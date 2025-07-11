@@ -4,9 +4,17 @@ version = "0.1.0"
 description = "Prototype for the core component of DetectMate"
 readme = "README.md"
 requires-python = ">=3.10"
+
 dependencies = [
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
     "pynng>=0.8.1",
     "pyyaml>=6.0.2",
+]
+
+[project.optional-dependencies]
+# install with:  uv pip install -e .[dev]
+dev = [
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.1",
 ]
