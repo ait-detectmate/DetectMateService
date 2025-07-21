@@ -2,13 +2,13 @@ from pathlib import Path
 from uuid import uuid4
 from typing import Any, Dict
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class CoreComponentSettings(BaseSettings):
-    """
-    Settings common to all components.
+    """Settings common to all components.
+
     Child components inherit & extend this via Pydantic.
     """
     component_id: str = Field(default_factory=lambda: uuid4().hex)
@@ -23,10 +23,12 @@ class CoreComponentSettings(BaseSettings):
     log_to_file: bool = True
     log_level: str = "INFO"
 
-    # MQ defaults
-    # TODO: list of strings for both input and output
-    mq_addr_in: str | None = "ipc:///tmp/detectmate.in.ipc"
-    mq_addr_out: str | None = "ipc:///tmp/detectmate.out.ipc"
+    # Manager (command) channel (REQ/REP)
+    manager_addr: str | None = "ipc:///tmp/detectmate.cmd.ipc"
+
+    # Engine channel (PAIR0)
+    engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
+    engine_autostart: bool = True
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",   # DETECTMATE_LOG_LEVEL etc.
@@ -44,4 +46,4 @@ class CoreComponentSettings(BaseSettings):
                 return cls.model_validate(data)
             except ValidationError as e:
                 raise SystemExit(f"[config] x {e}") from e
-        return cls()  # all defaults
+        return cls()

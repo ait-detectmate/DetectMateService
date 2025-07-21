@@ -5,8 +5,9 @@ from abc import ABC, abstractmethod
 
 
 class Engine(ABC):
-    """Engine drives a background thread that reads raw messages, calls
-    'self.process()', and publishes outputs."""
+    """Engine drives a background thread that reads raw messages over PAIR0,
+    calls 'self.process()', and sends outputs back over the same socket."""
+
     def __init__(self, settings):
         self.settings = settings
 
@@ -17,13 +18,17 @@ class Engine(ABC):
             target=self._run_loop, name="EngineLoop", daemon=True
         )
 
-        # sockets
-        self._in_sock = pynng.Sub0()
-        self._in_sock.dial(str(settings.mq_addr_in))
-        self._in_sock.subscribe(b"")  # receive everything
+        # set up a PAIR0 socket on its own channel
+        self._pair_sock = pynng.Pair0()
+        addr = str(settings.engine_addr)
+        if addr.startswith("ipc://"):
+            from pathlib import Path
+            Path(addr.replace("ipc://", "")).unlink(missing_ok=True)
+        self._pair_sock.listen(addr)
 
-        self._out_sock = pynng.Pub0()
-        self._out_sock.listen(str(settings.mq_addr_out))
+        # autostart if enabled
+        if getattr(settings, "engine_autostart", True):
+            self.start()
 
     def start(self) -> str:
         if not self._running:
@@ -39,10 +44,10 @@ class Engine(ABC):
                 continue
 
             try:
-                raw = self._in_sock.recv_msg()
-                result = self.process(raw)
-                if result is not None:
-                    self._out_sock.send(result)
+                raw = self._pair_sock.recv()
+                out = self.process(raw)
+                if out is not None:
+                    self._pair_sock.send(out)
             except Exception:
                 # TODO: we might want to log this
                 continue

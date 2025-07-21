@@ -27,9 +27,9 @@ class Manager:
 
     def __init__(
         self,
-        *args,
+        *_args,
         settings: Optional[CoreComponentSettings] = None,
-        **kwargs,
+        **_kwargs,
     ):
         self._stop_flag: bool = False
         self.settings: CoreComponentSettings = (
@@ -38,7 +38,7 @@ class Manager:
 
         # bind REP socket
         self._rep_sock = pynng.Rep0()
-        listen_addr = str(self.settings.mq_addr_in or self._default_addr)
+        listen_addr = str(self.settings.manager_addr or self._default_addr)
 
         if listen_addr.startswith("ipc://"):
             from pathlib import Path
