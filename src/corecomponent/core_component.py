@@ -57,7 +57,18 @@ class CoreComponent(Manager, Engine, ABC):
         """Stop both the engine loop and mark the component to exit."""
         self._stop_flag = True
         self.log.info("Stop flag set for %s[%s]", self.component_type, self.component_id)
-        return super().stop()  # calls Engine.stop()
+        return Engine.stop(self)  # calls Engine.stop()
+
+    # ensure pause/resume are logged
+    def pause(self) -> str:
+        msg = Engine.pause(self)
+        self.log.info(msg)
+        return msg
+
+    def resume(self) -> str:
+        msg = Engine.resume(self)
+        self.log.info(msg)
+        return msg
 
     # helpers
     def _build_logger(self) -> logging.Logger:

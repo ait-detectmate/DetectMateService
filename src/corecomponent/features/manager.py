@@ -90,11 +90,14 @@ class Manager:
         if lcmd == "ping":
             return "pong"
         if lcmd == "stop":
-            stop_fn = getattr(self, "stop", None)
-            if callable(stop_fn):
-                stop_fn()
-            else:
-                self._stop_flag = True
+            # Reply immediately, stop asynchronously to avoid blocking the REP send.
+            def _do_stop():
+                stop_fn = getattr(self, "stop", None)
+                if callable(stop_fn):
+                    stop_fn()
+                else:
+                    self._stop_flag = True
+            threading.Thread(target=_do_stop, daemon=True).start()
             return "stopping"
 
         if lcmd == "pause":
@@ -111,11 +114,7 @@ class Manager:
         """Called by CoreComponent.__exit__."""
         self._stop_flag = True
         try:
-            # poke the socket to unblock recv(), ignore errors
-            self._rep_sock.send(b"")
-        except pynng.NNGException:
-            pass
-        try:
+            # Just close; closing from another thread unblocks .recv() in pynng.
             self._rep_sock.close()
         except pynng.NNGException:
             pass

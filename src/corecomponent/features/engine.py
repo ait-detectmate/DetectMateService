@@ -53,11 +53,16 @@ class Engine(ABC):
                 continue
 
     def stop(self) -> str:
-        if self._running:
-            self._running = False
-            self._thread.join(timeout=1.0)
-            return "engine stopped"
-        return "engine not running"
+        if not self._running:
+            return "engine not running"
+        self._running = False
+        # Closing the socket will raise in the recv() and let the thread exit
+        try:
+            self._pair_sock.close()
+        except pynng.NNGException:
+            pass
+        self._thread.join(timeout=1.0)
+        return "engine stopped"
 
     def pause(self) -> str:
         self._paused.set()
