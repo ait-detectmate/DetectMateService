@@ -43,14 +43,38 @@ class Engine(ABC):
                 time.sleep(0.1)
                 continue
 
+            # recv phase
             try:
                 raw = self._pair_sock.recv()
-                out = self.process(raw)
-                if out is not None:
-                    self._pair_sock.send(out)
-            except Exception:
-                # TODO: we might want to log this
+            except pynng.NNGException as e:
+                # Socket likely closed during shutdown; leave loop if we're stopping.
+                if not self._running:
+                    break
+                self._log_engine_error("recv", e)
                 continue
+
+            # process phase
+            try:
+                out = self.process(raw)
+            except Exception as e:
+                # Log unexpected processing errors; don't silently swallow them.
+                self._log_engine_error("process", e)
+                continue
+
+            if out is None:
+                continue
+
+            # send phase
+            try:
+                self._pair_sock.send(out)
+            except pynng.NNGException as e:
+                self._log_engine_error("send", e)
+                continue
+
+    def _log_engine_error(self, phase: str, exc: Exception) -> None:
+        logger = getattr(self, "log", None)
+        if logger:
+            logger.exception("Engine error during %s: %s", phase, exc)
 
     def stop(self) -> str:
         if not self._running:
