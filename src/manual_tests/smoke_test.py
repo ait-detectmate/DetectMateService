@@ -1,11 +1,11 @@
 import time
-from corecomponent.settings import CoreComponentSettings
-from corecomponent.core_component import CoreComponent
+from service.settings import ServiceSettings
+from service.core import Service
 
 
-class SmokeComponent(CoreComponent):
-    def __init__(self, settings: CoreComponentSettings | None = None):
-        settings = settings or CoreComponentSettings(
+class SmokeComponent(Service):
+    def __init__(self, settings: ServiceSettings | None = None):
+        settings = settings or ServiceSettings(
             manager_addr="ipc:///tmp/smoke_cmd.ipc",
             engine_addr="ipc:///tmp/smoke_engine.ipc",
             engine_autostart=True,

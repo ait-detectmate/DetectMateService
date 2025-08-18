@@ -6,18 +6,18 @@ from pathlib import Path
 import time
 import typing
 
-from corecomponent.settings import CoreComponentSettings
-from corecomponent.features.manager import Manager
-from corecomponent.features.engine import Engine
+from service.settings import ServiceSettings
+from service.features.manager import Manager
+from service.features.engine import Engine
 
 
-class CoreComponent(Manager, Engine, ABC):
-    """Abstract base for every DetectMate component."""
+class Service(Manager, Engine, ABC):
+    """Abstract base for every DetectMate service/component."""
     # hard-code component type as class variable, overwrite in subclasses
     component_type: str = "core"
 
-    def __init__(self, settings: CoreComponentSettings | None = None):
-        settings = settings or CoreComponentSettings()
+    def __init__(self, settings: ServiceSettings | None = None):
+        settings = settings or ServiceSettings()
 
         # Initialize Manager first (opens REP socket & thread)
         Manager.__init__(self, settings=settings)
@@ -92,7 +92,7 @@ class CoreComponent(Manager, Engine, ABC):
         return logger
 
     # context-manager sugar
-    def __enter__(self) -> "CoreComponent":
+    def __enter__(self) -> "Service":
         self.setup_io()
         return self
 

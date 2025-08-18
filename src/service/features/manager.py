@@ -1,8 +1,8 @@
-"""Request/Reply command-manager for DetectMate components.
+"""Request/Reply command-manager for DetectMate services.
 
 The Manager class starts a background thread with a REP socket that
 waits for simple string commands. It is meant to be inherited
-by CoreComponent, so every concrete component automatically exposes
+by Service, so every concrete component automatically exposes
 the same management interface.
 
 Default commands
@@ -18,7 +18,7 @@ from pathlib import Path
 import threading
 import pynng
 
-from corecomponent.settings import CoreComponentSettings
+from service.settings import ServiceSettings
 
 
 class Manager:
@@ -29,12 +29,12 @@ class Manager:
     def __init__(
         self,
         *_args,
-        settings: Optional[CoreComponentSettings] = None,
+        settings: Optional[ServiceSettings] = None,
         **_kwargs,
     ):
         self._stop_flag: bool = False
-        self.settings: CoreComponentSettings = (
-            settings if settings is not None else CoreComponentSettings()
+        self.settings: ServiceSettings = (
+            settings if settings is not None else ServiceSettings()
         )
 
         # bind REP socket
@@ -111,7 +111,7 @@ class Manager:
 
     # tear-down helper
     def _close_manager(self) -> None:
-        """Called by CoreComponent.__exit__."""
+        """Called by Service.__exit__."""
         self._stop_flag = True
         try:
             # Just close; closing from another thread unblocks .recv() in pynng.

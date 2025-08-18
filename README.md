@@ -1,7 +1,6 @@
-# Core Component Prototype
+# Service Prototype
 
-This project demonstrates a basic `CoreComponent` class designed to be inherited by other specialized components.
-
+This project demonstrates a basic `Service` class designed to be inherited by other specialized components.
 
 ### Developer setup:
 

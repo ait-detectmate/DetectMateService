@@ -3,11 +3,11 @@ import threading
 import pynng
 import pytest
 
-from corecomponent.settings import CoreComponentSettings
-from corecomponent.core_component import CoreComponent
+from service.settings import ServiceSettings
+from service.core import Service
 
 
-class MockComponent(CoreComponent):
+class MockComponent(Service):
     component_type = "test"
 
     def process(self, raw_message: bytes) -> bytes | None:
@@ -25,7 +25,7 @@ class MockComponent(CoreComponent):
 
 @pytest.fixture
 def comp(tmp_path):
-    settings = CoreComponentSettings(
+    settings = ServiceSettings(
         manager_addr=f"ipc://{tmp_path}/t_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/t_engine.ipc",
         engine_autostart=True,

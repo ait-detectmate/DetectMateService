@@ -6,10 +6,10 @@ from pydantic import ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class CoreComponentSettings(BaseSettings):
-    """Settings common to all components.
+class ServiceSettings(BaseSettings):
+    """Settings common to all services.
 
-    Child components inherit & extend this via Pydantic.
+    Child services inherit & extend this via Pydantic.
     """
 
     # Give each instance either a stable name or explicit id via config/env.
@@ -57,7 +57,7 @@ class CoreComponentSettings(BaseSettings):
         return self
 
     @classmethod
-    def from_yaml(cls, path: str | Path | None) -> "CoreComponentSettings":
+    def from_yaml(cls, path: str | Path | None) -> "ServiceSettings":
         """Utility for one-liner loading w/ override by env vars."""
         if path:
             with open(path, "r") as fh:

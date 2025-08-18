@@ -1,5 +1,5 @@
 """Tests that demonstrate how to build a parser+detector pipeline on top of the
-CoreComponent's Engine/Manager.
+Service's Engine/Manager.
 
 - Demo 1: two detectors; anomaly-based (unknown events) and signature-based (count in window)
 - Demo 2: update Detector_2 config (limit_count) at runtime after 5 logs
@@ -15,9 +15,9 @@ from typing import Any, List, Optional, Tuple
 
 import pynng
 
-from corecomponent.core_component import CoreComponent
-from corecomponent.settings import CoreComponentSettings
-from corecomponent.schemas.schemas import ParserSchema
+from service.core import Service
+from service.settings import ServiceSettings
+from service.schemas.schemas import ParserSchema
 
 
 # Minimal app logic classes
@@ -97,13 +97,13 @@ def _payload_to_bytes(payload: dict[str, Any]) -> bytes:
     return json.dumps(payload, default=str).encode("utf-8")
 
 
-# CoreComponent-based demo classes
-class Demo1Component(CoreComponent):
+# Service-based demo classes
+class Demo1Component(Service):
     """Demo 1: two detectors; D1 (unknown events) and D2 (windowed count)."""
 
     component_type = "demo1"
 
-    def __init__(self, settings: CoreComponentSettings) -> None:
+    def __init__(self, settings: ServiceSettings) -> None:
         super().__init__(settings=settings)
         self.parser = Parser1()
         self.det1 = Detector1(known_events={0, 1})  # known: Server and Connection failed
@@ -130,10 +130,10 @@ class Demo1Component(CoreComponent):
         )
 
 
-class Demo2Component(CoreComponent):
+class Demo2Component(Service):
     component_type = "demo2"
 
-    def __init__(self, settings: CoreComponentSettings):
+    def __init__(self, settings: ServiceSettings):
         super().__init__(settings=settings)
         self.parser = Parser1()
         self.det1 = Detector1({0, 1})
@@ -166,10 +166,10 @@ class Demo2Component(CoreComponent):
         )
 
 
-class Demo3Component(CoreComponent):
+class Demo3Component(Service):
     component_type = "demo3"
 
-    def __init__(self, settings: CoreComponentSettings):
+    def __init__(self, settings: ServiceSettings):
         super().__init__(settings=settings)
         self.parser = Parser1()
         self.det1 = Detector1(set())   # start with empty set
@@ -197,7 +197,7 @@ class Demo3Component(CoreComponent):
 
 
 # pytest infrastructure
-def run_component_in_thread(comp: CoreComponent) -> threading.Thread:
+def run_component_in_thread(comp: Service) -> threading.Thread:
     t = threading.Thread(target=comp.run, daemon=True)
     t.start()
     time.sleep(0.2)  # let sockets/threads spin up
@@ -213,8 +213,8 @@ def dial_pair(addr: str) -> pynng.Pair0:
 
 # Demo 1 test
 def test_demo1_pipeline(tmp_path):
-    """End-to-end: Parser + two Detectors riding on CoreComponent Engine."""
-    settings = CoreComponentSettings(
+    """End-to-end: Parser + two Detectors riding on Service Engine."""
+    settings = ServiceSettings(
         manager_addr=f"ipc://{tmp_path}/d1_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/d1_engine.ipc",
         engine_autostart=True,
@@ -263,7 +263,7 @@ def test_demo1_pipeline(tmp_path):
 # Demo 2 test
 def test_demo2_update_detector_config_midstream(tmp_path):
     """Detector 2 limit updated after 5 logs -> alerts stop after update."""
-    cfg = CoreComponentSettings(
+    cfg = ServiceSettings(
         manager_addr=f"ipc://{tmp_path}/d2_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/d2_eng.ipc",
         engine_autostart=True,
@@ -306,7 +306,7 @@ def test_demo3_training_midstream(tmp_path):
 
     After 5 logs we train with {0,1,2}; subsequent logs should be OK.
     """
-    cfg = CoreComponentSettings(
+    cfg = ServiceSettings(
         manager_addr=f"ipc://{tmp_path}/d3_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/d3_eng.ipc",
         engine_autostart=True,
