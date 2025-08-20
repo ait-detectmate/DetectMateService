@@ -115,16 +115,25 @@ class Service(Manager, Engine, ABC):
         name = f"{self.component_type}.{self.component_id}"
         logger = logging.getLogger(name)
         logger.setLevel(getattr(logging, self.settings.log_level.upper(), logging.INFO))
+        logger.propagate = False  # don't bubble to root logger -> avoid duplicate lines
+
+        # Avoid duplicate handlers if this gets called again with same name
+        if logger.handlers:
+            return logger
 
         fmt = logging.Formatter("[%(asctime)s] %(levelname)s %(name)s: %(message)s")
+
+        # Point the console handler at the real, uncaptured stream & avoid re-adding handlers repeatedly
         if self.settings.log_to_console:
-            sh = logging.StreamHandler(sys.stdout)
+            safe_stdout = getattr(sys, "__stdout__", sys.stdout)
+            sh = logging.StreamHandler(safe_stdout)
             sh.setFormatter(fmt)
             logger.addHandler(sh)
         if self.settings.log_to_file:
             fh = logging.FileHandler(
-                Path(self.settings.log_dir) /
-                f"{self.component_type}_{self.component_id}.log"
+                Path(self.settings.log_dir) / f"{self.component_type}_{self.component_id}.log",
+                encoding="utf-8",
+                delay=True,  # don't open until first write
             )
             fh.setFormatter(fmt)
             logger.addHandler(fh)
