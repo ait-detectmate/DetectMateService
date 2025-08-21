@@ -110,7 +110,7 @@ class Engine(ABC):
         return "engine resumed"
 
     @abstractmethod
-    def process(self, raw_message: bytes) -> bytes | None:
+    def process(self, _raw_message: bytes) -> bytes | None:
         """Decode raw_message, run parser(s)/detector(s), and return something
         to publish (or None to skip)."""
         pass
