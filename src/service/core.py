@@ -145,10 +145,4 @@ class Service(Manager, Engine, ABC):
     def __exit__(self, _exc_type, _exc, _tb) -> typing.Literal[False]:
         self.stop()  # shut down gracefully
         self._close_manager()   # close REP socket & thread
-
-        # close log handlers
-        for h in list(self.log.handlers):
-            h.close()
-            self.log.removeHandler(h)
-        self.log.info("Bye")
         return False  # propagate exceptions
