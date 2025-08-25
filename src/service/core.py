@@ -18,16 +18,16 @@ class Service(Manager, Engine, ABC):
     component_type: str = "core"
 
     def __init__(self, settings: ServiceSettings = ServiceSettings()):
-        # Initialize Manager first (opens REP socket & discovers commands)
-        Manager.__init__(self, settings=settings)
-
-        # Prepare attributes & logger BEFORE Engine autostart can call start()
+        # Prepare attributes & logger first
         self.settings = settings
         self.component_id = settings.component_id
         self._stop_flag = False
         self.log = self._build_logger()
 
-        # Initialize Engine (opens PAIR socket & may autostart -> calls self.start())
+        # now init Manager (opens REP socket & discovers commands)
+        Manager.__init__(self, settings=settings)
+
+        # then init Engine (opens PAIR socket, may autostart)
         Engine.__init__(self, settings=settings)
 
         self.log.debug("%s[%s] created", self.component_type, self.component_id)

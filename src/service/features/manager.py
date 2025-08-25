@@ -16,7 +16,8 @@ from typing import Optional, Callable
 from pathlib import Path
 import threading
 import pynng
-
+from typing import cast
+from service.features.types import Loggable
 from service.settings import ServiceSettings
 
 
@@ -59,7 +60,8 @@ class Manager:
             Path(listen_addr.replace("ipc://", "")).unlink(missing_ok=True)
 
         self._rep_sock.listen(listen_addr)
-        print(f"[manager] listening on {listen_addr}")
+        loggable_self = cast(Loggable, self)
+        loggable_self.log.info("Manager listening on %s", listen_addr)
 
         # background thread
         self._thread = threading.Thread(
