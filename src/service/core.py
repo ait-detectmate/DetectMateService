@@ -17,9 +17,7 @@ class Service(Manager, Engine, ABC):
     # hard-code component type as class variable, overwrite in subclasses
     component_type: str = "core"
 
-    def __init__(self, settings: ServiceSettings | None = None):
-        settings = settings or ServiceSettings()
-
+    def __init__(self, settings: ServiceSettings = ServiceSettings()):
         # Initialize Manager first (opens REP socket & discovers commands)
         Manager.__init__(self, settings=settings)
 
