@@ -79,10 +79,6 @@ class Manager:
         self._decorated_handlers: dict[str, Callable[..., str]] = {}
         self._discover_decorated_commands()
 
-    # public helper
-    def register_command(self, name: str, handler: Callable[[str], str]) -> None:
-        self._handlers[name.lower()] = handler
-
     # discover decorated command methods on the instance/class
     def _discover_decorated_commands(self) -> None:
         for attr_name in dir(self):
