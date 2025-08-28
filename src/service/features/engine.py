@@ -18,11 +18,7 @@ class Engine(ABC):
     Default: NngPairSocketFactory (pynng.Pair0).
     """
 
-    def __init__(
-        self,
-        settings,
-        socket_factory: Optional[EngineSocketFactory] = None,
-    ):
+    def __init__(self, settings, socket_factory: Optional[EngineSocketFactory] = None):
         self.settings = settings
         self._stop_event = threading.Event()
 

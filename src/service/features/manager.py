@@ -14,6 +14,8 @@ ping   -> pong
 from __future__ import annotations
 from typing import Optional, Callable
 from pathlib import Path
+import errno
+import socket
 import threading
 import pynng
 from typing import cast
@@ -41,12 +43,7 @@ class Manager:
 
     _default_addr: str = "ipc:///tmp/detectmate.cmd.ipc"
 
-    def __init__(
-        self,
-        *_args,
-        settings: Optional[ServiceSettings] = None,
-        **_kwargs,
-    ):
+    def __init__(self, *_args, settings: Optional[ServiceSettings] = None, **_kwargs):
         self._stop_event = threading.Event()
         self.settings: ServiceSettings = (
             settings if settings is not None else ServiceSettings()
@@ -55,13 +52,48 @@ class Manager:
         # bind REP socket
         self._rep_sock = pynng.Rep0()
         listen_addr = str(self.settings.manager_addr or self._default_addr)
-
-        if listen_addr.startswith("ipc://"):
-            Path(listen_addr.replace("ipc://", "")).unlink(missing_ok=True)
-
-        self._rep_sock.listen(listen_addr)
         loggable_self = cast(Loggable, self)
-        loggable_self.log.info("Manager listening on %s", listen_addr)
+
+        # Handle IPC socket cleanup
+        if listen_addr.startswith("ipc://"):
+            ipc_path = Path(listen_addr.replace("ipc://", ""))
+            try:
+                if ipc_path.exists():
+                    ipc_path.unlink()
+            except OSError as e:
+                if e.errno != errno.ENOENT:  # ignore file doesn't exist errors
+                    loggable_self.log.error("Failed to remove IPC file: %s", e)
+                    raise
+
+        # Handle TCP port binding conflicts
+        elif listen_addr.startswith("tcp://"):
+            try:
+                # Parse host and port
+                addr_parts = listen_addr.replace("tcp://", "").split(":")
+                host = addr_parts[0] if addr_parts[0] else "127.0.0.1"
+                port = int(addr_parts[1])
+
+                # Check if port is already in use (avoid context manager to work with pytest-mock)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    if s.connect_ex((host, port)) == 0:
+                        raise OSError(f"Port {port} is already in use")
+                finally:
+                    try:
+                        s.close()
+                    except (OSError, socket.error) as sock_err:
+                        loggable_self.log.debug("Socket close error: %s", sock_err)
+            except (ValueError, IndexError, OSError) as e:
+                loggable_self.log.error("Invalid TCP address or port in use: %s", e)
+                raise
+
+        try:
+            self._rep_sock.listen(listen_addr)
+            loggable_self.log.info("Manager listening on %s", listen_addr)
+        except pynng.NNGException as e:
+            loggable_self.log.error("Failed to bind to address %s: %s", listen_addr, e)
+            raise
 
         # set a receive timeout for the socket
         self._rep_sock.recv_timeout = 100  # 100ms timeout
