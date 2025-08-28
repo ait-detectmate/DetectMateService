@@ -31,10 +31,10 @@ class Engine(ABC):
 
         # set up the engine socket via the factory abstraction
         addr = str(settings.engine_addr)
-        self._socket_factory: EngineSocketFactory = (
+        self._engine_socket_factory: EngineSocketFactory = (
             socket_factory if socket_factory is not None else NngPairSocketFactory()
         )
-        self._pair_sock = self._socket_factory.create(addr)
+        self._pair_sock = self._engine_socket_factory.create(addr)
 
         # Set a reasonable receive timeout
         self._pair_sock.recv_timeout = 100  # 100ms timeout
