@@ -6,7 +6,10 @@ from pathlib import Path
 import threading
 import typing
 import json
+from typing import Optional, Type
 
+from service.features.parameter_manager import ParameterManager
+from service.features.parameters import BaseParameters
 from service.settings import ServiceSettings
 from service.features.manager import Manager, manager_command
 from service.features.engine import Engine
@@ -44,7 +47,21 @@ class Service(Manager, Engine, ABC):
         # then init Engine with the processor (opens PAIR socket, may autostart)
         Engine.__init__(self, settings=settings, processor=self.processor)
 
+        self.param_manager: Optional[ParameterManager] = None
+        if hasattr(settings, 'parameter_file') and settings.parameter_file:
+            self.param_manager = ParameterManager(
+                str(settings.parameter_file),
+                self.get_parameters_schema()
+            )
+
         self.log.debug("%s[%s] created", self.component_type, self.component_id)
+
+    def get_parameters_schema(self) -> Type[BaseParameters]:
+        """Return the parameters schema for this service.
+
+        Override in subclasses.
+        """
+        return BaseParameters
 
     def create_processor(self) -> BaseProcessor:
         """Create and return a processor instance for this service.
@@ -111,10 +128,10 @@ class Service(Manager, Engine, ABC):
 
     @manager_command()
     def reconfigure(self, cmd: str | None = None) -> str:
-        """Accepts 'reconfigure {json}' to demonstrate dynamic config updates.
+        """Reconfigure service parameters dynamically."""
+        if not self.param_manager:
+            return "reconfigure: no parameter manager configured"
 
-        This is a placeholder; TODO: adapt later to real configuration
-        """
         payload = ""
         if cmd:
             _, _, tail = cmd.partition(" ")
@@ -127,10 +144,12 @@ class Service(Manager, Engine, ABC):
         except json.JSONDecodeError:
             return "reconfigure: invalid JSON"
 
-        # Example: record the last reconfigure payload
-        setattr(self, "_last_reconfigure", data)
-        self.log.info("Reconfigured with: %s", data)
-        return "reconfigure: ok"
+        try:
+            self.param_manager.update(data)
+            self.log.info("Reconfigured with: %s", data)
+            return "reconfigure: ok"
+        except Exception as e:
+            return f"reconfigure: error - {e}"
 
     # helpers
     def _build_logger(self) -> logging.Logger:

@@ -39,6 +39,8 @@ class ServiceSettings(BaseSettings):
         extra="forbid",
     )
 
+    parameter_file: Optional[Path] = None
+
     @model_validator(mode="after")
     def _ensure_component_id(self):
         # If user provided explicitly, keep it.
