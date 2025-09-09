@@ -1,6 +1,7 @@
 import threading
 import pynng
 import pytest
+import json
 
 from service.core import Service
 from service.settings import ServiceSettings
@@ -46,10 +47,10 @@ def test_manager_commands(mock_service):
         req.send(b"ping")
         assert req.recv() == b"pong"
 
-        # Test status
+        # Test status - parse JSON response
         req.send(b"status")
-        response = req.recv()
-        assert b"stopped" in response  # engine not running
+        response = json.loads(req.recv().decode())
+        assert response['status']['running'] is False  # Check running field
 
         # Test echo command
         test_message = b"echo test message"
@@ -94,7 +95,9 @@ def test_concurrent_commands(mock_service):
     # Verify all commands got responses
     assert all(results)
     assert results[0] == b"pong"
-    assert b"stopped" in results[1]
+    # Parse status response
+    status_response = json.loads(results[1].decode())
+    assert status_response['status']['running'] is False
     assert results[2] == b"echo test"
 
 
@@ -108,4 +111,5 @@ def test_manager_reconnect(mock_service):
     # Second connection (should work fine)
     with pynng.Req0(dial=mock_service.settings.manager_addr) as req:
         req.send(b"status")
-        assert b"stopped" in req.recv()
+        response = json.loads(req.recv().decode())
+        assert response['status']['running'] is False

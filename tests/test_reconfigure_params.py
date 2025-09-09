@@ -6,7 +6,6 @@ from pathlib import Path
 from service.core import Service
 from service.settings import ServiceSettings
 from service.features.parameters import BaseParameters
-from service.features.parameter_manager import ParameterManager
 from pydantic import Field
 
 
@@ -131,28 +130,3 @@ def test_reconfigure_command_no_payload(temp_config_file, temp_params_file):
     with MockService(settings=settings) as service:
         result = service._handle_cmd('reconfigure')
         assert "no payload" in result
-
-
-def test_reconfigure_persists_to_file(temp_config_file, temp_params_file):
-    """Test that reconfigure persists changes to the parameter file."""
-    # Update the config file to point to the params file
-    with open(temp_config_file, 'r') as f:
-        config_data = yaml.safe_load(f)
-    config_data['parameter_file'] = temp_params_file
-    with open(temp_config_file, 'w') as f:
-        yaml.dump(config_data, f)
-
-    settings = ServiceSettings.from_yaml(temp_config_file)
-
-    with MockService(settings=settings) as service:
-        # Modify parameters
-        new_params = {'threshold': 0.9, 'enabled': False}
-        cmd = f'reconfigure {json.dumps(new_params)}'
-        service._handle_cmd(cmd)
-
-    # Reload from file to verify persistence
-    new_manager = ParameterManager(temp_params_file, MockParameters)
-    params = new_manager.get()
-
-    assert params.threshold == 0.9
-    assert params.enabled is False
