@@ -66,7 +66,6 @@ class ParameterManager:
                 self._params = self.schema.model_validate(new_params)
             else:
                 self._params = new_params
-            self.save()
 
     def get(self) -> Optional[Union[BaseParameters, Dict[str, Any]]]:
         """Get current parameters."""

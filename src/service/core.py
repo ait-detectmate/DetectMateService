@@ -49,10 +49,14 @@ class Service(Manager, Engine, ABC):
 
         self.param_manager: Optional[ParameterManager] = None
         if hasattr(settings, 'parameter_file') and settings.parameter_file:
+            self.log.debug(f"Initializing ParameterManager with file: {settings.parameter_file}")
             self.param_manager = ParameterManager(
                 str(settings.parameter_file),
                 self.get_parameters_schema()
             )
+            # Check if parameters were loaded successfully
+            params = self.param_manager.get()
+            self.log.debug(f"Initial parameters: {params}")
 
         self.log.debug("%s[%s] created", self.component_type, self.component_id)
 
@@ -117,14 +121,60 @@ class Service(Manager, Engine, ABC):
         return msg
 
     @manager_command()
-    def status(self) -> str:
-        """Basic status report for this component."""
+    def status(self, cmd: str | None = None) -> str:
+        """Comprehensive status report including settings and parameters."""
+        if self.param_manager:
+            params = self.param_manager.get()
+            print(f"DEBUG: Parameters from manager: {params}")
+
         running = getattr(self, "_running", False)
         paused = getattr(self, "_paused", None)
         is_paused = (paused.is_set() if paused is not None else False)
-        return f"{self.component_type}[{self.component_id}] " + (
-            ("running (paused)" if is_paused else "running") if running else "stopped"
-        )
+
+        # Debug logging
+        self.log.debug(f"Parameter manager exists: {self.param_manager is not None}")
+        if self.param_manager:
+            params = self.param_manager.get()
+            self.log.debug(f"Parameters: {params}")
+            self.log.debug(f"Parameter file: {self.settings.parameter_file}")
+
+        # Convert Path objects to strings for JSON serialization
+        settings_dict = self.settings.model_dump()
+        for key, value in settings_dict.items():
+            if isinstance(value, Path):
+                settings_dict[key] = str(value)
+
+        # Handle parameters
+        if self.param_manager:
+            params = self.param_manager.get()
+            if params is not None:
+                if hasattr(params, 'model_dump'):
+                    params_dict = params.model_dump()
+                    # Convert any Path objects in parameters to strings
+                    for key, value in params_dict.items():
+                        if isinstance(value, Path):
+                            params_dict[key] = str(value)
+                else:
+                    params_dict = params
+            else:
+                params_dict = {}
+                self.log.warning("ParameterManager.get() returned None")
+        else:
+            params_dict = {}
+            self.log.warning("No ParameterManager initialized")
+
+        status_info = {
+            "status": {
+                "component_type": self.component_type,
+                "component_id": self.component_id,
+                "running": running,
+                "paused": is_paused
+            },
+            "settings": settings_dict,
+            "parameters": params_dict
+        }
+
+        return json.dumps(status_info, indent=2)
 
     @manager_command()
     def reconfigure(self, cmd: str | None = None) -> str:

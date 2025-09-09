@@ -67,7 +67,16 @@ def get_status(settings_path: Path):
         with pynng.Req0(dial=settings.manager_addr) as req:
             req.send(b"status")
             response = req.recv().decode()
-            print(f"Service status: {response}")
+
+            try:
+                # Try to parse as JSON for pretty printing
+                data = json.loads(response)
+                print("Service Status:")
+                print(json.dumps(data, indent=2))
+            except json.JSONDecodeError:
+                # Fallback to raw response if not json
+                print(f"Service status: {response}")
+
     except Exception as e:
         print(f"Error getting service status: {e}")
 
