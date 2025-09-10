@@ -85,7 +85,8 @@ class Service(Manager, Engine, ABC):
         The Manager's command thread is already live, so external
         clients can pause/resume/stop at any time.
         """
-        self.log.info(self.start())  # start engine loop
+        if not getattr(self, '_running', False):
+            self.log.info(self.start())  # start engine loop
         self._stop_event.wait()
         self.log.info(self.stop())  # ensure engine thread is joined
 
