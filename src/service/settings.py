@@ -28,10 +28,12 @@ class ServiceSettings(BaseSettings):
 
     # Manager (command) channel (REQ/REP)
     manager_addr: str | None = "ipc:///tmp/detectmate.cmd.ipc"
+    manager_recv_timeout: int = 100  # milliseconds
 
     # Engine channel (PAIR0)
     engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
     engine_autostart: bool = True
+    engine_recv_timeout: int = 100  # milliseconds
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.

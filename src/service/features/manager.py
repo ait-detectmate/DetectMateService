@@ -40,14 +40,15 @@ def manager_command(name: str | None = None):
 class Manager:
     """Mixin that starts a REP socket in the background and serves commands."""
 
-    _default_addr: str = "ipc:///tmp/detectmate.cmd.ipc"
-
-    def __init__(self, *_args, settings: Optional[ServiceSettings] = None,
-                 socket_factory: Optional[ManagerSocketFactory] = None, **_kwargs):
+    def __init__(
+            self,
+            *_args,
+            settings: Optional[ServiceSettings] = None,
+            socket_factory: Optional[ManagerSocketFactory] = None,
+            **_kwargs
+    ):
         self._stop_event = threading.Event()
-        self.settings: ServiceSettings = (
-            settings if settings is not None else ServiceSettings()
-        )
+        self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
 
         # Use socket factory abstraction
         self._manager_socket_factory: ManagerSocketFactory = (
@@ -55,11 +56,11 @@ class Manager:
         )
 
         loggable_self = cast(Loggable, self)
-        listen_addr = str(self.settings.manager_addr or self._default_addr)
+        listen_addr = str(self.settings.manager_addr)
 
         # Create socket using factory
         self._rep_sock = self._manager_socket_factory.create(listen_addr, loggable_self)
-        self._rep_sock.recv_timeout = 100  # 100ms timeout
+        self._rep_sock.recv_timeout = self.settings.manager_recv_timeout
 
         # background thread
         self._thread = threading.Thread(

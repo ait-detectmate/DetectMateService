@@ -3,7 +3,7 @@ import time
 import pynng
 from abc import ABC
 from typing import Optional
-
+from service.settings import ServiceSettings
 from service.features.engine_socket import (
     EngineSocketFactory,
     NngPairSocketFactory,
@@ -31,11 +31,11 @@ class Engine(ABC):
 
     def __init__(
             self,
-            settings,
+            settings: Optional[ServiceSettings] = None,
             processor: BaseProcessor = DefaultProcessor(),
             socket_factory: Optional[EngineSocketFactory] = None
     ):
-        self.settings = settings
+        self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
         self.processor = processor
         self._stop_event = threading.Event()
 
@@ -47,17 +47,15 @@ class Engine(ABC):
         )
 
         # set up the engine socket via the factory abstraction
-        addr = str(settings.engine_addr)
+        addr = str(self.settings.engine_addr)
         self._engine_socket_factory: EngineSocketFactory = (
             socket_factory if socket_factory is not None else NngPairSocketFactory()
         )
         self._pair_sock = self._engine_socket_factory.create(addr)
-
-        # Set a reasonable receive timeout
-        self._pair_sock.recv_timeout = 100  # 100ms timeout
+        self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
 
         # autostart if enabled
-        if getattr(settings, "engine_autostart", True):
+        if getattr(self.settings, "engine_autostart", True):
             self.start()
 
     def start(self) -> str:
