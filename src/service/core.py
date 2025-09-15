@@ -42,10 +42,10 @@ class Service(Manager, Engine, ABC):
         self.processor = self.create_processor()
 
         # now init Manager (opens REP socket & discovers commands)
-        Manager.__init__(self, settings=settings)
+        Manager.__init__(self, settings=settings, logger=self.log)
 
         # then init Engine with the processor (opens PAIR socket, may autostart)
-        Engine.__init__(self, settings=settings, processor=self.processor)
+        Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
 
         self.param_manager: Optional[ParameterManager] = None
         if hasattr(settings, 'parameter_file') and settings.parameter_file:

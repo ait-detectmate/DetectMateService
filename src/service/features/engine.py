@@ -1,6 +1,7 @@
 import threading
 import time
 import pynng
+import logging
 from abc import ABC
 from typing import Optional
 from service.settings import ServiceSettings
@@ -33,11 +34,13 @@ class Engine(ABC):
             self,
             settings: Optional[ServiceSettings] = None,
             processor: BaseProcessor = DefaultProcessor(),
-            socket_factory: Optional[EngineSocketFactory] = None
+            socket_factory: Optional[EngineSocketFactory] = None,
+            logger: Optional[logging.Logger] = None
     ):
         self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
         self.processor = processor
         self._stop_event = threading.Event()
+        self.log = logger or logging.getLogger(__name__)
 
         # control flags
         self._running = False
@@ -51,7 +54,7 @@ class Engine(ABC):
         self._engine_socket_factory: EngineSocketFactory = (
             socket_factory if socket_factory is not None else NngPairSocketFactory()
         )
-        self._pair_sock = self._engine_socket_factory.create(addr)
+        self._pair_sock = self._engine_socket_factory.create(addr, self.log)
         self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
 
         # autostart if enabled
@@ -80,15 +83,14 @@ class Engine(ABC):
                 # Socket likely closed during shutdown; leave loop if we're stopping.
                 if not self._running or self._stop_event.is_set():
                     break
-                self._log_engine_error("recv", e)
+                self.log.exception("Engine error during receive: %s", e)
                 continue
 
             # process phase
             try:
                 out = self.processor.process(raw)
             except Exception as e:
-                # Log unexpected processing errors; don't silently swallow them.
-                self._log_engine_error("process", e)
+                self.log.exception("Engine error during process: %s", e)
                 continue
 
             if out is None:
@@ -98,13 +100,8 @@ class Engine(ABC):
             try:
                 self._pair_sock.send(out)
             except pynng.NNGException as e:
-                self._log_engine_error("send", e)
+                self.log.exception("Engine error during send: %s", e)
                 continue
-
-    def _log_engine_error(self, phase: str, exc: Exception) -> None:
-        logger = getattr(self, "log", None)
-        if logger:
-            logger.exception("Engine error during %s: %s", phase, exc)
 
     def stop(self) -> None:
         """Stop the engine loop and clean up resources.
@@ -115,6 +112,8 @@ class Engine(ABC):
             RuntimeError: If stopping fails for any reason
         """
         if not self._running:
+            if self.log:
+                self.log.debug("Engine is not running, skipping stop")
             return None
         self._running = False
         self._stop_event.set()
@@ -123,10 +122,13 @@ class Engine(ABC):
             self._pair_sock.close()
         except pynng.NNGException as e:
             raise RuntimeError(f"Failed to close engine socket: {e}") from e
+            # TODO: wrap it in custom exception (create EngineException) and catch in the caller
         try:
             self._thread.join(timeout=1.0)
             if self._thread.is_alive():
                 raise RuntimeError("Engine thread failed to stop within timeout")
+            elif self.log:
+                self.log.debug("Engine stopped successfully")
         except Exception as e:
             raise RuntimeError(f"Failed to join engine thread: {e}") from e
         return None

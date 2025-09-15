@@ -4,7 +4,6 @@ from .features.manager import Manager
 from .features.engine import Engine
 from .features.engine_socket import EngineSocketFactory, NngPairSocketFactory
 from .features.manager_socket import ManagerSocketFactory, NngRepSocketFactory
-from .features.types import Loggable
 
 __all__ = [
     "Service",
@@ -15,5 +14,4 @@ __all__ = [
     "NngPairSocketFactory",
     "ManagerSocketFactory",
     "NngRepSocketFactory",
-    "Loggable",
 ]

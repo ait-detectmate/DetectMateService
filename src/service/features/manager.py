@@ -16,8 +16,7 @@ from typing import Optional, Callable
 import threading
 import pynng
 import time
-from typing import cast
-from service.features.types import Loggable
+import logging
 from service.settings import ServiceSettings
 from service.features.manager_socket import ManagerSocketFactory, NngRepSocketFactory
 
@@ -45,21 +44,22 @@ class Manager:
             *_args,
             settings: Optional[ServiceSettings] = None,
             socket_factory: Optional[ManagerSocketFactory] = None,
+            logger: Optional[logging.Logger] = None,
             **_kwargs
     ):
         self._stop_event = threading.Event()
         self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
+        self.log = logger or logging.getLogger(__name__)
 
         # Use socket factory abstraction
         self._manager_socket_factory: ManagerSocketFactory = (
             socket_factory if socket_factory is not None else NngRepSocketFactory()
         )
 
-        loggable_self = cast(Loggable, self)
         listen_addr = str(self.settings.manager_addr)
 
         # Create socket using factory
-        self._rep_sock = self._manager_socket_factory.create(listen_addr, loggable_self)
+        self._rep_sock = self._manager_socket_factory.create(listen_addr, self.log)
         self._rep_sock.recv_timeout = self.settings.manager_recv_timeout
 
         # background thread

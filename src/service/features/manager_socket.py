@@ -5,7 +5,7 @@ import socket
 from typing import Protocol, runtime_checkable
 
 import pynng
-from service.features.types import Loggable
+import logging
 
 
 @runtime_checkable
@@ -20,12 +20,12 @@ class ManagerSocket(Protocol):
 
 class ManagerSocketFactory(Protocol):
     """Factory that creates bound ManagerSocket instances."""
-    def create(self, addr: str, logger: Loggable) -> ManagerSocket: ...
+    def create(self, addr: str, logger: logging.Logger) -> ManagerSocket: ...
 
 
 class NngRepSocketFactory:
     """Default factory using pynng.Rep0 with proper error handling."""
-    def create(self, addr: str, logger: Loggable) -> ManagerSocket:
+    def create(self, addr: str, logger: logging.Logger) -> ManagerSocket:
         sock = pynng.Rep0()
 
         # Handle IPC socket cleanup
@@ -36,7 +36,7 @@ class NngRepSocketFactory:
                     ipc_path.unlink()
             except OSError as exc:
                 if exc.errno != errno.ENOENT:  # ignore file doesn't exist errors
-                    logger.log.error("Failed to remove IPC file: %s", exc)
+                    logger.error("Failed to remove IPC file: %s", exc)
                     raise
 
         # Handle TCP port binding conflicts
@@ -57,16 +57,16 @@ class NngRepSocketFactory:
                     try:
                         s.close()
                     except (OSError, socket.error) as sock_err:
-                        logger.log.debug("Socket close error: %s", sock_err)
+                        logger.debug("Socket close error: %s", sock_err)
             except (ValueError, IndexError, OSError) as exc:
-                logger.log.error("Invalid TCP address or port in use: %s", exc)
+                logger.error("Invalid TCP address or port in use: %s", exc)
                 raise
 
         try:
             sock.listen(addr)
-            logger.log.info("Manager listening on %s", addr)
+            logger.info("Manager listening on %s", addr)
             return sock
         except pynng.NNGException as exc:
-            logger.log.error("Failed to bind to address %s: %s", addr, exc)
+            logger.error("Failed to bind to address %s: %s", addr, exc)
             sock.close()
             raise
