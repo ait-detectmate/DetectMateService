@@ -43,6 +43,11 @@ class ServiceSettings(BaseSettings):
 
     parameter_file: Optional[Path] = None
 
+    @staticmethod
+    def _generate_uuid_from_string(input_string: str) -> str:
+        """Generate a stable UUID v5 hex string from the given input string."""
+        return uuid5(NAMESPACE_URL, input_string).hex
+
     @model_validator(mode="after")
     def _ensure_component_id(self):
         # If user provided explicitly, keep it.
@@ -52,13 +57,13 @@ class ServiceSettings(BaseSettings):
         # 1) Prefer a stable name -> stable UUIDv5
         if self.component_name:
             name = f"detectmate/{self.component_type}/{self.component_name}"
-            self.component_id = uuid5(NAMESPACE_URL, name).hex
+            self.component_id = self._generate_uuid_from_string(name)
             return self
 
         # 2) No name: derive deterministically from addresses (also stable)
         #    This stays the same as long as the addresses don't change.
         base = f"{self.component_type}|{self.manager_addr or ''}|{self.engine_addr or ''}"
-        self.component_id = uuid5(NAMESPACE_URL, f"detectmate/{base}").hex
+        self.component_id = self._generate_uuid_from_string(f"detectmate/{base}")
         return self
 
     @classmethod
@@ -68,8 +73,11 @@ class ServiceSettings(BaseSettings):
         if path:
             path = Path(path)
             if path.exists():
-                with open(path, "r") as fh:
-                    data = yaml.safe_load(fh) or {}
+                try:
+                    with open(path, "r") as fh:
+                        data = yaml.safe_load(fh) or {}
+                except (IOError, yaml.YAMLError) as e:
+                    raise SystemExit(f"[config] Error reading YAML file {path}: {e}") from e
 
         # convert string paths to Path objects
         if "log_dir" in data and isinstance(data["log_dir"], str):
