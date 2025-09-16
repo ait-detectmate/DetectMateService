@@ -6,42 +6,31 @@ import yaml
 from pydantic import ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from service.schemas.settings import BaseSettingsSchema
+
 
 class ServiceSettings(BaseSettings):
-    """Settings common to all services.
+    """Settings common to all services."""
 
-    Child services inherit & extend this via Pydantic.
-    """
-
-    # Give each instance either a stable name or explicit id via config/env.
-    # DETECTMATE_COMPONENT_NAME=detector-1 (preferred)
-    # or DETECTMATE_COMPONENT_ID=... (explicit)
-    component_name: Optional[str] = None
-    component_id: Optional[str] = None  # computed if not provided
-    component_type: str = "core"  # e.g. detector, parser, etc
-
-    # logger
-    log_dir: Path = Path("./logs")
-    log_to_console: bool = True
-    log_to_file: bool = True
-    log_level: str = "INFO"
-
-    # Manager (command) channel (REQ/REP)
-    manager_addr: str | None = "ipc:///tmp/detectmate.cmd.ipc"
-    manager_recv_timeout: int = 100  # milliseconds
-
-    # Engine channel (PAIR0)
-    engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
-    engine_autostart: bool = True
-    engine_recv_timeout: int = 100  # milliseconds
+    component_name: Optional[str] = BaseSettingsSchema.model_fields["component_name"].default
+    component_id: Optional[str] = BaseSettingsSchema.model_fields["component_id"].default
+    component_type: str = BaseSettingsSchema.model_fields["component_type"].default
+    log_dir: Path = BaseSettingsSchema.model_fields["log_dir"].default
+    log_to_console: bool = BaseSettingsSchema.model_fields["log_to_console"].default
+    log_to_file: bool = BaseSettingsSchema.model_fields["log_to_file"].default
+    log_level: str = BaseSettingsSchema.model_fields["log_level"].default
+    manager_addr: str | None = BaseSettingsSchema.model_fields["manager_addr"].default
+    manager_recv_timeout: int = BaseSettingsSchema.model_fields["manager_recv_timeout"].default
+    engine_addr: str | None = BaseSettingsSchema.model_fields["engine_addr"].default
+    engine_autostart: bool = BaseSettingsSchema.model_fields["engine_autostart"].default
+    engine_recv_timeout: int = BaseSettingsSchema.model_fields["engine_recv_timeout"].default
+    parameter_file: Optional[Path] = BaseSettingsSchema.model_fields["parameter_file"].default
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.
         env_nested_delimiter="__",  # DETECTMATE_DETECTOR__THRESHOLD
         extra="forbid",
     )
-
-    parameter_file: Optional[Path] = None
 
     @model_validator(mode="after")
     def _ensure_component_id(self):
