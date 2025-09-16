@@ -6,6 +6,7 @@ import logging
 import pynng
 import errno
 import socket
+from urllib.parse import urlparse
 
 
 @runtime_checkable
@@ -28,8 +29,9 @@ class NngPairSocketFactory:
     """Default factory using pynng.Pair0 and binding to the given address."""
     def create(self, addr: str, logger: logging.Logger) -> EngineSocket:
         sock = pynng.Pair0()
-        if addr.startswith("ipc://"):
-            ipc_path = Path(addr.replace("ipc://", ""))
+        parsed = urlparse(addr)
+        if parsed.scheme == "ipc":
+            ipc_path = Path(parsed.path)
             try:
                 if ipc_path.exists():
                     ipc_path.unlink()
@@ -38,10 +40,11 @@ class NngPairSocketFactory:
                     logger.error("Failed to remove IPC file: %s", e)
                     raise
 
-        elif addr.startswith("tcp://"):
-            addr_parts = addr.replace("tcp://", "").split(":")
-            host = addr_parts[0] or "127.0.0.1"
-            port = int(addr_parts[1])
+        elif parsed.scheme == "tcp":
+            host = parsed.hostname or "127.0.0.1"
+            port = parsed.port
+            if not port:
+                raise ValueError(f"Missing port in TCP address: {addr}")
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if s.connect_ex((host, port)) == 0:

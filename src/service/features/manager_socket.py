@@ -3,6 +3,7 @@ from pathlib import Path
 import errno
 import socket
 from typing import Protocol, runtime_checkable
+from urllib.parse import urlparse
 
 import pynng
 import logging
@@ -27,10 +28,9 @@ class NngRepSocketFactory:
     """Default factory using pynng.Rep0 with proper error handling."""
     def create(self, addr: str, logger: logging.Logger) -> ManagerSocket:
         sock = pynng.Rep0()
-
-        # Handle IPC socket cleanup
-        if addr.startswith("ipc://"):
-            ipc_path = Path(addr.replace("ipc://", ""))
+        parsed = urlparse(addr)
+        if parsed.scheme == "ipc":
+            ipc_path = Path(parsed.path)
             try:
                 if ipc_path.exists():
                     ipc_path.unlink()
@@ -40,12 +40,12 @@ class NngRepSocketFactory:
                     raise
 
         # Handle TCP port binding conflicts
-        elif addr.startswith("tcp://"):
+        elif parsed.scheme == "tcp":
             try:
-                # Parse host and port
-                addr_parts = addr.replace("tcp://", "").split(":")
-                host = addr_parts[0] if addr_parts[0] else "127.0.0.1"
-                port = int(addr_parts[1])
+                host = parsed.hostname or "127.0.0.1"
+                port = parsed.port
+                if not port:
+                    raise ValueError(f"Missing port in TCP address: {addr}")
 
                 # Check if port is already in use
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
