@@ -109,7 +109,12 @@ class Manager:
                     self.log.debug("Ignoring stop command - already stopping")
                 continue
 
-            reply: str = self._handle_cmd(cmd)
+            try:
+                reply: str = self._handle_cmd(cmd)
+            except Exception as e:
+                self.log.error(f"Unexpected error handling command '{cmd}': {e}")
+                reply = "error: internal error processing command"
+
             try:
                 self._rep_sock.send(reply.encode())
                 if hasattr(self, 'log'):
