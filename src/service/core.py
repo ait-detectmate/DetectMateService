@@ -131,42 +131,8 @@ class Service(Manager, Engine, ABC):
             self.log.debug(f"Parameters: {params}")
             self.log.debug(f"Parameter file: {self.settings.parameter_file}")
 
-        # Convert Path objects to strings for JSON serialization
-        settings_dict = self.settings.model_dump()
-        for key, value in settings_dict.items():
-            if isinstance(value, Path):
-                settings_dict[key] = str(value)
-
-        # Handle parameters
-        if self.param_manager:
-            params = self.param_manager.get()
-            if params is not None:
-                if hasattr(params, 'model_dump'):
-                    params_dict = params.model_dump()
-                    # Convert any Path objects in parameters to strings
-                    for key, value in params_dict.items():
-                        if isinstance(value, Path):
-                            params_dict[key] = str(value)
-                else:
-                    params_dict = params
-            else:
-                params_dict = {}
-                self.log.warning("ParameterManager.get() returned None")
-        else:
-            params_dict = {}
-            self.log.warning("No ParameterManager initialized")
-
-        status_info = {
-            "status": {
-                "component_type": self.component_type,
-                "component_id": self.component_id,
-                "running": running,
-                "paused": is_paused
-            },
-            "settings": settings_dict,
-            "parameters": params_dict
-        }
-
+        # Create status report
+        status_info = self._create_status_report(running, is_paused)
         return json.dumps(status_info, indent=2)
 
     @manager_command()
@@ -223,6 +189,44 @@ class Service(Manager, Engine, ABC):
             fh.setFormatter(fmt)
             logger.addHandler(fh)
         return logger
+
+    def _create_status_report(self, running: bool, is_paused: bool) -> dict:
+        """Create a status report dictionary with settings and parameters."""
+        # Convert Path objects in settings to strings for JSON serialization
+        settings_dict = self.settings.model_dump()
+        for key, value in settings_dict.items():
+            if isinstance(value, Path):
+                settings_dict[key] = str(value)
+
+        # Handle parameters
+        if self.param_manager:
+            params = self.param_manager.get()
+            if params is not None:
+                if hasattr(params, 'model_dump'):
+                    params_dict = params.model_dump()
+                    # Convert any Path objects in parameters to strings
+                    for key, value in params_dict.items():
+                        if isinstance(value, Path):
+                            params_dict[key] = str(value)
+                else:
+                    params_dict = params
+            else:
+                params_dict = {}
+                self.log.warning("ParameterManager.get() returned None")
+        else:
+            params_dict = {}
+            self.log.warning("No ParameterManager initialized")
+
+        return {
+            "status": {
+                "component_type": self.component_type,
+                "component_id": self.component_id,
+                "running": running,
+                "paused": is_paused
+            },
+            "settings": settings_dict,
+            "parameters": params_dict
+        }
 
     # context-manager sugar
     def __enter__(self) -> "Service":
