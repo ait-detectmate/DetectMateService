@@ -87,9 +87,13 @@ class Service(Manager, Engine, ABC):
         """
         if not getattr(self, '_running', False):
             self.log.info(self.start())  # start engine loop
+        else:
+            self.log.debug("Engine already running")
         self._stop_event.wait()
         if getattr(self, '_running', False):  # don't call stop() again if it was already called by a command
             self.log.info(self.stop())  # ensure engine thread is joined
+        else:
+            self.log.debug("Engine already stopped")
 
     @manager_command()
     def start(self) -> str:
