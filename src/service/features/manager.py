@@ -171,4 +171,5 @@ class Manager:
             pass
 
         if self._thread.is_alive():
-            self._thread.join(timeout=1.0)
+            join_timeout = getattr(self.settings, 'manager_thread_join_timeout', 1.0)
+            self._thread.join(timeout=join_timeout)

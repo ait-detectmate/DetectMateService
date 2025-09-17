@@ -29,6 +29,7 @@ class ServiceSettings(BaseSettings):
     # Manager (command) channel (REQ/REP)
     manager_addr: str | None = "ipc:///tmp/detectmate.cmd.ipc"
     manager_recv_timeout: int = 100  # milliseconds
+    manager_thread_join_timeout: float = 1.0  # seconds
 
     # Engine channel (PAIR0)
     engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
