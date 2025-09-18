@@ -68,9 +68,6 @@ class Manager:
         )
         self._thread.start()
 
-        # custom command handlers (explicit registrations)
-        self._handlers: dict[str, Callable[[str], str]] = {}
-
         # discover @manager_command-decorated methods once
         self._decorated_handlers: dict[str, Callable[..., str]] = {}
         self._discover_decorated_commands()

@@ -52,7 +52,8 @@ class Service(Manager, Engine, ABC):
             self.log.debug(f"Initializing ParameterManager with file: {settings.parameter_file}")
             self.param_manager = ParameterManager(
                 str(settings.parameter_file),
-                self.get_parameters_schema()
+                self.get_parameters_schema(),
+                logger=self.log
             )
             # Check if parameters were loaded successfully
             params = self.param_manager.get()
