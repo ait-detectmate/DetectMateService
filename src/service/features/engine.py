@@ -13,6 +13,11 @@ from service.features.engine_socket import (
 from library.processor import BaseProcessor, ProcessorException
 
 
+class EngineException(Exception):
+    """Custom exception for engine-related errors."""
+    pass
+
+
 class DefaultProcessor(BaseProcessor):
     """A default processor that does nothing.
 
@@ -108,7 +113,7 @@ class Engine(ABC):
         Returns:
             None on success
         Raises:
-            RuntimeError: If stopping fails for any reason
+            EngineException: If stopping fails for any reason
         """
         if not self._running:
             if self.log:
@@ -120,14 +125,13 @@ class Engine(ABC):
         try:
             self._pair_sock.close()
         except pynng.NNGException as e:
-            raise RuntimeError(f"Failed to close engine socket: {e}") from e
-            # TODO: wrap it in custom exception (create EngineException) and catch in the caller
+            raise EngineException(f"Failed to close engine socket: {e}") from e
         try:
             self._thread.join(timeout=1.0)
             if self._thread.is_alive():
-                raise RuntimeError("Engine thread failed to stop within timeout")
+                raise EngineException("Engine thread failed to stop within timeout")
             elif self.log:
                 self.log.debug("Engine stopped successfully")
         except Exception as e:
-            raise RuntimeError(f"Failed to join engine thread: {e}") from e
+            raise EngineException(f"Failed to join engine thread: {e}") from e
         return None

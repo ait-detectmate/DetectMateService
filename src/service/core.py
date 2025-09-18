@@ -12,7 +12,7 @@ from service.features.parameter_manager import ParameterManager
 from service.features.parameters import BaseParameters
 from service.settings import ServiceSettings
 from service.features.manager import Manager, manager_command
-from service.features.engine import Engine
+from service.features.engine import Engine, EngineException
 
 from library.processor import BaseProcessor
 
@@ -110,7 +110,7 @@ class Service(Manager, Engine, ABC):
             Engine.stop(self)
             self.log.info("Engine stopped successfully")
             return "engine stopped"
-        except RuntimeError as e:
+        except EngineException as e:
             self.log.error("Failed to stop engine: %s", e)
             return f"error: failed to stop engine - {e}"
 
