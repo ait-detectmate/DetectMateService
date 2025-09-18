@@ -37,10 +37,19 @@ def setup_logging(level=logging.INFO):
     root_logger.addHandler(stderr_handler)
 
 
-def start_service(settings_path: Path, params_path: Optional[Path] = None):
+def start_service(settings_path: Optional[Path] = None, params_path: Optional[Path] = None):
     """Start the service with given settings and parameters."""
     try:
-        settings = ServiceSettings.from_yaml(settings_path)
+        # if no settings path provided, use default settings
+        if settings_path is None:
+            settings = ServiceSettings()
+        # if settings path provided but doesn't exist, raise error
+        elif not settings_path.exists():
+            logger.error(f"Settings file not found: {settings_path}")
+            sys.exit(1)
+        # otherwise, load settings from file
+        else:
+            settings = ServiceSettings.from_yaml(settings_path)
     except Exception as e:
         logger.error(f"Error loading settings: {e}")
         sys.exit(1)
@@ -164,7 +173,7 @@ def main():
 
     # Start command
     start_parser = subparsers.add_parser("start", help="Start the service")
-    start_parser.add_argument("--settings", required=True, type=Path, help="Service settings YAML file")
+    start_parser.add_argument("--settings", required=False, type=Path, help="Service settings YAML file")
     start_parser.add_argument("--params", type=Path, help="Service parameters YAML file")
 
     # Stop command
