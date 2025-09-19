@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable, cast
 import logging
-import pynng
+import pynng  # type: ignore[import-untyped]
 import errno
 from urllib.parse import urlparse
 
@@ -45,7 +45,7 @@ class NngPairSocketFactory:
 
         try:
             sock.listen(addr)
-            return sock
+            return cast(EngineSocket, sock)  # use cast to tell mypy this implements EngineSocket
         except pynng.NNGException as e:
             logger.error("Failed to bind to address %s: %s", addr, e)
             sock.close()

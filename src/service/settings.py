@@ -50,7 +50,7 @@ class ServiceSettings(BaseSettings):
         return uuid5(NAMESPACE_URL, input_string).hex
 
     @model_validator(mode="after")
-    def _ensure_component_id(self):
+    def _ensure_component_id(self) -> "ServiceSettings":
         # If user provided explicitly, keep it.
         if self.component_id:
             return self

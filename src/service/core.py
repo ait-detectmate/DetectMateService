@@ -4,9 +4,9 @@ import sys
 from abc import ABC
 from pathlib import Path
 import threading
-import typing
 import json
-from typing import Optional, Type
+from typing import Optional, Type, Literal, Dict, Any
+from types import TracebackType
 
 from service.features.config_manager import ConfigManager
 from service.features.config import BaseConfig
@@ -19,11 +19,11 @@ from library.processor import BaseProcessor
 
 class ServiceProcessorAdapter(BaseProcessor):
     """Adapter class to use a Service's process method as a BaseProcessor."""
-    def __init__(self, service):
+    def __init__(self, service: Service) -> None:
         self.service = service
 
     def __call__(self, raw_message: bytes) -> bytes | None:
-        return self.service.process(raw_message)
+        return self.service.processor(raw_message)
 
 
 class Service(Manager, Engine, ABC):
@@ -203,7 +203,7 @@ class Service(Manager, Engine, ABC):
             logger.addHandler(fh)
         return logger
 
-    def _create_status_report(self, running: bool) -> dict:
+    def _create_status_report(self, running: bool) -> Dict[str, Any]:
         """Create a status report dictionary with settings and configs."""
         # Convert Path objects in settings to strings for JSON serialization
         settings_dict = self.settings.model_dump()
@@ -245,7 +245,12 @@ class Service(Manager, Engine, ABC):
         self.setup_io()
         return self
 
-    def __exit__(self, _exc_type, _exc, _tb) -> typing.Literal[False]:
+    def __exit__(
+            self,
+            _exc_type: type[BaseException] | None,
+            _exc_val: BaseException | None,
+            _exc_tb: TracebackType | None
+    ) -> Literal[False]:
         if not self._stop_event.is_set():  # only stop if not already stopped
             self.stop()  # shut down gracefully
         self._close_manager()  # close REP socket & thread

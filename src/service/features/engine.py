@@ -1,5 +1,5 @@
 import threading
-import pynng
+import pynng  # type: ignore[import-untyped]
 import logging
 from abc import ABC
 from typing import Optional
@@ -107,7 +107,7 @@ class Engine(ABC):
                 self.log.exception("Engine error during send: %s", e)
                 continue
 
-    def stop(self) -> None:
+    def stop(self) -> None | str:
         """Stop the engine loop and clean up resources.
 
         Returns:

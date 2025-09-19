@@ -12,24 +12,27 @@ ping   -> pong
 <else> -> "unknown command"
 """
 from __future__ import annotations
-from typing import Optional, Callable
+from typing import Optional, Callable, TypeVar
 import threading
-import pynng
+import pynng  # type: ignore[import-untyped]
 import time
 import logging
 from service.settings import ServiceSettings
 from service.features.manager_socket import ManagerSocketFactory, NngRepSocketFactory
 
 
+F = TypeVar('F', bound=Callable[..., str])
+
+
 # Decorator to mark callable commands on a component
-def manager_command(name: str | None = None):
+def manager_command(name: str | None = None) -> Callable[[F], F]:
     """Decorator to tag methods as manager-exposed commands.
 
     Usage:
         @manager_command()          -> command name is the method name (lowercase)
         @manager_command("status")  -> explicit command name
     """
-    def _wrap(fn):
+    def _wrap(fn: F) -> F:
         setattr(fn, "_manager_command", True)
         setattr(fn, "_manager_command_name", (name or fn.__name__).lower())
         return fn

@@ -1,10 +1,10 @@
 from __future__ import annotations
 from pathlib import Path
 import errno
-from typing import Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable, cast
 from urllib.parse import urlparse
 
-import pynng
+import pynng  # type: ignore[import-untyped]
 import logging
 
 
@@ -50,7 +50,7 @@ class NngRepSocketFactory:
         try:
             sock.listen(addr)
             logger.info("Manager listening on %s", addr)
-            return sock
+            return cast(ManagerSocket, sock)  # use cast to tell mypy this implements ManagerSocket
         except pynng.NNGException as exc:
             logger.error("Failed to bind to address %s: %s", addr, exc)
             sock.close()

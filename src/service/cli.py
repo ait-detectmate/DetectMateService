@@ -4,7 +4,7 @@ import logging
 import sys
 from typing import Optional
 from pathlib import Path
-import pynng
+import pynng  # type: ignore[import-untyped]
 import yaml
 
 from .settings import ServiceSettings
@@ -14,7 +14,7 @@ from .core import Service
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(level=logging.INFO):
+def setup_logging(level: int = logging.INFO) -> None:
     """Set up logging with errors to stderr and others to stdout."""
     # create separate handlers for stdout and stderr
     stdout_handler = logging.StreamHandler(sys.stdout)
@@ -37,7 +37,7 @@ def setup_logging(level=logging.INFO):
     root_logger.addHandler(stderr_handler)
 
 
-def start_service(settings_path: Optional[Path] = None, config_path: Optional[Path] = None):
+def start_service(settings_path: Optional[Path] = None, config_path: Optional[Path] = None) -> None:
     """Start the service with given settings and parameters."""
 
     # Load settings
@@ -64,7 +64,7 @@ def start_service(settings_path: Optional[Path] = None, config_path: Optional[Pa
                 logger.error(f"Config file not found: {config_path}")
                 sys.exit(1)
             # if parameters file exists, set it
-            settings.parameter_file = config_path
+            settings.config_file = config_path
     except Exception as e:
         logger.error(f"Error loading config file: {e}")
         sys.exit(1)
@@ -81,7 +81,7 @@ def start_service(settings_path: Optional[Path] = None, config_path: Optional[Pa
         raise
 
 
-def stop_service(settings_path: Path):
+def stop_service(settings_path: Path) -> None:
     """Stop a running service."""
     try:
         settings = ServiceSettings.from_yaml(settings_path)
@@ -102,7 +102,7 @@ def stop_service(settings_path: Path):
         sys.exit(1)
 
 
-def reconfigure_service(settings_path: Path, config_path: Path, persist: bool):
+def reconfigure_service(settings_path: Path, config_path: Path, persist: bool) -> None:
     """Reconfigure a running service with new parameters."""
     try:
         settings = ServiceSettings.from_yaml(settings_path)
@@ -152,7 +152,7 @@ def reconfigure_service(settings_path: Path, config_path: Path, persist: bool):
         sys.exit(1)
 
 
-def get_status(settings_path: Path):
+def get_status(settings_path: Path) -> None:
     """Get the current status of the service."""
     try:
         settings = ServiceSettings.from_yaml(settings_path)
@@ -180,7 +180,7 @@ def get_status(settings_path: Path):
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     setup_logging()
     parser = argparse.ArgumentParser(description="DetectMate Service CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
