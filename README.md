@@ -50,7 +50,7 @@ with service:
 #### CLI
 
 You can also run the service using the command line interface (CLI).
-It takes 2 configuration files as arguments:
+It takes configuration files as arguments:
 
 Example configuration files can be found in the `tests/config` directory.
 
@@ -63,7 +63,11 @@ detectmate start --settings tests/config/service_config.yaml --params tests/conf
 Reconfigure the service:
 
 ```bash
+# Update parameters in memory only
 detectmate reconfigure --settings tests/config/service_config.yaml --params tests/config/new_params.yaml
+
+# Update parameters and persist to file. This overwrites the originally provided params file.
+detectmate reconfigure --settings tests/config/service_config.yaml --params tests/config/new_params.yaml --persist
 ```
 
 Get the service status:

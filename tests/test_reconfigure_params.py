@@ -2,7 +2,11 @@ import pytest
 import tempfile
 import yaml
 import json
+import os
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+from service.cli import reconfigure_service
 from service.core import Service
 from service.settings import ServiceSettings
 from service.features.parameters import BaseParameters
@@ -30,7 +34,10 @@ def temp_config_file():
             'engine_autostart': False
         }
         yaml.dump(config_data, f)
-        yield f.name
+    yield f.name
+    # Clean up
+    if os.path.exists(f.name):
+        os.unlink(f.name)
 
 
 @pytest.fixture
@@ -42,7 +49,42 @@ def temp_params_file():
             'enabled': False
         }
         yaml.dump(params_data, f)
-        yield f.name
+    yield f.name
+    # Clean up
+    if os.path.exists(f.name):
+        os.unlink(f.name)
+
+
+@pytest.fixture
+def test_service_mocked(temp_params_file):
+    """Create a mocked test service instance for unit testing."""
+    from service.settings import ServiceSettings
+
+    # Create settings with the temp parameters file
+    settings = ServiceSettings(
+        manager_addr="inproc://test_manager",
+        engine_addr="inproc://test_engine",
+        parameter_file=Path(temp_params_file),
+        engine_autostart=False
+    )
+
+    # Mock the Manager and Engine initialization to avoid socket issues
+    with patch.object(Service, '__init__', lambda self, settings: None):
+        service = MockService(settings)
+        service.settings = settings
+        service.component_id = "test_id"
+        service._stop_event = Mock()
+        service.log = Mock()
+
+        # Initialize parameter manager
+        from service.features.parameter_manager import ParameterManager
+        service.param_manager = ParameterManager(
+            temp_params_file,
+            MockParameters,
+            service.log
+        )
+
+        yield service
 
 
 def test_reconfigure_command_valid(temp_config_file, temp_params_file):
@@ -130,3 +172,173 @@ def test_reconfigure_command_no_payload(temp_config_file, temp_params_file):
     with MockService(settings=settings) as service:
         result = service._handle_cmd('reconfigure')
         assert "no payload" in result
+
+
+# Tests with the persist functionality
+def test_reconfigure_without_persist(test_service_mocked, temp_params_file):
+    """Test reconfigure without persist flag - should update in memory but not save to file."""
+    # Read original file content
+    with open(temp_params_file, 'r') as f:
+        original_content = yaml.safe_load(f)
+
+    # New parameters to test
+    new_params = {
+        'threshold': 0.8,
+        'enabled': True
+    }
+
+    # Call reconfigure without persist
+    cmd = f'reconfigure {json.dumps(new_params)}'
+    result = test_service_mocked.reconfigure(cmd)
+
+    # Should succeed
+    assert result == "reconfigure: ok"
+
+    # Parameters should be updated in memory
+    current_params = test_service_mocked.param_manager.get()
+    assert current_params.threshold == 0.8
+    assert current_params.enabled is True
+
+    # File should not be changed (no persist)
+    with open(temp_params_file, 'r') as f:
+        file_content = yaml.safe_load(f)
+    assert file_content == original_content
+
+
+def test_reconfigure_with_persist(test_service_mocked, temp_params_file):
+    """Test reconfigure with persist flag - should update both in memory and in file."""
+    # New parameters to test
+    new_params = {
+        'threshold': 0.8,
+        'enabled': True
+    }
+
+    # Call reconfigure with persist
+    cmd = f'reconfigure persist {json.dumps(new_params)}'
+    result = test_service_mocked.reconfigure(cmd)
+
+    # Should succeed
+    assert result == "reconfigure: ok"
+
+    # Parameters should be updated in memory
+    current_params = test_service_mocked.param_manager.get()
+    assert current_params.threshold == 0.8
+    assert current_params.enabled is True
+
+    # File should be updated (with persist)
+    with open(temp_params_file, 'r') as f:
+        file_content = yaml.safe_load(f)
+    assert file_content == new_params
+
+
+def test_cli_reconfigure_with_persist(temp_params_file):
+    """Test CLI reconfigure command with persist flag."""
+    # Create a temporary settings file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        yaml.dump({
+            'manager_addr': 'inproc://test_manager',
+            'parameter_file': temp_params_file
+        }, f)
+        settings_path = f.name
+
+    # Create a temporary new parameters file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        new_params = {
+            'threshold': 0.9,
+            'enabled': False
+        }
+        yaml.dump(new_params, f)
+        new_params_path = f.name
+
+    try:
+        # Mock the pynng request to avoid actual socket communication
+        with patch('pynng.Req0') as mock_req:
+            mock_socket = Mock()
+            mock_req.return_value.__enter__.return_value = mock_socket
+            mock_socket.recv.return_value = b"reconfigure: ok"
+
+            # Call reconfigure with persist
+            reconfigure_service(Path(settings_path), Path(new_params_path), persist=True)
+
+            # Verify the request was sent with "persist" flag
+            call_args = mock_socket.send.call_args[0][0]
+            assert b"persist" in call_args
+            assert b'"threshold": 0.9' in call_args
+
+    finally:
+        # Clean up
+        for path in [settings_path, new_params_path]:
+            if os.path.exists(path):
+                os.unlink(path)
+
+
+def test_cli_reconfigure_without_persist(temp_params_file):
+    """Test CLI reconfigure command without persist flag."""
+    # Create a temporary settings file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        yaml.dump({
+            'manager_addr': 'inproc://test_manager',
+            'parameter_file': temp_params_file
+        }, f)
+        settings_path = f.name
+
+    # Create a temporary new parameters file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        new_params = {
+            'threshold': 0.9,
+            'enabled': False
+        }
+        yaml.dump(new_params, f)
+        new_params_path = f.name
+
+    try:
+        # Mock the pynng request to avoid actual socket communication
+        with patch('pynng.Req0') as mock_req:
+            mock_socket = Mock()
+            mock_req.return_value.__enter__.return_value = mock_socket
+            mock_socket.recv.return_value = b"reconfigure: ok"
+
+            # Call reconfigure without persist
+            reconfigure_service(Path(settings_path), Path(new_params_path), persist=False)
+
+            # Verify the request was sent without "persist" flag
+            call_args = mock_socket.send.call_args[0][0]
+            assert b"persist" not in call_args
+            assert b'"threshold": 0.9' in call_args
+
+    finally:
+        # Clean up
+        for path in [settings_path, new_params_path]:
+            if os.path.exists(path):
+                os.unlink(path)
+
+
+# Integration test for persist functionality
+def test_reconfigure_command_with_persist_integration(temp_config_file, temp_params_file):
+    """Integration test for reconfigure command with persist flag."""
+    # Update the config file to point to the params file
+    with open(temp_config_file, 'r') as f:
+        config_data = yaml.safe_load(f)
+    config_data['parameter_file'] = temp_params_file
+    with open(temp_config_file, 'w') as f:
+        yaml.dump(config_data, f)
+
+    settings = ServiceSettings.from_yaml(temp_config_file)
+
+    # Use context manager to ensure proper cleanup
+    with MockService(settings=settings) as service:
+        # Test reconfigure with persist
+        new_params = {'threshold': 0.8, 'enabled': True}
+        cmd = f'reconfigure persist {json.dumps(new_params)}'
+        result = service._handle_cmd(cmd)
+
+        assert result == "reconfigure: ok"
+
+        # Parameters should be updated in memory
+        assert service.param_manager.get().threshold == 0.8
+        assert service.param_manager.get().enabled is True
+
+        # File should be updated (with persist)
+        with open(temp_params_file, 'r') as f:
+            file_content = yaml.safe_load(f)
+        assert file_content == new_params
