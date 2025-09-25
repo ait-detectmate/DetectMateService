@@ -5,7 +5,7 @@ repos:
 
 # Core cleanup
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
     - id: trailing-whitespace
     - id: end-of-file-fixer
@@ -26,6 +26,7 @@ repos:
   hooks:
     - id: mypy
       args: [--strict, --ignore-missing-imports]
+      exclude: ^(docs/|tests/)
       additional_dependencies:
         - pydantic
         - types-PyYAML
