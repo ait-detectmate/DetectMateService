@@ -23,8 +23,5 @@ dev = [
     "pytest-cov>=6.2.1",
 ]
 
-[mypy]
-ignore_missing_imports = true
-
 [project.scripts]
 detectmate = "service.cli:main"

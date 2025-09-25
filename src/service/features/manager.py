@@ -12,7 +12,7 @@ ping   -> pong
 <else> -> "unknown command"
 """
 from __future__ import annotations
-from typing import Optional, Callable, TypeVar
+from typing import Optional, Callable, TypeVar, Any
 import threading
 import pynng
 import time
@@ -44,11 +44,11 @@ class Manager:
 
     def __init__(
             self,
-            *_args,
+            *_args: Any,
             settings: Optional[ServiceSettings] = None,
             socket_factory: Optional[ManagerSocketFactory] = None,
             logger: Optional[logging.Logger] = None,
-            **_kwargs
+            **_kwargs: Any
     ):
         self._stop_event = threading.Event()
         self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
