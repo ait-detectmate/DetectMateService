@@ -30,7 +30,7 @@ jobs:
       run: uv pip install -e ".[dev]"
 
     - name: Run pre-commit
-      run: uv run pre-commit run --from-ref origin/HEAD --to-ref HEAD
+      run: uv run pre-commit run -a
 
     - name: Lint with flake8
       run: |
