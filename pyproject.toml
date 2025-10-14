@@ -18,7 +18,7 @@ dependencies = [
 # add dependencies in this section with: uv add --optional dev <package>
 # install with all the dev dependencies:  uv pip install -e .[dev]
 dev = [
-    "pre-commit>=4.2.0",
+    "prek>=0.2.8",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
 ]

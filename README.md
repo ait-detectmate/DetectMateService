@@ -4,11 +4,11 @@ This project demonstrates a basic `Service` class designed to be inherited by ot
 
 ### Developer setup:
 
-Set up the dev environment and install pre-commit hooks:
+Set up the dev environment and install pre-commit hooks (using [prek](https://github.com/j178/prek)):
 
 ```bash
 uv pip install -e .[dev]
-pre-commit install
+prek install
 ```
 
 Run the tests:
