@@ -46,8 +46,6 @@ class LibraryComponentProcessor(BaseProcessor):
 
 class Service(Manager, Engine, ABC):
     """Abstract base for every DetectMate service/component."""
-    # hard-code component type as class variable, overwrite in subclasses
-    component_type: str = "core"
 
     def __init__(
             self,
@@ -58,9 +56,19 @@ class Service(Manager, Engine, ABC):
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self._stop_event: threading.Event = threading.Event()
+
+        # set component_type
+        if (hasattr(settings, 'component_type') and
+                settings.component_type != "core" and
+                not settings.component_type.startswith("core")):
+            self.component_type = settings.component_type  # this is a library component, use its type
+        else:
+            self.component_type = "core"  # default to core
+
+        # Now build the logger (which uses component_type)
         self.log: logging.Logger = self._build_logger()
 
-        # Load library component if component_type is specified
+        # Load library component if component_type is specified and not core
         self.library_component: Optional[CoreComponent] = None
         if (hasattr(settings, 'component_type') and
                 settings.component_type != "core" and
