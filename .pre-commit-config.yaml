@@ -5,7 +5,7 @@ repos:
 
 # Core cleanup
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
     - id: trailing-whitespace
     - id: end-of-file-fixer
@@ -22,12 +22,15 @@ repos:
 
 # Type checking
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.16.1
+  rev: v1.18.2
   hooks:
     - id: mypy
+      args: [--strict, --ignore-missing-imports]
+      exclude: ^(docs/|tests/)
       additional_dependencies:
         - pydantic
         - types-PyYAML
+        - pydantic-settings
 
 # Code formatting
 - repo: https://github.com/hhatto/autopep8
@@ -41,6 +44,7 @@ repos:
   rev: 7.3.0
   hooks:
     - id: flake8
+      args: [--max-line-length=110]
 
 # Docstring formatting
 - repo: https://github.com/PyCQA/docformatter
@@ -53,12 +57,14 @@ repos:
   rev: 1.8.6
   hooks:
     - id: bandit
+      exclude: ^tests/
 
 # Unused code detection
 - repo: https://github.com/jendrikseipp/vulture
   rev: v2.14
   hooks:
     - id: vulture
+      args: [--min-confidence=70, src/]
 
 # Log and syntax pattern checks
 - repo: https://github.com/pre-commit/pygrep-hooks

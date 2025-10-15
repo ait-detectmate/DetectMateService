@@ -1,0 +1,9 @@
+component_type: "my_detector"
+component_name: "detector-1"
+manager_addr: "ipc:///tmp/detector_cmd.ipc"
+engine_addr: "ipc:///tmp/detector_engine.ipc"
+log_level: "DEBUG"
+log_dir: "./logs"
+log_to_console: true
+log_to_file: true
+engine_autostart: true

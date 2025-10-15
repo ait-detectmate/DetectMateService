@@ -1,20 +1,27 @@
 [project]
-name = "corecomponent-prototype"
+name = "DetectMateService"
 version = "0.1.0"
-description = "Prototype for the core component of DetectMate"
+description = "A modular framework for building log processing and anomaly detection services."
 readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = [
+    "pathlib>=1.0.1",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
     "pynng>=0.8.1",
     "pyyaml>=6.0.2",
+    "types-pyyaml>=6.0.12.20250915",
 ]
 
 [project.optional-dependencies]
-# install with:  uv pip install -e .[dev]
+# add dependencies in this section with: uv add --optional dev <package>
+# install with all the dev dependencies:  uv pip install -e .[dev]
 dev = [
-    "pre-commit>=4.2.0",
+    "prek>=0.2.8",
     "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
 ]
+
+[project.scripts]
+detectmate = "service.cli:main"
