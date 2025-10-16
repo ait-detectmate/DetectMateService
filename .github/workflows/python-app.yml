@@ -19,6 +19,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Configure git to use GITHUB_TOKEN for private repos
+      run: git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
     - name: Set up uv (Python 3.10)
       uses: astral-sh/setup-uv@v6.6.0
       with:
@@ -26,10 +30,9 @@ jobs:
         activate-environment: true
         enable-cache: true
 
-    - name: Configure git to use GITHUB_TOKEN for private dependencies
-      run: git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
     - name: Install project deps
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: uv pip install -e ".[dev]"
 
     - name: Run pre-commit with prek
