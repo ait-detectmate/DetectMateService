@@ -21,7 +21,7 @@ dev = [
     "prek>=0.2.8",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
-    "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git@dev_ipmach"
+    "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git@lib_integration_v2"
     # TODO: change branch
     # TODO: should this stay a dev dependency? or move to main dependencies?
 ]

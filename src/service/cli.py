@@ -2,15 +2,16 @@ import argparse
 import json
 import logging
 import sys
-from typing import Optional, Type
+from typing import Optional
 from pathlib import Path
 import pynng
 import yaml
 
 from .settings import ServiceSettings
-from .features.config import BaseConfig
+# from .features.config import BaseConfig
 from .core import Service
 
+from detectmatelibrary.readers.log_file import LogFileConfig
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +19,10 @@ logger = logging.getLogger(__name__)
 class CLIService(Service):
     """Concrete implementation of Service for CLI operations."""
 
-    def process(self, raw_message: bytes) -> bytes | None:
-        """Basic implementation that just echoes the message."""
-        return raw_message
-
-    def get_config_schema(self) -> Type[BaseConfig]:
+    def get_config_schema(self) -> LogFileConfig:
         """Return the base config schema for CLI service."""
-        return BaseConfig
+        # TODO: make this dynamic based on actual service !!!
+        return LogFileConfig
 
 
 def setup_logging(level: int = logging.INFO) -> None:
