@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   build:
@@ -27,16 +28,19 @@ jobs:
         activate-environment: true
         enable-cache: true
 
-    - name: Configure git to use GITHUB_TOKEN for private repos
+    - name: Configure git credentials
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: git config --global url."https://git:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+        git config --global credential.helper store
 
     - name: Install project deps
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GIT_TERMINAL_PROMPT: 0
-      run: uv pip install -e ".[dev]"
+      run: uv pip install -e ".[dev]" --verbose
 
     - name: Run pre-commit with prek
       run: uv run prek run -a
