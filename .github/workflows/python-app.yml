@@ -30,16 +30,10 @@ jobs:
 
     - name: Configure git credentials
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
-        git config --global credential.helper store
+        MY_TOKEN: ${{ secrets.ANNA_GITHUB_TOKEN }}
+      run: git config --global url."https://${ANNA_GITHUB_TOKEN}:x-oauth-basic@github.com".insteadOf "https://github.com"
 
     - name: Install project deps
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: uv pip install -e ".[dev]" --verbose
 
     - name: Run pre-commit with prek
