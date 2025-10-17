@@ -21,10 +21,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up uv (Python 3.10)
+    - name: Set up uv (Python 3.12)
       uses: astral-sh/setup-uv@v6.6.0
       with:
-        python-version: "3.10"
+        python-version: "3.12"
         activate-environment: true
         enable-cache: true
 
@@ -36,7 +36,6 @@ jobs:
         git config --global url."https://${ANNA_GITHUB_TOKEN}:x-oauth-basic@github.com".insteadOf "https://github.com"
 
         # Set up uv
-        uv python install 3.12
         uv venv
         source .venv/bin/activate
         uv pip install -e ".[dev]"
