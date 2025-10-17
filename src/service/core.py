@@ -58,7 +58,9 @@ class Service(Manager, Engine, ABC):
         self._stop_event: threading.Event = threading.Event()
 
         # set component_type
-        if (hasattr(settings, 'component_type') and
+        if hasattr(self, 'component_type'):  # prioritize class attribute over settings
+            pass  # already set by the child class
+        elif (hasattr(settings, 'component_type') and
                 settings.component_type != "core" and
                 not settings.component_type.startswith("core")):
             self.component_type = settings.component_type  # this is a library component, use its type
