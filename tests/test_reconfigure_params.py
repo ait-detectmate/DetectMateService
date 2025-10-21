@@ -9,12 +9,14 @@ from unittest.mock import Mock, patch
 from service.cli import reconfigure_service
 from service.core import Service
 from service.settings import ServiceSettings
-from service.features.config import BaseConfig
 from pydantic import Field
+
+from detectmatelibrary.common.core import CoreConfig
+# CoreConfig from the library has start_id: int = 10 as default
 
 
 # Test configs schema
-class MockConfig(BaseConfig):
+class MockConfig(CoreConfig):
     threshold: float = Field(default=0.5, ge=0.0, le=1.0)
     enabled: bool = Field(default=True)
 
@@ -213,7 +215,8 @@ def test_reconfigure_with_persist(test_service_mocked, temp_params_file):
     # New configs to test
     new_configs = {
         'threshold': 0.8,
-        'enabled': True
+        'enabled': True,
+        'start_id': 5
     }
 
     # Call reconfigure with persist
@@ -227,6 +230,7 @@ def test_reconfigure_with_persist(test_service_mocked, temp_params_file):
     current_params = test_service_mocked.config_manager.get()
     assert current_params.threshold == 0.8
     assert current_params.enabled is True
+    assert current_params.start_id == 5
 
     # File should be updated (with persist)
     with open(temp_params_file, 'r') as f:
@@ -331,7 +335,7 @@ def test_reconfigure_command_with_persist_integration(temp_config_file, temp_par
     # Use context manager to ensure proper cleanup
     with MockService(settings=settings) as service:
         # Test reconfigure with persist
-        new_configs = {'threshold': 0.8, 'enabled': True}
+        new_configs = {'threshold': 0.8, 'enabled': True, 'start_id': 5}
         cmd = f'reconfigure persist {json.dumps(new_configs)}'
         result = service._handle_cmd(cmd)
 
@@ -340,6 +344,7 @@ def test_reconfigure_command_with_persist_integration(temp_config_file, temp_par
         # configs should be updated in memory
         assert service.config_manager.get().threshold == 0.8
         assert service.config_manager.get().enabled is True
+        assert service.config_manager.get().start_id == 5
 
         # File should be updated (with persist)
         with open(temp_params_file, 'r') as f:
