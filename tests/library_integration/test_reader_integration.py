@@ -44,7 +44,17 @@ def running_service(tmp_path: Path, test_log_file: Path) -> Generator[dict, None
         "engine_autostart": True,
     }
 
-    config = {"file": str(test_log_file)}
+    config = {
+        "readers": {
+            "File_reader": {
+                "method_type": "log_file_reader",
+                "auto_config": False,
+                "params": {
+                    "file": str(test_log_file)
+                }
+            }
+        }
+    }
 
     # Write YAML files
     settings_file = tmp_path / "reader_settings.yaml"

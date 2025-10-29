@@ -50,7 +50,17 @@ def running_pipeline_services(tmp_path: Path, test_log_file: Path) -> Generator[
         "log_to_file": False,
         "engine_autostart": True,
     }
-    reader_config = {"file": str(test_log_file)}
+    reader_config = {
+        "readers": {
+            "File_reader": {
+                "method_type": "log_file_reader",
+                "auto_config": False,
+                "params": {
+                    "file": str(test_log_file)
+                }
+            }
+        }
+    }
 
     # Parser settings
     parser_settings = {

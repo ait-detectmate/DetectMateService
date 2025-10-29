@@ -56,7 +56,17 @@ def running_pipeline_services(
         "log_to_file": False,
         "engine_autostart": True,
     }
-    reader_config = {"file": str(test_log_file)}
+    reader_config = {
+        "readers": {
+            "File_reader": {
+                "method_type": "log_file_reader",
+                "auto_config": False,
+                "params": {
+                    "file": str(test_log_file)
+                }
+            }
+        }
+    }
 
     # Parser settings
     parser_settings = {
@@ -71,12 +81,27 @@ def running_pipeline_services(
         "log_to_file": False,
         "engine_autostart": True,
     }
-    parser_config = {"path_templates": str(test_templates_file)}
+    parser_config = {
+        "parsers": {
+            "MatcherParser": {
+                "method_type": "matcher_parser",
+                "auto_config": False,
+                "pattern": r"type=(?P<type>[^ ]+) msg=audit\((?P<timestamp>[^:]+):\d+\): (?P<content>.*)",
+                "time_format": None,
+                "params": {
+                    "remove_spaces": True,
+                    "remove_punctuation": True,
+                    "lowercase": True,
+                    "path_templates": str(test_templates_file)
+                }
+            }
+        }
+    }
 
     # Detector settings
     detector_settings = {
-        "component_type": "detectors.NewValueDetector.NewValueDetector",
-        "component_config_class": "detectors.NewValueDetector.NewValueDetectorConfig",
+        "component_type": "detectors.new_value_detector.NewValueDetector",
+        "component_config_class": "detectors.new_value_detector.NewValueDetectorConfig",
         "component_name": "test-nvd",
         "manager_addr": f"ipc:///tmp/test_pipeline_detector_cmd_{timestamp}.ipc",
         "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{timestamp}.ipc",
