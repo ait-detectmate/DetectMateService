@@ -5,4 +5,4 @@ readers:
         logSource: AIT_Audit
         hostname: testbed
         params:
-            file: ../data/audit.log
+            file: /app/demo/data/audit.log

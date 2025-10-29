@@ -8,4 +8,4 @@ parsers:
             remove_spaces: True
             remove_punctuation: True
             lowercase: True
-            path_templates: ../data/test_templates.txt
+            path_templates: /app/demo/data/test_templates.txt
