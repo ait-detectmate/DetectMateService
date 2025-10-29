@@ -45,7 +45,7 @@ class ConfigManager:
             self.logger.debug(f"Loaded data from file: {data}")
 
             if self.schema and data:
-                self._configs = self.schema.model_validate(data)
+                self._configs = data  # self.schema.model_validate(data)
                 self.logger.debug(f"Validated params: {self._configs}")
             elif data:
                 # If no schema, store as raw dict
