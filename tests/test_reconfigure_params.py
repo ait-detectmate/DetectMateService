@@ -151,7 +151,7 @@ def test_reconfigure_command_validation_error(temp_config_file, temp_params_file
 
         assert "error" in result.lower()
         # Should preserve original values
-        assert service.config_manager.get().threshold == 0.7
+        assert service.config_manager.get()['threshold'] == 0.7
 
 
 def test_reconfigure_command_no_config_manager():
