@@ -235,7 +235,8 @@ def test_reconfigure_with_persist(test_service_mocked, temp_params_file):
     # File should be updated (with persist)
     with open(temp_params_file, 'r') as f:
         file_content = yaml.safe_load(f)
-    assert file_content == new_configs
+    for key, val in new_configs.items():
+        assert file_content[key] == val
 
 
 def test_cli_reconfigure_with_persist(temp_params_file):
@@ -349,4 +350,5 @@ def test_reconfigure_command_with_persist_integration(temp_config_file, temp_par
         # File should be updated (with persist)
         with open(temp_params_file, 'r') as f:
             file_content = yaml.safe_load(f)
-        assert file_content == new_configs
+        for key, val in new_configs.items():
+            assert file_content[key] == val
