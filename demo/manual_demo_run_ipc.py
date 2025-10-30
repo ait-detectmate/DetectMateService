@@ -1,12 +1,12 @@
 import pynng
 
 
-LOG_PATH = "/app/demo/data/audit.log"
+LOG_PATH = "data/audit.log"
 
 
 def process_logs() -> None:
     """Read the audit log and send each line through reader, parser, and
-    detector over TCP."""
+    detector engines."""
     with open(LOG_PATH, "r") as f:
         total = sum(1 for _ in f)
     print(f"Processing {total} log lines...")
@@ -16,18 +16,18 @@ def process_logs() -> None:
 
         try:
             # Step 1: Reader
-            with pynng.Pair0(dial="tcp://reader:8001") as reader:
+            with pynng.Pair0(dial="ipc:///tmp/test_reader_engine.ipc") as reader:
                 reader.send(b"sdf")
                 log_response1 = reader.recv()
 
             # Step 2: Parser
-            with pynng.Pair0(dial="tcp://parser:8011") as parser:
+            with pynng.Pair0(dial="ipc:///tmp/test_parser_engine.ipc") as parser:
                 parser.send(log_response1)
                 log_response2 = parser.recv()
 
             # Step 3: Detector
             with pynng.Pair0(
-                dial="tcp://detector:8021",
+                dial="ipc:///tmp/test_nvd_engine.ipc",
                 recv_timeout=10,
             ) as detector:
                 detector.send(log_response2)
