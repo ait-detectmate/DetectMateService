@@ -127,3 +127,21 @@ Stop the service:
 ```bash
 detectmate stop --settings tests/config/service_settings.yaml
 ```
+
+
+## Demo pipeline run:
+
+A containerized demonstration of the DetectMate log analysis pipeline. The demo runs three services (reader, parser,
+detector) that process audit logs to detect anomalies, with a test script that feeds log lines through the complete
+pipeline and reports detected anomalies.
+
+**Terminal 1** (keep running to see service logs):
+```bash
+docker compose up reader parser detector
+```
+
+**Terminal 2** (run after services are up):
+```bash
+# Wait a few seconds for services to be ready, then:
+docker compose up demo
+```
