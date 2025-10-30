@@ -19,6 +19,7 @@ class ServiceSettings(BaseSettings):
     component_name: Optional[str] = None
     component_id: Optional[str] = None  # computed if not provided
     component_type: str = "core"  # e.g. detector, parser, etc
+    component_config_class: Optional[str] = None
 
     # logger
     log_dir: Path = Path("./logs")

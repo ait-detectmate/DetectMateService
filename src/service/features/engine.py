@@ -78,6 +78,11 @@ class Engine(ABC):
             # recv phase
             try:
                 raw = self._pair_sock.recv()
+                if raw is None or len(raw) == 0:
+                    self.log.debug("Engine: Received empty message, skipping")
+                    continue
+
+                self.log.debug(f"Engine: Received {len(raw)} bytes from socket")
             except pynng.Timeout:
                 continue  # Timeout occurred, check running flag and continue
             except pynng.NNGException as e:
@@ -86,10 +91,15 @@ class Engine(ABC):
                     break
                 self.log.exception("Engine error during receive: %s", e)
                 continue
+            except Exception as e:
+                self.log.exception("Unexpected engine error during receive: %s", e)
+                continue
 
             # process phase
             try:
+                self.log.debug("Engine: Calling processor...")
                 out = self.processor(raw)
+                self.log.debug(f"Engine: Processor returned: {out!r}")
             except ProcessorException as e:
                 self.log.error("Processor error: %s", e)
                 continue
@@ -98,11 +108,14 @@ class Engine(ABC):
                 continue
 
             if out is None:
+                self.log.debug("Engine: Processor returned None, skipping send")
                 continue
 
             # send phase
             try:
+                self.log.debug(f"Engine: Sending {len(out)} bytes back")
                 self._pair_sock.send(out)
+                self.log.debug("Engine: Send completed")
             except pynng.NNGException as e:
                 self.log.exception("Engine error during send: %s", e)
                 continue

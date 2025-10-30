@@ -6,19 +6,19 @@ from pathlib import Path
 from typing import Type, Optional, Dict, Any, Union
 from pydantic import BaseModel, ValidationError
 
-from service.features.config import BaseConfig
+from detectmatelibrary.common.core import CoreConfig
 
 
 class ConfigManager:
     def __init__(
             self,
             config_file: str,
-            schema: Optional[Type[BaseConfig]] = None,
+            schema: Optional[Type[CoreConfig]] = None,
             logger: Optional[logging.Logger] = None
     ):
         self.config_file = config_file
         self.schema = schema
-        self._configs: Optional[Union[BaseConfig, Dict[str, Any]]] = None
+        self._configs: Optional[Union[CoreConfig, Dict[str, Any]]] = None
         self._lock = threading.RLock()
         self.logger = logger or logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class ConfigManager:
             self.logger.debug(f"Loaded data from file: {data}")
 
             if self.schema and data:
-                self._configs = self.schema.model_validate(data)
+                self._configs = data  # self.schema.model_validate(data)
                 self.logger.debug(f"Validated params: {self._configs}")
             elif data:
                 # If no schema, store as raw dict
@@ -99,7 +99,7 @@ class ConfigManager:
                 self._configs = new_configs
             self.logger.info(f"Parameters updated: {self._configs}")
 
-    def get(self) -> Optional[Union[BaseConfig, Dict[str, Any]]]:
+    def get(self) -> Optional[Union[CoreConfig, Dict[str, Any]]]:
         """Get current parameters."""
         with self._lock:
             return self._configs

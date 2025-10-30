@@ -1,0 +1,8 @@
+readers:
+    File_reader:
+        method_type: log_file_reader
+        auto_config: False
+        logSource: AIT_Audit
+        hostname: testbed
+        params:
+            file: ../../data/audit.log

@@ -3,9 +3,10 @@ name = "DetectMateService"
 version = "0.1.0"
 description = "A modular framework for building log processing and anomaly detection services."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 dependencies = [
+    "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git@base_structure",  # TODO: change branch
     "pathlib>=1.0.1",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",

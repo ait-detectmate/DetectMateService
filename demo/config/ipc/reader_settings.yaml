@@ -1,0 +1,10 @@
+component_type: "readers.log_file.LogFileReader"
+component_config_class: "readers.log_file.LogFileConfig"
+component_name: "test-reader"
+manager_addr: "ipc:///tmp/test_reader_cmd.ipc"
+engine_addr: "ipc:///tmp/test_reader_engine.ipc"
+log_level: "DEBUG"
+log_dir: "./logs"
+log_to_console: true
+log_to_file: false
+engine_autostart: true

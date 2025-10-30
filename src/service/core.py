@@ -1,20 +1,22 @@
 from __future__ import annotations
 import logging
 import sys
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
 import threading
 import json
-from typing import Optional, Type, Literal, Dict, Any
+from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
 from service.features.config_manager import ConfigManager
-from service.features.config import BaseConfig
 from service.settings import ServiceSettings
 from service.features.manager import Manager, manager_command
 from service.features.engine import Engine, EngineException
+from service.features.component_loader import ComponentLoader
+from service.features.config_loader import ConfigClassLoader
 
 from library.processor import BaseProcessor
+from detectmatelibrary.common.core import CoreComponent, CoreConfig
 
 
 class ServiceProcessorAdapter(BaseProcessor):
@@ -26,17 +28,87 @@ class ServiceProcessorAdapter(BaseProcessor):
         return self.service.process(raw_message)
 
 
+class LibraryComponentProcessor(BaseProcessor):
+    """Adapter to use DetectMate library components as BaseProcessor."""
+
+    def __init__(self, component: CoreComponent) -> None:
+        self.component = component
+
+    def __call__(self, raw_message: bytes) -> bytes | None | Any:
+        """Process message using the library component."""
+        try:
+            result = self.component.process(raw_message)
+            return result
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Component processing error: {e}")
+            return None
+
+
 class Service(Manager, Engine, ABC):
     """Abstract base for every DetectMate service/component."""
-    # hard-code component type as class variable, overwrite in subclasses
-    component_type: str = "core"
 
-    def __init__(self, settings: ServiceSettings = ServiceSettings()):
+    def __init__(
+            self,
+            settings: ServiceSettings = ServiceSettings(),
+            component_config: Dict[str, Any] | None = None
+    ):
         # Prepare attributes & logger first
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self._stop_event: threading.Event = threading.Event()
+
+        # set component_type
+        if hasattr(self, 'component_type'):  # prioritize class attribute over settings
+            pass  # already set by the child class
+        elif (hasattr(settings, 'component_type') and
+                settings.component_type != "core" and
+                not settings.component_type.startswith("core")):
+            self.component_type = settings.component_type  # this is a library component, use its type
+        else:
+            self.component_type = "core"  # default to core
+
+        # Now build the logger (which uses component_type)
         self.log: logging.Logger = self._build_logger()
+
+        # Initialize config manager before loading the library component
+        # so we can pass the loaded configs to the component
+        self.config_manager: Optional[ConfigManager] = None
+        loaded_config_dict: Dict[str, Any] = {}
+
+        if hasattr(settings, 'config_file') and settings.config_file:
+            self.log.debug(f"Initializing ConfigManager with file: {settings.config_file}")
+            self.config_manager = ConfigManager(
+                str(settings.config_file),
+                self.get_config_schema(),
+                logger=self.log
+            )
+            # Get the loaded configs to pass to library component
+            configs = self.config_manager.get()
+            self.log.debug(f"Initial configs: {configs}")
+            if configs is not None:
+                if hasattr(configs, 'model_dump'):
+                    loaded_config_dict = configs.model_dump()
+                elif isinstance(configs, dict):
+                    loaded_config_dict = configs
+
+        # Load library component if component_type is specified and not core
+        self.library_component: Optional[CoreComponent] = None
+        if (hasattr(settings, 'component_type') and
+                settings.component_type != "core" and
+                not settings.component_type.startswith("core")):
+
+            try:
+                self.log.info(f"Loading library component: {settings.component_type}")
+                # use loaded configs from config_manager, fall back to component_config
+                config_to_use = loaded_config_dict or component_config or {}
+                self.library_component = ComponentLoader.load_component(
+                    settings.component_type,
+                    config_to_use
+                )
+                self.log.info(f"Successfully loaded component: {self.library_component}")
+            except Exception as e:
+                self.log.error(f"Failed to load component {settings.component_type}: {e}")
+                raise
 
         # Create processor instance
         self.processor = self.create_processor()
@@ -47,38 +119,43 @@ class Service(Manager, Engine, ABC):
         # then init Engine with the processor (opens PAIR socket, may autostart)
         Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
 
-        self.config_manager: Optional[ConfigManager] = None
-        if hasattr(settings, 'config_file') and settings.config_file:
-            self.log.debug(f"Initializing ConfigManager with file: {settings.config_file}")
-            self.config_manager = ConfigManager(
-                str(settings.config_file),
-                self.get_config_schema(),
-                logger=self.log
-            )
-            # Check if configs were loaded successfully
-            configs = self.config_manager.get()
-            self.log.debug(f"Initial configs: {configs}")
-
         self.log.debug("%s[%s] created", self.component_type, self.component_id)
 
-    def get_config_schema(self) -> Type[BaseConfig]:
+    def get_config_schema(self) -> Type[CoreConfig]:
         """Return the configuration schema for this service.
 
-        Override in subclasses.
+        If component_config_class is specified in settings, load and
+        return it. Otherwise return the default CoreConfig.
         """
-        return BaseConfig
+        if hasattr(self.settings, 'component_config_class') and self.settings.component_config_class:
+            try:
+                self.log.debug(f"Loading config class: {self.settings.component_config_class}")
+                config_class = ConfigClassLoader.load_config_class(self.settings.component_config_class)
+                self.log.debug(f"Successfully loaded config class: {config_class}")
+                return config_class
+            except Exception as e:
+                self.log.error(f"Failed to load config class {self.settings.component_config_class}: {e}")
+                raise
+        return cast(Type[CoreConfig], CoreConfig)  # help mypy
 
-    @abstractmethod
-    def process(self, raw_message: bytes) -> bytes | None:
-        """Process the raw message and return the result or None to skip."""
-        pass
+    def process(self, raw_message: bytes) -> bytes | None | Any:
+        """Process the raw message using the library component or default
+        implementation."""
+        if self.library_component:
+            # use the library component's process method
+            return self.library_component.process(raw_message)
+        else:
+            # default implementation for core service
+            return raw_message
 
     def create_processor(self) -> BaseProcessor:
-        """Create and return a processor instance for this service.
-
-        Override this method in subclasses to provide custom processors.
-        """
-        return ServiceProcessorAdapter(self)
+        """Create processor based on available components."""
+        if self.library_component:
+            return LibraryComponentProcessor(self.library_component)
+        else:
+            # fall back to service's own process method
+            # TODO: do we need this?
+            return ServiceProcessorAdapter(self)
 
     # public API
     def setup_io(self) -> None:

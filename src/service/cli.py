@@ -2,29 +2,19 @@ import argparse
 import json
 import logging
 import sys
-from typing import Optional, Type
+from typing import Optional
 from pathlib import Path
 import pynng
 import yaml
 
 from .settings import ServiceSettings
-from .features.config import BaseConfig
 from .core import Service
-
 
 logger = logging.getLogger(__name__)
 
 
 class CLIService(Service):
-    """Concrete implementation of Service for CLI operations."""
-
-    def process(self, raw_message: bytes) -> bytes | None:
-        """Basic implementation that just echoes the message."""
-        return raw_message
-
-    def get_config_schema(self) -> Type[BaseConfig]:
-        """Return the base config schema for CLI service."""
-        return BaseConfig
+    pass
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -51,9 +41,9 @@ def setup_logging(level: int = logging.INFO) -> None:
 
 
 def start_service(settings_path: Optional[Path] = None, config_path: Optional[Path] = None) -> None:
-    """Start the service with given settings and parameters."""
+    """Start the service with given settings and component configuration."""
 
-    # Load settings
+    # Load service settings
     try:
         # if no settings path provided, use default settings
         if settings_path is None:
@@ -201,7 +191,7 @@ def main() -> None:
     # Start command
     start_parser = subparsers.add_parser("start", help="Start the service")
     start_parser.add_argument("--settings", required=False, type=Path, help="Service settings YAML file")
-    start_parser.add_argument("--config", type=Path, help="Service parameters YAML file")
+    start_parser.add_argument("--config", type=Path, help="Component configuration YAML file")
 
     # Stop command
     stop_parser = subparsers.add_parser("stop", help="Stop the service")

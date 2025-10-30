@@ -1,0 +1,10 @@
+component_type: "parsers.template_matcher.MatcherParser"
+component_config_class: "parsers.template_matcher.MatcherParserConfig"
+component_name: "test-parser"
+manager_addr: "tcp://parser:8010"
+engine_addr: "tcp://parser:8011"
+log_level: "DEBUG"
+log_dir: "./logs"
+log_to_console: true
+log_to_file: false
+engine_autostart: true
