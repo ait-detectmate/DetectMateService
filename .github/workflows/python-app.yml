@@ -28,11 +28,6 @@ jobs:
         activate-environment: true
         enable-cache: true
 
-    - name: Configure git to authenticate private repos
-      env:
-        GITHUB_TOKEN: ${{ secrets.ANNA_GITHUB_TOKEN }}
-      run: git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com".insteadOf "https://github.com"
-
     - name: Install project deps
       run: uv pip install -e .[dev]
 
