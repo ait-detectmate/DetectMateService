@@ -16,16 +16,6 @@ COPY ./src ./src
 COPY ./demo ./demo
 COPY ./tests ./tests
 
-ARG GITHUB_TOKEN
-ENV GITHUB_TOKEN=${GITHUB_TOKEN}
-
-# Configure git to use the token for private repo access
-RUN if [ -n "$GITHUB_TOKEN" ]; then \
-    git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com".insteadOf "https://github.com"; \
-    fi
-
-RUN uv pip install --system -e .[dev]
-
-RUN git config --global --unset-all url.https://${GITHUB_TOKEN}:x-oauth-basic@github.com.insteadof || true
+RUN uv pip install --system -e .
 
 CMD ["detectmate", "--help"]
