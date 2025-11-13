@@ -134,8 +134,22 @@ class Engine(ABC):
                 self.log.debug("Engine: Processor returned None, skipping send")
                 continue
 
-            # send phase - send to all output destinations
-            self._send_to_outputs(out)
+            # send phase
+            if self._out_sockets:
+                # Multi-destination mode: send to all configured outputs
+                self._send_to_outputs(out)
+            else:
+                # Backwards-compatible mode: no outputs configured, reply on PAIR socket
+                try:
+                    self.log.debug(
+                        "Engine: No output sockets configured, "
+                        "sending reply back via engine socket"
+                    )
+                    self._pair_sock.send(out)
+                    self.log.debug("Engine: Reply sent on engine socket")
+                except pynng.NNGException as e:
+                    self.log.error("Engine error sending reply on engine socket: %s", e)
+                    continue
 
     def _send_to_outputs(self, data: bytes) -> None:
         """Send processed data to all configured output destinations."""
