@@ -86,7 +86,7 @@ def running_pipeline_services(
             "MatcherParser": {
                 "method_type": "matcher_parser",
                 "auto_config": False,
-                "pattern": r"type=(?P<type>[^ ]+) msg=audit\((?P<timestamp>[^:]+):\d+\): (?P<content>.*)",
+                "log_format": "type=<type> msg=audit(<Time>...): <Content>",
                 "time_format": None,
                 "params": {
                     "remove_spaces": True,
