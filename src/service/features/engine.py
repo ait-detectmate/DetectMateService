@@ -63,30 +63,63 @@ class Engine(ABC):
 
         # set up output sockets for multiple destinations
         self._out_sockets: List[pynng.Socket] = []
-        self._setup_output_sockets()
+        try:
+            self._setup_output_sockets()
+        except Exception:
+            # if outputs fail to connect, also close input socket to avoid leaks
+            try:
+                self._pair_sock.close()
+            except pynng.NNGException as e:
+                self.log.warning("Failed to close engine input socket after setup failure: %s", e)
+            raise
 
         # autostart if enabled
         if getattr(self.settings, "engine_autostart", True):
             self.start()
 
     def _setup_output_sockets(self) -> None:
-        """Create and connect output sockets for all destinations in
-        out_addr."""
+        """Create and connect output sockets for all destinations in out_addr.
+
+        Hard-fail if any destination is unavailable at startup.
+        """
         if not self.settings.out_addr:
             self.log.info("No output addresses configured, processed messages will not be forwarded")
             return
 
+        failures: list[tuple[str, Exception]] = []
+
         for addr in self.settings.out_addr:
+            addr_str = str(addr)
             try:
                 # Use Push socket for one-way output to multiple destinations
                 sock = pynng.Push0()
-                sock.dial(str(addr))
+                # Ensure blocking dial honors timeout
+                sock.dial_timeout = self.settings.out_dial_timeout
+                # Block until connect or timeout -> detect missing listeners now
+                sock.dial(addr_str, block=True)
                 self._out_sockets.append(sock)
-                self.log.info(f"Connected output socket to {addr}")
-            except pynng.NNGException as e:
-                self.log.error(f"Failed to connect output socket to {addr}: {e}")
-                # Continue with other sockets even if one fails
-                continue
+                self.log.info(f"Connected output socket to {addr_str}")
+            except (pynng.Timeout, pynng.NNGException) as e:
+                self.log.error(f"Failed to connect output socket to {addr_str}: {e}")
+                failures.append((addr_str, e))
+            except Exception as e:
+                self.log.exception(f"Unexpected error connecting output socket to {addr_str}: {e}")
+                failures.append((addr_str, e))
+
+        if failures:
+            # Close any sockets that did connect
+            for i, sock in enumerate(self._out_sockets):
+                try:
+                    sock.close()
+                    self.log.debug("Closed output socket %d after setup failure", i)
+                except pynng.NNGException as e:
+                    self.log.warning("Failed to close output socket %d after setup failure: %s", i, e)
+            self._out_sockets.clear()
+            msg = "; ".join(f"{a} -> {type(e).__name__}: {e}" for a, e in failures)
+            raise EngineException(
+                "Failed to connect to all output addresses at startup. "
+                f"Unreachable: {msg}"
+            )
 
     def start(self) -> str:
         if not self._running:

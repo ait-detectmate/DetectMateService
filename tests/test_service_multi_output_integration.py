@@ -84,6 +84,13 @@ class TestServiceMultiOutputIntegration:
             engine_autostart=True,
         )
 
+        # output listeners must exist before service starts
+        r1 = pynng.Pull0()
+        r1.listen(temp_ipc_paths['out1'])
+        r2 = pynng.Pull0()
+        r2.listen(temp_ipc_paths['out2'])
+        r1.recv_timeout = r2.recv_timeout = 1000
+
         service = MockService(settings=settings)
 
         # Create command client
@@ -112,6 +119,8 @@ class TestServiceMultiOutputIntegration:
         finally:
             service.stop()
             cmd_client.close()
+            r1.close()
+            r2.close()
 
     def test_service_context_manager_with_outputs(self, temp_ipc_paths, tmp_path):
         """Test service as context manager with multiple outputs."""
@@ -157,6 +166,13 @@ class TestServiceMultiOutputIntegration:
             engine_autostart=True,
         )
 
+        # listeners required before starting service
+        r1 = pynng.Pull0()
+        r1.listen(temp_ipc_paths['out1'])
+        r2 = pynng.Pull0()
+        r2.listen(temp_ipc_paths['out2'])
+        r1.recv_timeout = r2.recv_timeout = 1000
+
         service = MockService(settings=settings)
 
         # Create command client
@@ -186,6 +202,8 @@ class TestServiceMultiOutputIntegration:
 
         finally:
             cmd_client.close()
+            r1.close()
+            r2.close()
 
     def test_service_with_no_outputs_still_works(self, temp_ipc_paths, tmp_path):
         """Test that service works normally with no output addresses."""

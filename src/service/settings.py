@@ -50,6 +50,8 @@ class ServiceSettings(BaseSettings):
 
     # Output addresses (strongly typed URLs)
     out_addr: List[OutAddr] = Field(default_factory=list)
+    # timeout for output dials. Used with blocking dial in Engine
+    out_dial_timeout: int = 1000  # milliseconds
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.
