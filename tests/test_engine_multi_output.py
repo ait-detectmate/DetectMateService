@@ -270,49 +270,59 @@ class TestEngineMultiOutput:
             sender.close()
             receiver.close()
 
-    # def test_output_socket_failure_resilience(self, temp_ipc_paths):
-    #     """Test that engine continues with remaining sockets if one fails."""
-    #     settings = ServiceSettings(
-    #         engine_addr=temp_ipc_paths['engine'],
-    #         manager_addr=temp_ipc_paths['manager'],
-    #         # out1: has receiver, out2: no receiver (simulated failure)
-    #         out_addr=[
-    #             temp_ipc_paths['out1'],
-    #             temp_ipc_paths['out2'],
-    #         ],
-    #         engine_autostart=False,
-    #     )
-    #
-    #     # Create receiver only for out1 (skip out2 to trigger dial/send issues)
-    #     receiver1 = pynng.Pull0()
-    #     receiver1.listen(temp_ipc_paths['out1'])
-    #     receiver1.recv_timeout = 2000
-    #
-    #     processor = SimpleProcessor()
-    #     engine = Engine(settings=settings, processor=processor)
-    #
-    #     sender = pynng.Pair0()
-    #     sender.dial(temp_ipc_paths['engine'])
-    #
-    #     try:
-    #         engine.start()
-    #         time.sleep(0.2)  # Give time for connections
-    #
-    #         # Send a few messages; even if out2 fails, out1 should still work
-    #         test_message = b"resilience test"
-    #         for _ in range(3):
-    #             sender.send(test_message)
-    #             time.sleep(0.05)
-    #
-    #         # Receiver 1 should still get the processed message
-    #         result1 = receiver1.recv()
-    #         expected = b"PROCESSED: RESILIENCE TEST"
-    #         assert result1 == expected
-    #
-    #     finally:
-    #         engine.stop()
-    #         sender.close()
-    #         receiver1.close()
+    def test_output_socket_failure_resilience(self, temp_ipc_paths):
+        """Engine continues with remaining sockets if one fails mid-run."""
+        settings = ServiceSettings(
+            engine_addr=temp_ipc_paths['engine'],
+            manager_addr=temp_ipc_paths['manager'],
+            out_addr=[
+                temp_ipc_paths['out1'],
+                temp_ipc_paths['out2'],
+            ],
+            engine_autostart=False,
+        )
+
+        # Receivers for both outputs so startup succeeds
+        receiver1 = pynng.Pull0()
+        receiver1.listen(temp_ipc_paths['out1'])
+        receiver1.recv_timeout = 2000
+
+        receiver2 = pynng.Pull0()
+        receiver2.listen(temp_ipc_paths['out2'])
+        receiver2.recv_timeout = 2000
+
+        processor = SimpleProcessor()
+        engine = Engine(settings=settings, processor=processor)
+
+        sender = pynng.Pair0()
+        sender.dial(temp_ipc_paths['engine'])
+
+        try:
+            engine.start()
+            time.sleep(0.2)  # Give time for connections
+
+            # Simulate mid-run failure of the second output socket
+            # (closed socket will cause send() to raise NNGException)
+            engine._out_sockets[1].close()
+
+            # Send a few messages; even if out2 fails, out1 should still work
+            test_message = b"resilience test"
+            for _ in range(3):
+                sender.send(test_message)
+                time.sleep(0.05)
+
+            # Receiver 1 should still get the processed message
+            result1 = receiver1.recv()
+            expected = b"PROCESSED: RESILIENCE TEST"
+            assert result1 == expected
+
+            # Engine should still be running
+            assert engine._running
+        finally:
+            engine.stop()
+            sender.close()
+            receiver1.close()
+            receiver2.close()
 
     def test_multiple_messages_sequence(self, temp_ipc_paths):
         """Test sending multiple messages in sequence to multiple outputs."""
@@ -488,49 +498,60 @@ out_addr:
                 log_level="DEBUG",
             )
 
-    # def test_output_socket_failure_resilience_runtime(self, temp_ipc_paths):
-    #     """Engine should keep sending to reachable outputs even if another
-    #     valid output is unreachable."""
-    #     settings = ServiceSettings(
-    #         engine_addr=temp_ipc_paths['engine'],
-    #         manager_addr=temp_ipc_paths['manager'],
-    #         out_addr=[
-    #             temp_ipc_paths['out1'],  # reachable
-    #             temp_ipc_paths['out2'],  # valid scheme but no listener -> unreachable
-    #         ],
-    #         engine_autostart=False,
-    #     )
-    #
-    #     # Receiver only for out1
-    #     receiver1 = pynng.Pull0()
-    #     receiver1.listen(temp_ipc_paths['out1'])
-    #     receiver1.recv_timeout = 2000
-    #
-    #     processor = SimpleProcessor()
-    #     engine = Engine(settings=settings, processor=processor)
-    #
-    #     sender = pynng.Pair0()
-    #     sender.dial(temp_ipc_paths['engine'])
-    #
-    #     try:
-    #         engine.start()
-    #         time.sleep(0.2)
-    #
-    #         sender.send(b"resilience test")
-    #
-    #         # out1 must still receive processed data
-    #         result1 = receiver1.recv()
-    #         assert result1 == b"PROCESSED: RESILIENCE TEST"
-    #
-    #         # engine should still be running
-    #         assert engine._running
-    #
-    #     finally:
-    #         engine.stop()
-    #         sender.close()
-    #         receiver1.close()
+    def test_output_socket_failure_resilience_runtime(self, temp_ipc_paths):
+        """Engine keeps sending to reachable outputs even if another fails
+        during runtime."""
+        settings = ServiceSettings(
+            engine_addr=temp_ipc_paths['engine'],
+            manager_addr=temp_ipc_paths['manager'],
+            out_addr=[
+                temp_ipc_paths['out1'],
+                temp_ipc_paths['out2'],
+            ],
+            engine_autostart=False,
+        )
 
-    def test_output_socket_unavailable_hard_fails(self, temp_ipc_paths):
+        # Receivers for both outputs so startup succeeds
+        receiver1 = pynng.Pull0()
+        receiver1.listen(temp_ipc_paths['out1'])
+        receiver1.recv_timeout = 2000
+
+        receiver2 = pynng.Pull0()
+        receiver2.listen(temp_ipc_paths['out2'])
+        receiver2.recv_timeout = 2000
+
+        processor = SimpleProcessor()
+        engine = Engine(settings=settings, processor=processor)
+
+        sender = pynng.Pair0()
+        sender.dial(temp_ipc_paths['engine'])
+
+        try:
+            engine.start()
+            time.sleep(0.2)
+
+            # First message: both outputs working
+            sender.send(b"initial")
+            assert receiver1.recv() == b"PROCESSED: INITIAL"
+            assert receiver2.recv() == b"PROCESSED: INITIAL"
+
+            # Now simulate runtime failure of the second output socket
+            engine._out_sockets[1].close()
+
+            # Second message: out1 still must receive processed data
+            sender.send(b"resilience test")
+            result1 = receiver1.recv()
+            assert result1 == b"PROCESSED: RESILIENCE TEST"
+
+            # Engine should still be running despite repeated send errors on out2
+            assert engine._running
+        finally:
+            engine.stop()
+            sender.close()
+            receiver1.close()
+            receiver2.close()
+
+    def test_unreachable_output_address_hard_fail(self, temp_ipc_paths):
         """Engine should hard-fail if any configured output is unreachable at
         startup."""
         settings = ServiceSettings(
@@ -543,18 +564,18 @@ out_addr:
             engine_autostart=False,
         )
 
-        # Create receiver only for out1
+        # Listener only on out1 so out2 is unreachable at startup
         receiver1 = pynng.Pull0()
         receiver1.listen(temp_ipc_paths['out1'])
         receiver1.recv_timeout = 1000
 
         try:
-            with pytest.raises(EngineException) as ei:
+            with pytest.raises(EngineException) as excinfo:
                 Engine(settings=settings, processor=SimpleProcessor())
 
-            msg = str(ei.value)
+            msg = str(excinfo.value)
+            assert "Failed to connect to all output addresses at startup" in msg
             assert temp_ipc_paths['out2'] in msg
-            assert "Failed to connect" in msg or "Unreachable" in msg
         finally:
             receiver1.close()
 
