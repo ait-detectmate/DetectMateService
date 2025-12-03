@@ -13,13 +13,7 @@ import pynng
 import yaml
 import sys
 import os
-from detectmatelibrary.schemas import (
-    PARSER_SCHEMA,
-    DETECTOR_SCHEMA,
-    deserialize,
-    serialize,
-    ParserSchema,
-)
+from detectmatelibrary.schemas import DetectorSchema, ParserSchema
 
 
 @pytest.fixture(scope="session")
@@ -81,8 +75,8 @@ def test_parser_messages() -> list:
     ]
 
     for config in parser_configs:
-        parser_msg = ParserSchema(__version__="1.0.0", **config)
-        byte_message = serialize(PARSER_SCHEMA, parser_msg)
+        parser_msg = ParserSchema(config)
+        byte_message = parser_msg.serialize()
         messages.append(byte_message)
 
     return messages
@@ -190,8 +184,7 @@ class TestDetectorServiceViaEngine:
                 assert len(response) > 0
 
                 # Verify it's a valid DetectorSchema
-                schema_id, detector_schema = deserialize(response)
-                assert schema_id == DETECTOR_SCHEMA
+                (detector_schema := DetectorSchema()).deserialize(response)
                 assert detector_schema.score == 1.0
                 assert detector_schema.description == "Dummy detection process"
             except pynng.Timeout:
@@ -215,8 +208,7 @@ class TestDetectorServiceViaEngine:
                 try:
                     response = socket.recv()
                     # Detection occurred
-                    schema_id, detector_schema = deserialize(response)
-                    assert schema_id == DETECTOR_SCHEMA
+                    (detector_schema := DetectorSchema()).deserialize(response)
                     assert detector_schema.score == 1.0
                     results.append(True)
                 except pynng.Timeout:
@@ -249,10 +241,8 @@ class TestDetectorServiceViaEngine:
 
             try:
                 response = socket.recv()
-                schema_id, detector_schema = deserialize(response)
-
+                (detector_schema := DetectorSchema()).deserialize(response)
                 # Verify structure
-                assert schema_id == DETECTOR_SCHEMA
                 assert detector_schema.description == "Dummy detection process"
                 assert detector_schema.score == 1.0
                 assert "type" in detector_schema.alertsObtain
@@ -291,8 +281,7 @@ class TestDetectorServiceViaEngine:
                 try:
                     response = socket.recv()
                     if response is not None and len(response) > 0:
-                        schema_id, detector_schema = deserialize(response)
-                        assert schema_id == DETECTOR_SCHEMA
+                        (detector_schema := DetectorSchema()).deserialize(response)
                         assert detector_schema.score == 1.0
                         detection_count += 1
                 except pynng.Timeout:
@@ -320,7 +309,7 @@ class TestDetectorServiceViaEngine:
                 socket.send(parser_message)
                 try:
                     response = socket.recv()
-                    schema_id, detector_schema = deserialize(response)
+                    (detector_schema := DetectorSchema()).deserialize(response)
                     scores.append(detector_schema.score)
                 except pynng.Timeout:
                     pass  # No detection, skip

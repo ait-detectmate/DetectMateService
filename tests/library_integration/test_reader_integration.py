@@ -13,7 +13,7 @@ import yaml
 import sys
 import os
 
-from detectmatelibrary.schemas import LOG_SCHEMA, deserialize
+from detectmatelibrary.schemas import LogSchema
 
 
 # fixtures and configuration
@@ -140,8 +140,7 @@ class TestReaderServiceViaEngine:
             assert len(response) > 0, "Should receive non-empty response"
 
             # Verify it can be deserialized as LogSchema
-            schema_id, log_schema = deserialize(response)
-            assert schema_id == LOG_SCHEMA, "Response should be a LogSchema"
+            (log_schema := LogSchema()).deserialize(response)
             assert hasattr(log_schema, "log"), "LogSchema should have log attribute"
             assert hasattr(log_schema, "logID"), "LogSchema should have logID attribute"
 
@@ -156,7 +155,7 @@ class TestReaderServiceViaEngine:
                 socket.send(b"read")
                 response = socket.recv()
 
-                schema_id, log_schema = deserialize(response)
+                (log_schema := LogSchema()).deserialize(response)
                 logs.append({
                     "log": log_schema.log,
                     "logID": log_schema.logID,
@@ -181,7 +180,7 @@ class TestReaderServiceViaEngine:
             socket.send(b"read")
             response = socket.recv()
 
-            schema_id, log_schema = deserialize(response)
+            (log_schema := LogSchema()).deserialize(response)
             log_text = log_schema.log
 
             assert "AREUTHERIGHTONE" in log_text or "type=AREUTHERIGHTONE" in log_text, \
@@ -217,7 +216,7 @@ class TestReaderConfigurationPassing:
             socket.send(b"read")
             response = socket.recv()
 
-            schema_id, log_schema = deserialize(response)
+            (log_schema := LogSchema()).deserialize(response)
 
             # The service should have read from our test log file
             log_text = log_schema.log
@@ -243,7 +242,7 @@ class TestLogReading:
             for i in range(read_count):
                 socket.send(b"read")
                 response = socket.recv()
-                schema_id, log_schema = deserialize(response)
+                (log_schema := LogSchema()).deserialize(response)
                 collected_logs.append(log_schema.log)
 
         assert len(collected_logs) == read_count, f"Should collect exactly {read_count} logs"

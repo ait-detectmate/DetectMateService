@@ -11,13 +11,7 @@ import pynng
 import yaml
 import sys
 import os
-from detectmatelibrary.schemas import (
-    LOG_SCHEMA,
-    PARSER_SCHEMA,
-    deserialize,
-    serialize,
-    LogSchema,
-)
+from detectmatelibrary.schemas import ParserSchema, LogSchema
 
 
 def create_test_log_messages() -> list:
@@ -44,8 +38,8 @@ def create_test_log_messages() -> list:
         },
     ]
     for config in log_configs:
-        log_msg = LogSchema(__version__="1.0.0", **config)
-        byte_message = serialize(LOG_SCHEMA, log_msg)
+        log_msg = LogSchema(config)
+        byte_message = log_msg.serialize()
         messages.append(byte_message)
     return messages
 
@@ -165,8 +159,7 @@ class TestParserServiceViaEngine:
                 response = socket.recv()
                 assert len(response) > 0, "Should receive non-empty response"
                 # Verify it can be deserialized as ParserSchema
-                schema_id, parser_schema = deserialize(response)
-                assert schema_id == PARSER_SCHEMA, "Response should be a ParserSchema"
+                (parser_schema := ParserSchema()).deserialize(response)
                 assert hasattr(parser_schema, "parserType"), "ParserSchema should have parserType"
                 assert hasattr(parser_schema, "log"), "ParserSchema should have log"
                 assert hasattr(parser_schema, "variables"), "ParserSchema should have variables"
@@ -184,7 +177,7 @@ class TestParserServiceViaEngine:
             original_log = "User john logged in from 192.168.1.100"
             socket.send(test_log_messages[0])
             response = socket.recv()
-            schema_id, parser_schema = deserialize(response)
+            (parser_schema := ParserSchema()).deserialize(response)
             assert parser_schema.log == original_log
 
     def test_parse_has_expected_variables(
@@ -195,7 +188,7 @@ class TestParserServiceViaEngine:
         with pynng.Pair0(dial=engine_addr, recv_timeout=10000) as socket:
             socket.send(test_log_messages[0])
             response = socket.recv()
-            schema_id, parser_schema = deserialize(response)
+            (parser_schema := ParserSchema()).deserialize(response)
             assert parser_schema.variables == ["dummy_variable"]
 
     def test_parse_has_expected_template(
@@ -206,7 +199,7 @@ class TestParserServiceViaEngine:
         with pynng.Pair0(dial=engine_addr, recv_timeout=10000) as socket:
             socket.send(test_log_messages[0])
             response = socket.recv()
-            schema_id, parser_schema = deserialize(response)
+            (parser_schema := ParserSchema()).deserialize(response)
             assert parser_schema.template == "This is a dummy template"
 
     def test_parse_has_event_id(
@@ -217,7 +210,7 @@ class TestParserServiceViaEngine:
         with pynng.Pair0(dial=engine_addr, recv_timeout=10000) as socket:
             socket.send(test_log_messages[0])
             response = socket.recv()
-            schema_id, parser_schema = deserialize(response)
+            (parser_schema := ParserSchema()).deserialize(response)
             assert parser_schema.EventID == 2
 
     def test_parses_first_log_schema(
@@ -229,8 +222,7 @@ class TestParserServiceViaEngine:
             socket.send(test_log_messages[0])
             try:
                 response = socket.recv()
-                schema_id, parser_schema = deserialize(response)
-                assert schema_id == PARSER_SCHEMA
+                (parser_schema := ParserSchema()).deserialize(response)
                 assert parser_schema.log == "User john logged in from 192.168.1.100"
             except pynng.Timeout:
                 pytest.skip("Parser service did not respond to message")
@@ -244,8 +236,7 @@ class TestParserServiceViaEngine:
             socket.send(test_log_messages[1])
             try:
                 response = socket.recv()
-                schema_id, parser_schema = deserialize(response)
-                assert schema_id == PARSER_SCHEMA
+                (parser_schema := ParserSchema()).deserialize(response)
                 assert parser_schema.log == "Database query failed: connection timeout"
             except pynng.Timeout:
                 pytest.skip("Parser service did not respond to message")
@@ -259,8 +250,7 @@ class TestParserServiceViaEngine:
             socket.send(test_log_messages[2])
             try:
                 response = socket.recv()
-                schema_id, parser_schema = deserialize(response)
-                assert schema_id == PARSER_SCHEMA
+                (parser_schema := ParserSchema()).deserialize(response)
                 assert parser_schema.log == "File config.txt accessed by admin at 10:45:30"
             except pynng.Timeout:
                 pytest.skip("Parser service did not respond to message")
@@ -282,8 +272,7 @@ class TestParserServiceViaEngine:
                 except pynng.Timeout as e:
                     print(f"DEBUG: Timeout on log message {i + 1}")
                     raise e
-                schema_id, parser_schema = deserialize(response)
-                assert schema_id == PARSER_SCHEMA
+                (parser_schema := ParserSchema()).deserialize(response)
                 assert parser_schema.variables == ["dummy_variable"]
                 assert parser_schema.template == "This is a dummy template"
                 responses_received.append(parser_schema)
@@ -299,7 +288,7 @@ class TestParserServiceViaEngine:
             for log_message in test_log_messages:
                 socket.send(log_message)
                 response = socket.recv()
-                schema_id, parser_schema = deserialize(response)
+                (parser_schema := ParserSchema()).deserialize(response)
                 # All messages should have the same dummy parser output structure
                 assert parser_schema.variables == ["dummy_variable"]
                 assert parser_schema.template == "This is a dummy template"
