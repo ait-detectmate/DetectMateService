@@ -105,6 +105,33 @@ def test_load_component_without_config_calls_default_init(monkeypatch):
     assert calls == [{"args": (), "kwargs": {}}]
 
 
+def test_load_component_empty_dict_config_behaves_like_no_config(monkeypatch):
+    """When config is an empty dict (falsy), the loader should behave like 'no
+    config' and NOT pass config=...
+
+    to the constructor.
+    """
+    monkeypatch.setattr(ComponentLoader, "DEFAULT_ROOT", "testpkg")
+
+    calls = []
+
+    module_name = "testpkg.detectors"
+
+    class Dummy(CoreComponent):
+        def __init__(self, *args, **kwargs):
+            calls.append({"args": args, "kwargs": kwargs})
+
+    module = types.ModuleType(module_name)
+    setattr(module, "RandomDetector", Dummy)
+    sys.modules[module_name] = module
+
+    instance = ComponentLoader.load_component("detectors.RandomDetector", config={})
+
+    assert isinstance(instance, Dummy)
+    # Still no args/kwargs – empty dict is treated as "no config"
+    assert calls == [{"args": (), "kwargs": {}}]
+
+
 def test_load_component_invalid_format_raises_runtime_error():
     """Component type without a dot is turned into a ValueError inside the try,
     which is then wrapped as a RuntimeError by the generic except."""

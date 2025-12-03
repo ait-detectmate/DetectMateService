@@ -1,10 +1,11 @@
 import importlib
-from typing import Any, Dict, Type
+from typing import Any, Dict
 
 from detectmatelibrary.common.core import CoreComponent
 
 
 class ComponentLoader:
+    """Loads components dynamically, with DetectMate-relative fallback."""
     DEFAULT_ROOT = "detectmatelibrary"
 
     @classmethod
@@ -17,34 +18,34 @@ class ComponentLoader:
         package.
 
         Args:
-            component_type: dot path like "detectors.RandomDetector"
-                            OR full dot path like "package.module.ClassName"
-            config: configuration dictionary for the component
+            component_type:
+                - DetectMate-style relative path: "detectors.dummy_detector.DummyDetector"
+                - OR fully-qualified path:        "somepkg.detectors.FancyDetector"
+            config: configuration dictionary / config object for the component
 
         Returns:
             Initialized component instance
         """
         try:
-            # Split path into module + class
+            # parse component path (e.g. "detectors.dummy_detector.DummyDetector")
             if '.' not in component_type:
                 raise ValueError(f"Invalid component type format: {component_type}. "
                                  f"Expected 'module.ClassName or 'package.module.ClassName'")
 
             module_name, class_name = component_type.rsplit('.', 1)
 
-            # Heuristic: if it looks like a bare module name (no package),
-            # treat it as being under detectmatelibrary.*
-            if "." not in module_name:
-                # e.g. "detectors.RandomDetector" -> "detectmatelibrary.detectors"
-                module_path = f"{cls.DEFAULT_ROOT}.{module_name}"
-            else:
-                # already a full path
-                module_path = module_name
+            # first try as DetectMate-relative
+            try:
+                full_module_path = f"{cls.DEFAULT_ROOT}.{module_name}"
+                module = importlib.import_module(full_module_path)
+            except ImportError:
+                # If that fails, treat it as an absolute module path
+                module = importlib.import_module(module_name)
 
-            module = importlib.import_module(module_path)
-            component_class: Type[CoreComponent] = getattr(module, class_name)
+            # get the class
+            component_class = getattr(module, class_name)
 
-            # create instance with config if provided
+            # only pass config if it's truthy ({} behaves as "no config")
             if config:
                 instance = component_class(config=config)
             else:
