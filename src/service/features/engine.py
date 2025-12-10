@@ -90,8 +90,8 @@ class Engine(ABC):
         for addr in self.settings.out_addr:
             addr_str = str(addr)
             try:
-                # Use Push socket for one-way output to multiple destinations
-                sock = pynng.Push0()
+                # Use Pair socket to match the input socket type of other services
+                sock = pynng.Pair0()
                 # Ensure blocking dial honors timeout
                 sock.dial_timeout = self.settings.out_dial_timeout
                 # Non-blocking dial: returns immediately, connects in background
