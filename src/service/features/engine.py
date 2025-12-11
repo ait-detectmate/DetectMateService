@@ -80,8 +80,9 @@ class Engine(ABC):
     def _setup_output_sockets(self) -> None:
         """Create and connect output sockets for all destinations in out_addr.
 
-        Attempts to connect to all configured addresses. If a destination is
-        unavailable, the socket remains in a dialing state (background retry).
+        Attempts to connect to all configured addresses. If a
+        destination is unavailable, the socket remains in a dialing
+        state (background retry).
         """
         if not self.settings.out_addr:
             self.log.info("No output addresses configured, processed messages will not be forwarded")
@@ -94,6 +95,11 @@ class Engine(ABC):
                 sock = pynng.Pair0()
                 # Ensure blocking dial honors timeout
                 sock.dial_timeout = self.settings.out_dial_timeout
+
+                # Set buffer sizes to 0 to minimize buffering and drop messages if peer not ready
+                sock.send_buffer_size = 0
+                sock.recv_buffer_size = 0
+
                 # Non-blocking dial: returns immediately, connects in background
                 sock.dial(addr_str, block=False)
                 self._out_sockets.append(sock)
@@ -175,10 +181,8 @@ class Engine(ABC):
         for i, sock in enumerate(self._out_sockets):
             try:
                 self.log.debug(f"Engine: Sending {len(data)} bytes to output socket {i}")
-                # Non-blocking send or short timeout is preferred to avoid stalling
-                # pynng doesn't easily support per-send timeout without setting it on socket.
-                # sock.send_timeout could be set, but block=False is explicit.
-                # However, Push0 in NNG with block=False will raise TryAgain if no peer is connected/ready.
+                # Non-blocking send is preferred to avoid stalling the engine loop
+                # Pair0 with block=False will raise TryAgain if the peer is disconnected
                 sock.send(data, block=False)
                 self.log.debug(f"Engine: Send completed to output socket {i}")
             except pynng.TryAgain:
