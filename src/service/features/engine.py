@@ -186,9 +186,7 @@ class Engine(ABC):
                 sock.send(data, block=False)
                 self.log.debug(f"Engine: Send completed to output socket {i}")
             except pynng.TryAgain:
-                # Determine intended behavior: drop message or block?
-                # For high-throughput services, dropping is usually preferred over stalling.
-                self.log.warning(f"Engine: Output socket {i} not ready (full/disconnected), dropping message")
+                self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
             except pynng.NNGException as e:
                 self.log.error(f"Engine error sending to output socket {i}: {e}")
                 continue
