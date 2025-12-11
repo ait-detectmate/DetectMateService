@@ -5,7 +5,7 @@ import pynng
 from pydantic import ValidationError
 
 from service.settings import ServiceSettings
-from service.features.engine import Engine, EngineException
+from service.features.engine import Engine
 from library.processor import BaseProcessor
 
 
@@ -595,7 +595,8 @@ out_addr:
             receiver1.close()
 
     def test_late_binding_output(self, temp_ipc_paths):
-        """Test that engine connects to an output that comes online AFTER engine start."""
+        """Test that engine connects to an output that comes online AFTER
+        engine start."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
             manager_addr=temp_ipc_paths['manager'],
