@@ -1,4 +1,5 @@
 site_name: DetectMate Service
+site_url: https://annaerdi.github.io/DetectMateService/
 
 theme:
   name: readthedocs
