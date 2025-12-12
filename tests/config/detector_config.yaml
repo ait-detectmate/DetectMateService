@@ -1,0 +1,3 @@
+threshold: 0.7
+window_size: 15
+enabled: true

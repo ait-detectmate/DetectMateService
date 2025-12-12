@@ -1,0 +1,11 @@
+parsers:
+    MatcherParser:
+        method_type: matcher_parser
+        auto_config: False
+        pattern: "type=(?P<type>[^ ]+) msg=audit\\((?P<timestamp>[^:]+):\\d+\\): (?P<content>.*)"
+        time_format: null
+        params:
+            remove_spaces: True
+            remove_punctuation: True
+            lowercase: True
+            path_templates: ../../data/test_templates.txt
