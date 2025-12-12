@@ -34,4 +34,4 @@ jobs:
           echo "Deploying version $VERSION"
           uv run mike deploy --push --update-aliases $VERSION latest
           # Optional: make the released version the default shown when visiting the site
-          uv run mike set-default --push latest
+          #uv run mike set-default --push latest
