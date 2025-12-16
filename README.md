@@ -58,7 +58,7 @@ service = DemoService()
 
 with service:
     with pynng.Req0(dial=service.settings.manager_addr) as req:
-        for cmd in ("ping", "status", "pause", "status", "resume", "status", "stop"):
+        for cmd in ("ping", "status", "stop"):
             print(f">>> {cmd}")
             req.send(cmd.encode("utf-8"))
             reply = req.recv().decode("utf-8", "ignore")
@@ -75,17 +75,7 @@ Example configuration files can be found in the `tests/config` directory.
 Start the service:
 
 ```bash
-detectmate start --settings tests/config/service_settings.yaml --config tests/config/detector_config.yaml
-```
-
-Reconfigure the service:
-
-```bash
-# Update parameters in memory only
-detectmate reconfigure --settings tests/config/service_settings.yaml --config tests/config/new_config.yaml
-
-# Update parameters and persist to file. This overwrites the originally provided config file.
-detectmate reconfigure --settings tests/config/service_settings.yaml --config tests/config/new_config.yaml --persist
+detectmate start --settings tests/config/service_settings.yaml
 ```
 
 Get the service status:
