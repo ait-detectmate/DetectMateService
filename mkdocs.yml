@@ -12,3 +12,4 @@ nav:
     - Usage:
       - Quick Start: usage.md
       - Using a Library Component: library.md
+      - Running a Pipeline: pipeline.md
