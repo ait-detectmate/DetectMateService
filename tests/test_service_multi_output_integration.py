@@ -41,7 +41,7 @@ class TestServiceMultiOutputIntegration:
         # Create output receivers
         receivers = []
         for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2']]:
-            receiver = pynng.Pull0()
+            receiver = pynng.Pair0()
             receiver.listen(addr)
             receiver.recv_timeout = 1000
             receivers.append(receiver)
@@ -85,9 +85,9 @@ class TestServiceMultiOutputIntegration:
         )
 
         # output listeners must exist before service starts
-        r1 = pynng.Pull0()
+        r1 = pynng.Pair0()
         r1.listen(temp_ipc_paths['out1'])
-        r2 = pynng.Pull0()
+        r2 = pynng.Pair0()
         r2.listen(temp_ipc_paths['out2'])
         r1.recv_timeout = r2.recv_timeout = 1000
 
@@ -133,7 +133,7 @@ class TestServiceMultiOutputIntegration:
             engine_autostart=True,
         )
 
-        receiver = pynng.Pull0()
+        receiver = pynng.Pair0()
         receiver.listen(temp_ipc_paths['out1'])
         receiver.recv_timeout = 1000
 
@@ -167,9 +167,9 @@ class TestServiceMultiOutputIntegration:
         )
 
         # listeners required before starting service
-        r1 = pynng.Pull0()
+        r1 = pynng.Pair0()
         r1.listen(temp_ipc_paths['out1'])
-        r2 = pynng.Pull0()
+        r2 = pynng.Pair0()
         r2.listen(temp_ipc_paths['out2'])
         r1.recv_timeout = r2.recv_timeout = 1000
 
@@ -298,11 +298,11 @@ class TestServiceMultiOutputIntegration:
         )
 
         # Create receivers
-        receiver1 = pynng.Pull0()
+        receiver1 = pynng.Pair0()
         receiver1.listen(service1_paths['out'])
         receiver1.recv_timeout = 1000
 
-        receiver2 = pynng.Pull0()
+        receiver2 = pynng.Pair0()
         receiver2.listen(service2_paths['out'])
         receiver2.recv_timeout = 1000
 
@@ -362,7 +362,7 @@ class TestServiceMultiOutputStressTests:
         receivers = []
         for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2'],
                      temp_ipc_paths['out3']]:
-            receiver = pynng.Pull0()
+            receiver = pynng.Pair0()
             receiver.listen(addr)
             receiver.recv_timeout = 5000  # Longer timeout for stress test
             receivers.append(receiver)

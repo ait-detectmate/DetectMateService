@@ -1,0 +1,9 @@
+component_name: "receiver"
+component_type: "core"
+log_dir: "./logs"
+log_level: "DEBUG"
+manager_addr: "ipc:///tmp/receiver.cmd.ipc"
+engine_addr: "ipc:///tmp/receiver.engine.ipc"
+
+# Receiver does not forward messages
+out_addr: []

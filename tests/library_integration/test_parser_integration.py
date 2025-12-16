@@ -264,6 +264,7 @@ class TestParserServiceViaEngine:
         for i, log_message in enumerate(test_log_messages):
             # Use a fresh connection for each message
             with pynng.Pair0(dial=engine_addr, recv_timeout=15000) as socket:
+                time.sleep(0.1)
                 print(f"DEBUG: Sending log message {i + 1}")
                 socket.send(log_message)
                 try:
