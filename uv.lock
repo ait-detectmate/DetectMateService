@@ -162,6 +162,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "detectmatelibrary", git = "https://github.com/ait-detectmate/DetectMateLibrary.git?rev=main" },
     { name = "detectmatelibrary", git = "https://github.com/ait-detectmate/DetectMateLibrary.git" },
     { name = "pathlib", specifier = ">=1.0.1" },
     { name = "prek", marker = "extra == 'dev'", specifier = ">=0.2.8" },
