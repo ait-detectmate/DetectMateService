@@ -107,7 +107,7 @@ class Service(Manager, Engine, ABC):
                 )
                 self.log.info(f"Successfully loaded component: {self.library_component}")
             except Exception as e:
-                self.log.error(f"Failed to load ghjcomponent {settings.component_type}: {e}")
+                self.log.error(f"Failed to load component {settings.component_type}: {e}")
                 raise
 
         # Create processor instance
