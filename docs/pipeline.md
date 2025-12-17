@@ -34,7 +34,7 @@ The pipeline consists of the following services defined in `demo/docker-compose.
         2. for each line, it sends a request to the **Reader** to get a log line
         3. forwards the log line to the **Parser** for processing
         4. forwards the parsed data to the **Detector** for analysis
-        5. Pprints any detected anomalies to the console
+        5. prints any detected anomalies to the console
 
 
 ## How to Run
