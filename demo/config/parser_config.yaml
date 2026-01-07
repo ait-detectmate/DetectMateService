@@ -2,7 +2,7 @@ parsers:
     MatcherParser:
         method_type: matcher_parser
         auto_config: False
-        pattern: "type=(?P<type>[^ ]+) msg=audit\\((?P<timestamp>[^:]+):\\d+\\): (?P<content>.*)"
+        log_format: "type=<Type> msg=audit(<Time>): <Content>"
         time_format: null
         params:
             remove_spaces: True
