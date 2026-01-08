@@ -185,44 +185,33 @@ def get_status(settings_path: Path) -> None:
 
 def main() -> None:
     setup_logging()
-    parser = argparse.ArgumentParser(description="DetectMate Service CLI")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # Start command
-    start_parser = subparsers.add_parser("start", help="Start the service")
-    start_parser.add_argument("--settings", required=False, type=Path, help="Service settings YAML file")
-    start_parser.add_argument("--config", type=Path, help="Component configuration YAML file")
-
-    # Stop command
-    stop_parser = subparsers.add_parser("stop", help="Stop the service")
-    stop_parser.add_argument("--settings", required=True, type=Path, help="Service settings YAML file")
-
-    # Status command
-    status_parser = subparsers.add_parser("status", help="Get service status")
-    status_parser.add_argument("--settings", required=True, type=Path, help="Service settings YAML file")
-
-    # Reconfigure command
-    reconfigure_parser = subparsers.add_parser("reconfigure", help="Reconfigure service configs")
-    reconfigure_parser.add_argument("--settings", required=True, type=Path,
-                                    help="Service settings YAML file (to get manager address)")
-    reconfigure_parser.add_argument("--config", required=True, type=Path, help="New configuration YAML file")
-    reconfigure_parser.add_argument("--persist", action="store_true",
-                                    help="Persist changes to parameter file")
+    parser = argparse.ArgumentParser(description="DetectMate Service Launcher")
+    parser.add_argument("--settings", type=Path, help="Path to service settings YAML")
+    parser.add_argument("--config", type=Path, help="Path to component config YAML")
 
     args = parser.parse_args()
 
+    # Load settings
+    if args.settings and args.settings.exists():
+        settings = ServiceSettings.from_yaml(args.settings)
+    else:
+        settings = ServiceSettings()
+
+    if args.config:
+        settings.config_file = args.config
+
+    # Initialize and run
+    # Note: Service now inherits from Service, not CLIService
+    service = Service(settings=settings)
+
     try:
-        if args.command == "start":
-            start_service(args.settings, args.config)
-        elif args.command == "stop":
-            stop_service(args.settings)
-        elif args.command == "status":
-            get_status(args.settings)
-        elif args.command == "reconfigure":
-            reconfigure_service(args.settings, args.config, args.persist)
-    except Exception as e:
-        logger.error(f"Command failed: {e}")
-        sys.exit(1)
+        with service:
+            # This blocks until _stop_event.set() or KeyboardInterrupt
+            service.run()
+    except KeyboardInterrupt:
+        logger.info("Shutdown signal received (Ctrl+C)...")
+    finally:
+        logger.info("Clean exit.")
 
 
 if __name__ == "__main__":

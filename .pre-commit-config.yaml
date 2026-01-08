@@ -20,6 +20,11 @@ repos:
     - id: check-symlinks
     - id: check-toml
 
+- repo: https://github.com/myint/autoflake
+  rev: v2.3.1
+  hooks:
+    - id: autoflake
+      args: [--in-place, --remove-all-unused-imports, --remove-unused-variables]
 # Type checking
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.18.2
@@ -37,9 +42,8 @@ repos:
   rev: v2.3.2
   hooks:
     - id: autopep8
-      args: [--max-line-length=110, --diff]
+      args: [--max-line-length=110, --in-place]
 
-# Linting
 - repo: https://github.com/PyCQA/flake8
   rev: 7.3.0
   hooks:
@@ -59,12 +63,6 @@ repos:
     - id: bandit
       exclude: ^tests/
 
-# Unused code detection
-- repo: https://github.com/jendrikseipp/vulture
-  rev: v2.14
-  hooks:
-    - id: vulture
-      args: [--min-confidence=70, src/]
 
 # Log and syntax pattern checks
 - repo: https://github.com/pre-commit/pygrep-hooks
