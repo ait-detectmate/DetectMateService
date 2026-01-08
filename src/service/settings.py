@@ -53,6 +53,10 @@ class ServiceSettings(BaseSettings):
     # timeout for output dials. Used with blocking dial in Engine
     out_dial_timeout: int = 1000  # milliseconds
 
+    http_enabled: bool = True
+    http_host: str = "0.0.0.0"
+    http_port: int = 8000
+
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.
         env_nested_delimiter="__",  # DETECTMATE_DETECTOR__THRESHOLD
