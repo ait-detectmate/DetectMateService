@@ -15,7 +15,6 @@ from library.processor import BaseProcessor, ProcessorException
 
 class EngineException(Exception):
     """Custom exception for engine-related errors."""
-    pass
 
 
 class DefaultProcessor(BaseProcessor):
@@ -23,6 +22,7 @@ class DefaultProcessor(BaseProcessor):
 
     This is necessary to satisfy the abstract BaseProcessor requirement.
     """
+
     def __call__(self, raw: bytes) -> bytes | None:
         return raw
 
@@ -124,6 +124,13 @@ class Engine(ABC):
     def start(self) -> str:
         if not self._running:
             self._running = True
+            # RECREATE THE THREAD if it's dead or doesn't exist
+            if not self._thread.is_alive():
+                self._thread = threading.Thread(
+                    target=self._run_loop,
+                    name="EngineLoop",
+                    daemon=True
+                )
             self._thread.start()
             return "engine started"
         return "engine already running"
