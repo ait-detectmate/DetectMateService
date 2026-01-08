@@ -1,4 +1,5 @@
-component_type: "my_detector"
+component_type: "detectors.dummy_detector.DummyDetector"
+component_config_class: "detectors.dummy_detector.DummyDetectorConfig"
 component_name: "detector-1"
 manager_addr: "ipc:///tmp/detector_cmd.ipc"
 engine_addr: "ipc:///tmp/detector_engine.ipc"
