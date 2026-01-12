@@ -38,11 +38,6 @@ class ServiceSettings(BaseSettings):
     log_to_file: bool = True
     log_level: str = "INFO"
 
-    # Manager (command) channel (REQ/REP)
-    manager_addr: str | None = "ipc:///tmp/detectmate.cmd.ipc"
-    manager_recv_timeout: int = 100  # milliseconds
-    manager_thread_join_timeout: float = 1.0  # seconds
-
     # Engine channel (PAIR0)
     engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
     engine_autostart: bool = True
@@ -53,8 +48,8 @@ class ServiceSettings(BaseSettings):
     # timeout for output dials. Used with blocking dial in Engine
     out_dial_timeout: int = 1000  # milliseconds
 
-    http_enabled: bool = True
-    http_host: str = "0.0.0.0"
+    # HTTP server (FastAPI) settings
+    http_host: str = "127.0.0.1"
     http_port: int = 8000
 
     model_config = SettingsConfigDict(
@@ -89,7 +84,7 @@ class ServiceSettings(BaseSettings):
 
         # 2) No name: derive deterministically from addresses (also stable)
         #    This stays the same as long as the addresses don't change.
-        base = f"{self.component_type}|{self.manager_addr or ''}|{self.engine_addr or ''}"
+        base = f"{self.component_type}|{self.engine_addr or ''}"
         self.component_id = self._generate_uuid_from_string(f"detectmate/{base}")
         return self
 

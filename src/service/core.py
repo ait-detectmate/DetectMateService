@@ -10,7 +10,6 @@ from types import TracebackType
 
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
-from service.features.manager import Manager, manager_command
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
@@ -46,7 +45,7 @@ class LibraryComponentProcessor(BaseProcessor):
             return None
 
 
-class Service(Manager, Engine, ABC):
+class Service(Engine, ABC):
     """Abstract base for every DetectMate service/component."""
 
     def __init__(
@@ -59,8 +58,7 @@ class Service(Manager, Engine, ABC):
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self._service_exit_event: threading.Event = threading.Event()
         self.web_server = None
-        if self.settings.http_enabled:
-            self.web_server = WebServer(self)
+        self.web_server = WebServer(self)
 
         # set component_type
         if hasattr(self, 'component_type'):  # prioritize class attribute over settings
@@ -117,9 +115,6 @@ class Service(Manager, Engine, ABC):
 
         # Create processor instance
         self.processor = self.create_processor()
-
-        # now init Manager (opens REP socket & discovers commands)
-        Manager.__init__(self, settings=settings, logger=self.log)
 
         # then init Engine with the processor (opens PAIR socket, may autostart)
         Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
@@ -192,7 +187,6 @@ class Service(Manager, Engine, ABC):
         else:
             self.log.debug("Engine already stopped")
 
-    @manager_command()
     def start(self) -> str:
         """Expose engine start as a command."""
         # Check if already running to avoid redundant starts
@@ -204,7 +198,6 @@ class Service(Manager, Engine, ABC):
         self.log.info(msg)
         return msg
 
-    @manager_command()
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
         if not getattr(self, "_running", False):
@@ -219,7 +212,6 @@ class Service(Manager, Engine, ABC):
             self.log.error("Failed to stop engine: %s", e)
             return f"error: failed to stop engine - {e}"
 
-    @manager_command()
     def status(self, cmd: str | None = None) -> str:
         """Comprehensive status report including settings and configs."""
         if self.config_manager:
@@ -239,7 +231,6 @@ class Service(Manager, Engine, ABC):
         status_info = self._create_status_report(running)
         return json.dumps(status_info, indent=2)
 
-    @manager_command()
     def reconfigure(self, cmd: str | None = None) -> str:
         """Reconfigure service configurations dynamically."""
         if not self.config_manager:
@@ -278,7 +269,6 @@ class Service(Manager, Engine, ABC):
         except Exception as e:
             return f"reconfigure: error - {e}"
 
-    @manager_command()
     def shutdown(self) -> str:
         """Stops everything and exits the process."""
         self.log.info("Process shutdown initiated.")
@@ -365,6 +355,5 @@ class Service(Manager, Engine, ABC):
             _exc_tb: TracebackType | None
     ) -> Literal[False]:
         if not self._service_exit_event.is_set():  # only stop if not already stopped
-            self.shutdown()  # shut down gracefully
-        self._close_manager()  # close REP socket & thread
+            self.shutdown()  # shut down gracefully  # close REP socket & thread
         return False  # propagate exceptions
