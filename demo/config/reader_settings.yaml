@@ -1,7 +1,8 @@
 component_type: "readers.log_file.LogFileReader"
 component_config_class: "readers.log_file.LogFileConfig"
 component_name: "test-reader"
-manager_addr: "tcp://reader:8000"
+http_host: "127.0.0.1"
+http_port: 8000
 engine_addr: "tcp://reader:8001"
 log_level: "DEBUG"
 log_dir: "./logs"

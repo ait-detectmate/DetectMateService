@@ -1,7 +1,8 @@
 component_type: "readers.log_file.LogFileReader"
 component_config_class: "readers.log_file.LogFileConfig"
 component_name: "test-reader"
-manager_addr: "ipc:///tmp/test_reader_cmd.ipc"
+http_host:
+http_port:
 engine_addr: "ipc:///tmp/test_reader_engine.ipc"
 log_level: "DEBUG"
 log_dir: "./logs"
