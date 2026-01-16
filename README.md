@@ -105,3 +105,7 @@ docker compose up reader parser detector
 # Wait a few seconds for services to be ready, then:
 docker compose up demo
 ```
+
+### Documentation
+
+- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/)
