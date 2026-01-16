@@ -73,19 +73,19 @@ Example configuration files can be found in the `tests/config` directory.
 Start the service:
 
 ```bash
-uv run detectmate start --settings tests/config/service_settings.yaml
+uv run detectmate start --settings examples/service_settings.yaml
 ```
 
 Get the service status:
 
 ```bash
-uv run detectmate status --settings tests/config/service_settings.yaml
+uv run detectmate status --settings examples/service_settings.yaml
 ```
 
 Stop the service:
 
 ```bash
-uv run detectmate stop --settings tests/config/service_settings.yaml
+uv run detectmate stop --settings examples/service_settings.yaml
 ```
 
 
