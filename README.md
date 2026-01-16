@@ -7,7 +7,7 @@ DetectMate Service is a framework for building modular services that communicate
 With uv (recommended):
 
 ```bash
-uv sync
+uv sync --dev
 ```
 
 With pip and virtualenv:
@@ -23,8 +23,8 @@ pip install -e .
 If you plan to contribute to the development of this package, follow these steps to set up the dev environment and install pre-commit hooks (using [prek](https://github.com/j178/prek))
 
 ```bash
-uv sync
-prek install
+uv sync --dev
+uv run prek install
 ```
 
 Run the tests:
