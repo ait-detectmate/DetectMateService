@@ -23,7 +23,7 @@ pip install -e .
 If you plan to contribute to the development of this package, follow these steps to set up the dev environment and install pre-commit hooks (using [prek](https://github.com/j178/prek))
 
 ```bash
-uv pip install -e .[dev]
+uv sync
 prek install
 ```
 
