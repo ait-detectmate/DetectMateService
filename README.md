@@ -106,6 +106,10 @@ docker compose up reader parser detector
 docker compose up demo
 ```
 
-### Documentation
+## Documentation
 
 - [Project Documentation](https://ait-detectmate.github.io/DetectMateService/)
+
+## License
+
+[EUPL-1.2](https://github.com/ait-detectmate/DetectMateService/blob/main/LICENSE.md)
