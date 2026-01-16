@@ -7,9 +7,7 @@ DetectMate Service is a framework for building modular services that communicate
 With uv (recommended):
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -e .
+uv sync --dev
 ```
 
 With pip and virtualenv:
@@ -25,8 +23,8 @@ pip install -e .
 If you plan to contribute to the development of this package, follow these steps to set up the dev environment and install pre-commit hooks (using [prek](https://github.com/j178/prek))
 
 ```bash
-uv pip install -e .[dev]
-prek install
+uv sync --dev
+uv run prek install
 ```
 
 Run the tests:
@@ -75,19 +73,19 @@ Example configuration files can be found in the `tests/config` directory.
 Start the service:
 
 ```bash
-detectmate start --settings tests/config/service_settings.yaml
+uv run detectmate start --settings examples/service_settings.yaml
 ```
 
 Get the service status:
 
 ```bash
-detectmate status --settings tests/config/service_settings.yaml
+uv run detectmate status --settings examples/service_settings.yaml
 ```
 
 Stop the service:
 
 ```bash
-detectmate stop --settings tests/config/service_settings.yaml
+uv run detectmate stop --settings examples/service_settings.yaml
 ```
 
 
@@ -107,3 +105,11 @@ docker compose up reader parser detector
 # Wait a few seconds for services to be ready, then:
 docker compose up demo
 ```
+
+## Documentation
+
+- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/)
+
+## License
+
+[EUPL-1.2](https://github.com/ait-detectmate/DetectMateService/blob/main/LICENSE.md)

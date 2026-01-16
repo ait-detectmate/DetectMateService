@@ -12,17 +12,10 @@ cd DetectMateService
 We recommend using [uv](https://github.com/astral-sh/uv) to manage the environment
 and dependencies.
 
-### 1. Create and activate a virtual environment with uv
+### 1. Download the dependencies
 
 ```bash
-uv venv
-source .venv/bin/activate
-```
-
-### 2. Install the project
-
-```bash
-uv pip install .
+uv sync
 ```
 
 ## Alternative setup with pip
@@ -44,12 +37,12 @@ pip install .
 For development, you can install with optional dependencies:
 
 ```bash
-pip install -e ".[dev]"
+uv sync --dev
 ```
 
 We recommend using [`prek`](https://github.com/j178/prek) to manage Git
 pre-commit hooks. `prek` is configured via the existing `.pre-commit-config.yaml`
 and can be installed as part of the `dev` extras. To ensure pre-commit hooks run before each commit, run:
 ```bash
-prek install
+uv run prek install
 ```
