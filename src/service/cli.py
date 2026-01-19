@@ -191,7 +191,7 @@ def main() -> None:
 
     if args.config:
         settings.config_file = args.config
-
+    logger.info("config file: %s", settings.config_file)
     # Initialize and run
     # Note: Service now inherits from Service, not CLIService
     service = Service(settings=settings)
