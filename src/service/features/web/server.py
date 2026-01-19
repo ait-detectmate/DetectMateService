@@ -29,8 +29,8 @@ class WebServer(threading.Thread):
         )
         self.server = uvicorn.Server(self.config)
         self.server.install_signal_handlers = False  # Importnt for running in thread,
-        # pythons signal module only allows the Main Thread to resgister signal handlers
-        # uvicrons default behaviour to listen for shutdown signals will raise ValueError
+        # pythons signal module only allows the Main Thread to register signal handlers
+        # uvicorns default behaviour to listen for shutdown signals will raise ValueError
 
     def run(self) -> None:
         self.server.run()
