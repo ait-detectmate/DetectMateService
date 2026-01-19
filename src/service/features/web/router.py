@@ -33,9 +33,11 @@ async def admin_status(service: Any = Depends(get_service)) -> Any:
 @router.post("/reconfigure")  # type: ignore[misc]
 async def admin_reconfigure(payload: ReconfigPayload, service: Any = Depends(get_service)) -> Dict[str, Any]:
     # format the string to match what internal reconfigure() expects
-    import json
-    cmd_str = f"{'persist ' if payload.persist else ''}{json.dumps(payload.config)}"
-    return {"message": service.reconfigure(cmd_str)}
+    result = service.reconfigure(
+        config_data=payload.config,
+        persist=payload.persist
+    )
+    return {"message": result}
 
 
 @router.post("/shutdown")  # type: ignore[misc]
