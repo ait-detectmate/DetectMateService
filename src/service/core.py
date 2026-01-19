@@ -231,42 +231,34 @@ class Service(Engine, ABC):
         status_info = self._create_status_report(running)
         return json.dumps(status_info, indent=2)
 
-    def reconfigure(self, cmd: str | None = None) -> str:
+    def reconfigure(self, config_data: Dict[str, Any], persist: bool = False) -> str:
         """Reconfigure service configurations dynamically."""
         if not self.config_manager:
             return "reconfigure: no config manager configured"
 
-        payload = ""
-        persist = False
-
-        if cmd:
-            # Parse the command: "reconfigure [persist] <json>"
-            parts = cmd.split(maxsplit=2)  # Split into at most 3 parts
-            if len(parts) >= 2:
-                # Check if the second part is "persist"
-                if parts[1].lower() == "persist":
-                    persist = True
-                    # Use the third part as payload if it exists
-                    payload = parts[2] if len(parts) > 2 else ""
-                else:
-                    # Use the rest of the command as payload
-                    payload = cmd.split(maxsplit=1)[1] if len(parts) > 1 else ""
-
-        if not payload:
-            return "reconfigure: no-op (no payload)"
-
+        if not config_data:
+            return "reconfigure: no-op (empty config data)"
         try:
-            data = json.loads(payload)
-        except json.JSONDecodeError:
-            return "reconfigure: invalid JSON"
+            self.config_manager.update(config_data)
+            #  problem: update() validates against the Schema,
+            # model_validate()constructs a pydantic model instance of for example
+            # (NewValueDetectorConfig), but save() expects a dict to serialize to YAML
+            # pydantic automatically fills in default values, including
+            # inherited from CoreDetectorConfig like parser, start_id)
+            # class CoreDetectorConfig(CoreConfig):
+            # comp_type: str = "detectors"
+            # method_type: str = "core_detector"
+            # parser: str = "<PLACEHOLDER>"
+            # on save these get written in the config.yaml file
+            # -> then this file is missing "detectors" and other important fields and cannot be used
 
-        try:
-            self.config_manager.update(data)
             if persist:
                 self.config_manager.save()
-            self.log.info("Reconfigured with: %s", data)
+            self.log.info("Reconfigured with: %s", config_data)
             return "reconfigure: ok"
+
         except Exception as e:
+            self.log.error("Reconfiguration error: %s", e)
             return f"reconfigure: error - {e}"
 
     def shutdown(self) -> str:
