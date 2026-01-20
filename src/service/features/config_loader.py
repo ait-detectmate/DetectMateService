@@ -1,7 +1,6 @@
 import importlib
 from typing import Type, cast
 
-
 from detectmatelibrary.common.core import CoreConfig
 
 
@@ -9,13 +8,15 @@ class ConfigClassLoader:
     """Loads configuration schema classes from DetectMate library
     dynamically."""
 
+    BASE_PACKAGE = "detectmatelibrary"
+
     @classmethod
     def load_config_class(cls, config_class_path: str) -> Type[CoreConfig]:
         """Load a config class from a path string.
 
         Args:
             config_class_path: dot path like "readers.log_file.LogFileConfig"
-                             or just class name if in detectmatelibrary
+                               or fully-qualified like "myplugin.readers.LogFileConfig"
 
         Returns:
             The config class (not an instance)
@@ -23,9 +24,11 @@ class ConfigClassLoader:
         Raises:
             ImportError: If module cannot be imported
             AttributeError: If class not found in module
+            TypeError: If class is not a subclass of CoreConfig
+            RuntimeError: For other failures (e.g. invalid format)
         """
         try:
-            # handle both "module.ClassName" and just "ClassName" formats
+            # handle "module.ClassName" formats
             if '.' not in config_class_path:
                 raise ValueError(
                     f"Invalid config class format: {config_class_path}. "
@@ -34,9 +37,13 @@ class ConfigClassLoader:
 
             module_name, class_name = config_class_path.rsplit('.', 1)
 
-            # import the module
-            full_module_path = f"detectmatelibrary.{module_name}"
-            module = importlib.import_module(full_module_path)
+            # first try as DetectMate-relative
+            try:
+                full_module_path = f"{cls.BASE_PACKAGE}.{module_name}"
+                module = importlib.import_module(full_module_path)
+            except ImportError:
+                # if that fails, treat it as an absolute module path
+                module = importlib.import_module(module_name)
 
             # get the class
             config_class = getattr(module, class_name)

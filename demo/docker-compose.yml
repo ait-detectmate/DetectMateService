@@ -3,8 +3,6 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}  # must be set in .env or export
     container_name: detectmate_reader
     command: >
       detectmate start
@@ -22,8 +20,6 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: detectmate_parser
     command: >
       detectmate start
@@ -44,8 +40,6 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: detectmate_detector
     command: >
       detectmate start
@@ -65,8 +59,6 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: detectmate_demo
     command: python demo/manual_demo_run_tcp.py
     volumes:
