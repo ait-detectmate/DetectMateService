@@ -36,6 +36,7 @@ repos:
         - pydantic
         - types-PyYAML
         - pydantic-settings
+        - types-requests
 
 # Code formatting
 - repo: https://github.com/hhatto/autopep8

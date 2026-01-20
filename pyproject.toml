@@ -13,6 +13,7 @@ dependencies = [
     "pynng>=0.8.1",
     "pyyaml>=6.0.2",
     "types-pyyaml>=6.0.12.20250915",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
@@ -22,7 +23,9 @@ dev = [
     "prek>=0.2.8",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "types-requests",
 ]
 
 [project.scripts]
 detectmate = "service.cli:main"
+detectmate-client = "service.client:main"
