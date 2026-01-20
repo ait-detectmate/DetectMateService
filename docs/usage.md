@@ -6,15 +6,24 @@ DetectMateService provides a command-line interface (CLI) `detectmate` to manage
 
 To run a component with default settings only, you can use this command:
 ```bash
-detectmate start
+detectmate
 ```
 
 You should see output like:
 
 ```
-[2025-10-21 10:30:00] INFO core.abc123: Manager listening on ipc:///tmp/detectmate.cmd.ipc
-[2025-10-21 10:30:00] INFO core.abc123: engine started
-[2025-10-21 10:30:00] INFO core.abc123: setup_io: ready to process messages
+[2026-01-20 15:16:21,140] INFO service.cli: config file: None
+[2026-01-20 15:16:21,140] INFO service.cli: config file: None
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP Admin active at 127.0.0.1:8000
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
+INFO:     Started server process [3933168]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
 ```
 
 ## Create service settings
@@ -26,16 +35,17 @@ component_name: my-first-service
 component_type: core  # or use a library component like "detectors.RandomDetector"
 log_level: INFO
 log_dir: ./logs
-manager_addr: ipc:///tmp/detectmate.cmd.ipc
+http_host: 127.0.0.1
+http_port: 8000
 engine_addr: ipc:///tmp/detectmate.engine.ipc
 ```
 
 ## Start the service with settings
 
-To start the service, use the `start` command. You can optionally specify a settings file and a component configuration file.
+To start the service, use the `detectmate` command. You can optionally specify a settings file and a component configuration file.
 
 ```bash
-detectmate start --settings settings.yaml --config config.yaml
+detectmate --settings settings.yaml --config config.yaml
 ```
 
 - `--settings`: Path to the service settings YAML file.
@@ -46,10 +56,8 @@ detectmate start --settings settings.yaml --config config.yaml
 To check the status of a running service run:
 
 ```bash
-detectmate status --settings settings.yaml
+detectmate-client status --url <http_host:http_port>
 ```
-
-The `--settings` argument is required to know where to contact the service manager (via `manager_addr`).
 
 Output:
 
@@ -74,13 +82,13 @@ Output:
 You can update the component configuration of a running service without restarting it:
 
 ```bash
-detectmate reconfigure --settings settings.yaml --config new_config.yaml
+detectmate-client  --url <http_host:http_port> reconfigure new_config.yaml
 ```
 
 Add `--persist` to save the new configuration to the original config file (if supported).
 
 ```bash
-detectmate reconfigure --settings settings.yaml --config new_config.yaml --persist
+detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
 ```
 
 ## Stopping the service
@@ -88,5 +96,5 @@ detectmate reconfigure --settings settings.yaml --config new_config.yaml --persi
 To stop the service:
 
 ```bash
-detectmate stop --settings settings.yaml
+detectmate stop --url <http_host:http_port>
 ```
