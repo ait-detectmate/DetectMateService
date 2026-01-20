@@ -69,14 +69,14 @@ The service supports dynamic reconfiguration with two modes:
 Changes are applied to the running service but not saved to disk. The changes will be lost when the service restarts.
 
 ```bash
-detectmate-client --url 127.0.0.1: 8000 reconfigure path/to/new-config.yaml
+detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml
 ```
 
 #### 2. Persistent update (with --persist flag)
 Changes are applied to the running service AND saved to the original parameter file. The changes persist across service restarts.
 
 ```bash
-detectmate-client --url 127.0.0.1: 8000 reconfigure path/to/new-config.yaml --persist
+detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml --persist
 ```
 
 **Note:** The `--persist` flag will overwrite the original parameter file specified in your service configuration with the new values.
