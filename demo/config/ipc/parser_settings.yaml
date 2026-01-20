@@ -1,7 +1,8 @@
 component_type: "parsers.template_matcher.MatcherParser"
 component_config_class: "parsers.template_matcher.MatcherParserConfig"
 component_name: "test-parser"
-manager_addr: "ipc:///tmp/test_parser_cmd.ipc"
+http_host: "127.0.0.1"
+http_port: 8010
 engine_addr: "ipc:///tmp/test_parser_engine.ipc"
 output_engine_addr: "ipc:///tmp/test_nvd_engine.ipc"
 log_level: "DEBUG"
