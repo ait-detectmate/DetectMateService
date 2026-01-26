@@ -169,8 +169,8 @@ class TestReaderServiceViaEngine:
 
         # Verify log IDs increment
         log_ids = [log["logID"] for log in logs]
-        assert log_ids[1] == log_ids[0] + 1
-        assert log_ids[2] == log_ids[1] + 1
+        assert log_ids[1] == str(int(log_ids[0]) + 1)
+        assert log_ids[2] == str(int(log_ids[1]) + 1)
 
     def test_log_contains_expected_content(self, running_service: dict) -> None:
         """Verify returned logs contain expected audit log content."""
