@@ -13,10 +13,21 @@ from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
-from service.features.web.server import WebServer
-
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
+from prometheus_client import Counter, Gauge
+
+service_running = Gauge(
+    "service_running",
+    "Whether the service engine is running (1 = running, 0 = stopped)",
+    ["component_type", "component_id"]
+)
+
+engine_starts_total = Counter(
+    "engine_starts_total",
+    "Number of times the engine was started",
+    ["component_type", "component_id"]
+)
 
 
 class ServiceProcessorAdapter(BaseProcessor):
@@ -57,6 +68,7 @@ class Service(Engine, ABC):
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self._service_exit_event: threading.Event = threading.Event()
+        from service.features.web.server import WebServer
         self.web_server = None
         self.web_server = WebServer(self)
 
@@ -194,7 +206,19 @@ class Service(Engine, ABC):
             msg = "Ignored: Engine is already running"
             self.log.debug(msg)
             return msg
+
+        engine_starts_total.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).inc()
+
         msg = Engine.start(self)
+
+        service_running.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).set(1)
+
         self.log.info(msg)
         return msg
 
@@ -206,6 +230,10 @@ class Service(Engine, ABC):
         self.log.info("Stop command received")
         try:
             Engine.stop(self)
+            service_running.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).set(0)
             self.log.info("Engine stopped successfully")
             return "engine stopped"
         except EngineException as e:
