@@ -8,6 +8,7 @@ import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
+from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
@@ -68,7 +69,6 @@ class Service(Engine, ABC):
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self._service_exit_event: threading.Event = threading.Event()
-        from service.features.web.server import WebServer
         self.web_server = None
         self.web_server = WebServer(self)
 
