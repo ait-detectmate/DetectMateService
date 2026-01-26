@@ -17,8 +17,8 @@ from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
 from prometheus_client import Counter, Gauge
 
-service_running = Gauge(
-    "service_running",
+engine_running = Gauge(
+    "engine_running",
     "Whether the service engine is running (1 = running, 0 = stopped)",
     ["component_type", "component_id"]
 )
@@ -214,7 +214,7 @@ class Service(Engine, ABC):
 
         msg = Engine.start(self)
 
-        service_running.labels(
+        engine_running.labels(
             component_type=self.component_type,
             component_id=self.component_id
         ).set(1)
@@ -230,7 +230,7 @@ class Service(Engine, ABC):
         self.log.info("Stop command received")
         try:
             Engine.stop(self)
-            service_running.labels(
+            engine_running.labels(
                 component_type=self.component_type,
                 component_id=self.component_id
             ).set(0)
