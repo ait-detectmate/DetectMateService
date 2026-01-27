@@ -30,6 +30,24 @@ engine_starts_total = Counter(
     ["component_type", "component_id"]
 )
 
+data_read_bytes_total = Counter(
+    "data_read_bytes_total",
+    "Total bytes read from input interfaces",
+    ["component_type", "component_id"]
+)
+
+data_processed_bytes_total = Counter(
+    "data_processed_bytes_total",
+    "Total bytes processed by the engine",
+    ["component_type", "component_id"]
+)
+
+data_written_bytes_total = Counter(
+    "data_written_bytes_total",
+    "Total bytes written to output interfaces",
+    ["component_type", "component_id"]
+)
+
 
 class ServiceProcessorAdapter(BaseProcessor):
     """Adapter class to use a Service's process method as a BaseProcessor."""
