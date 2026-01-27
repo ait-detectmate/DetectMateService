@@ -16,7 +16,8 @@ from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
-from prometheus_client import Counter, Gauge
+from prometheus_client import REGISTRY, Counter, Gauge
+
 
 engine_running = Gauge(
     "engine_running",
@@ -30,23 +31,20 @@ engine_starts_total = Counter(
     ["component_type", "component_id"]
 )
 
-data_read_bytes_total = Counter(
-    "data_read_bytes_total",
-    "Total bytes read from input interfaces",
-    ["component_type", "component_id"]
-)
 
-data_processed_bytes_total = Counter(
-    "data_processed_bytes_total",
-    "Total bytes processed by the engine",
-    ["component_type", "component_id"]
-)
+def get_counter(name: str, documentation: str, labelnames: list[str]) -> Counter:
+    """Safely get or create a Prometheus counter."""
+    # Search the registry for an existing collector with this name
+    for collector in REGISTRY._collector_to_names:
+        if name in REGISTRY._collector_to_names[collector]:
+            return collector
+    # If not found, create it
+    return Counter(name, documentation, labelnames)
 
-data_written_bytes_total = Counter(
-    "data_written_bytes_total",
-    "Total bytes written to output interfaces",
-    ["component_type", "component_id"]
-)
+
+data_processed_bytes_total = get_counter("data_processed_bytes_total",
+                                         "Total bytes processed by the engine", [
+                                             "component_type", "component_id"])
 
 
 class ServiceProcessorAdapter(BaseProcessor):
@@ -171,6 +169,13 @@ class Service(Engine, ABC):
     def process(self, raw_message: bytes) -> bytes | None | Any:
         """Process the raw message using the library component or default
         implementation."""
+
+        if raw_message:
+            data_processed_bytes_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc(len(raw_message))
+
         if self.library_component:
             # use the library component's process method
             return self.library_component.process(raw_message)
