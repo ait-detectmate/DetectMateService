@@ -16,13 +16,14 @@ from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
-from prometheus_client import REGISTRY, Counter, Gauge
+from prometheus_client import REGISTRY, Counter, Enum
 
 
-engine_running = Gauge(
+engine_running = Enum(
     "engine_running",
-    "Whether the service engine is running (1 = running, 0 = stopped)",
-    ["component_type", "component_id"]
+    "Whether the service engine is running (running or stopped)",
+    ["component_type", "component_id"],
+    states=['running', 'stopped'],
 )
 
 engine_starts_total = Counter(
@@ -240,7 +241,7 @@ class Service(Engine, ABC):
         engine_running.labels(
             component_type=self.component_type,
             component_id=self.component_id
-        ).set(1)
+        ).state('running')
 
         self.log.info(msg)
         return msg
@@ -256,7 +257,7 @@ class Service(Engine, ABC):
             engine_running.labels(
                 component_type=self.component_type,
                 component_id=self.component_id
-            ).set(0)
+            ).state('stopped')
             self.log.info("Engine stopped successfully")
             return "engine stopped"
         except EngineException as e:
