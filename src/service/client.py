@@ -38,6 +38,16 @@ class DetectMateClient:
         response = requests.get(f"{self.base_url}/admin/status", timeout=self.timeout)
         self._handle_response(response)
 
+    def metrics(self) -> None:
+        response = requests.get(f"{self.base_url}/metrics", timeout=self.timeout)
+        try:
+            response.raise_for_status()
+            # Prometheus returns plain text
+            print(response.text)
+        except requests.exceptions.HTTPError as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+
     def reconfigure(self, yaml_file: str, persist: bool) -> None:
         try:
             with open(yaml_file, 'r') as f:
@@ -82,6 +92,8 @@ def main() -> None:
     # Status
     subparsers.add_parser("status", help="Get service status and configuration")
 
+    subparsers.add_parser("metrics", help="Get service metrics")
+
     # Reconfigure
     reconf = subparsers.add_parser("reconfigure", help="Update configuration from a YAML file")
     reconf.add_argument("file", help="Path to the YAML configuration file")
@@ -100,6 +112,8 @@ def main() -> None:
         client.stop()
     elif args.command == "status":
         client.status()
+    elif args.command == "metrics":
+        client.metrics()
     elif args.command == "reconfigure":
         client.reconfigure(args.file, args.persist)
     else:
