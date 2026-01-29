@@ -116,10 +116,9 @@ class Service(Engine, ABC):
         # Create processor instance
         self.processor = self.create_processor()
 
-        # then init Engine with the processor (opens PAIR socket, may autostart)
+        # then init Engine with the processor (opens PAIR socket)
         Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
-
-        self.log.debug("%s[%s] created", self.component_type, self.component_id)
+        self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
         """Return the configuration schema for this service.
@@ -164,12 +163,13 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
-        # 1. Start Web Server
+        # 1. Start Web Server (Admin API)
         if self.web_server:
             self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
             self.web_server.start()
 
         # 2. Engine Start logic
+        # __init__ is 100% finished
         if self.settings.engine_autostart:
             self.log.info("Auto-starting engine...")
             self.start()
@@ -183,7 +183,7 @@ class Service(Engine, ABC):
         if self.web_server:
             self.web_server.stop()
         if getattr(self, "_running", False):
-            Engine.stop(self)
+            self.stop()  # This calls the Service.stop which calls Engine.stop
         else:
             self.log.debug("Engine already stopped")
 

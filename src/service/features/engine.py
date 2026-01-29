@@ -73,9 +73,7 @@ class Engine(ABC):
                 self.log.warning("Failed to close engine input socket after setup failure: %s", e)
             raise
 
-        # autostart if enabled
-        if getattr(self.settings, "engine_autostart", True):
-            self.start()
+        self.log.debug("Engine initialized and ready.")
 
     def _setup_output_sockets(self) -> None:
         """Create and connect output sockets for all destinations in out_addr.
