@@ -3,6 +3,7 @@ import tempfile
 import yaml
 import json
 import os
+import shutil
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -33,16 +34,21 @@ class MockService(Service):
 @pytest.fixture
 def temp_config_file():
     """Create a temporary config file for testing."""
+    temp_log_dir = tempfile.mkdtemp(prefix="detectmate_logs_")
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
         config_data = {
             'config_file': str(Path(f.name).with_suffix('.params.yaml')),
-            'engine_autostart': False
+            'engine_autostart': False,
+            'log_to_file': False,
+            'log_dir': temp_log_dir,
         }
         yaml.dump(config_data, f)
     yield f.name
     # Clean up
     if os.path.exists(f.name):
         os.unlink(f.name)
+    if os.path.isdir(temp_log_dir):
+        shutil.rmtree(temp_log_dir)
 
 
 @pytest.fixture
@@ -156,7 +162,7 @@ def test_reconfigure_command_validation_error(temp_config_file, temp_params_file
 
 def test_reconfigure_command_no_config_manager():
     """Test reconfigure command when no config manager is configured."""
-    settings = ServiceSettings(engine_autostart=False)  # No config file
+    settings = ServiceSettings(engine_autostart=False, log_to_file=False)  # No config file
 
     with MockService(settings=settings) as service:
         result = service._handle_cmd('reconfigure {"threshold": 0.8}')

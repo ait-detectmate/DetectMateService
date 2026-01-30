@@ -19,19 +19,19 @@ def create_test_log_messages() -> list:
     messages = []
     log_configs = [
         {
-            "logID": "1",
+            "logID": 1,
             "log": "User john logged in from 192.168.1.100",
             "logSource": "auth_server",
             "hostname": "server-01",
         },
         {
-            "logID": "2",
+            "logID": 2,
             "log": "Database query failed: connection timeout",
             "logSource": "database",
             "hostname": "db-01",
         },
         {
-            "logID": "3",
+            "logID": 3,
             "log": "File config.txt accessed by admin at 10:45:30",
             "logSource": "file_server",
             "hostname": "fs-01",
