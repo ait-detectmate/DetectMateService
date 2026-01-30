@@ -28,6 +28,8 @@ class TestManagerSocketErrorHandling:
             manager_addr=f"ipc://{ipc_file}",
             engine_autostart=False,
             log_level="ERROR",
+            log_dir=tmp_path,
+            log_to_file=False,
         )
 
         # Stub the service logger so we can assert the error log call
@@ -51,6 +53,7 @@ class TestManagerSocketErrorHandling:
             manager_addr="tcp://127.0.0.1:9999",
             engine_autostart=False,
             log_level="ERROR",
+            log_to_file=False,
         )
 
         # Mock pynng to raise AddressInUse when creating sockets
@@ -67,6 +70,7 @@ class TestManagerSocketErrorHandling:
             manager_addr="tcp://invalid-address:not-a-port",
             engine_autostart=False,
             log_level="ERROR",
+            log_to_file=False,
         )
 
         # Should raise a ValueError for invalid port
@@ -79,6 +83,7 @@ class TestManagerSocketErrorHandling:
             manager_addr="tcp://127.0.0.1:9999",
             engine_autostart=False,
             log_level="ERROR",
+            log_to_file=False,
         )
 
         # Mock pynng to raise an exception on listen
@@ -100,6 +105,8 @@ class TestManagerSocketErrorHandling:
             manager_addr=f"ipc://{ipc_file}",
             engine_autostart=False,
             log_level="ERROR",
+            log_dir=tmp_path,
+            log_to_file=False,
         )
 
         # Should not raise any exceptions
@@ -117,6 +124,7 @@ class TestManagerSocketErrorHandling:
             manager_addr=f"tcp://127.0.0.1:{port}",
             engine_autostart=False,
             log_level="ERROR",
+            log_to_file=False,
         )
 
         # Should not raise any exceptions
@@ -131,6 +139,8 @@ class TestManagerSocketErrorHandling:
             manager_addr=f"ipc://{ipc_file}",
             engine_autostart=False,
             log_level="ERROR",
+            log_dir=tmp_path,
+            log_to_file=False,
         )
 
         # Should not raise any exceptions even though file doesn't exist

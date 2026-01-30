@@ -30,6 +30,8 @@ def comp(tmp_path):
         engine_addr=f"ipc://{tmp_path}/t_engine.ipc",
         engine_autostart=True,
         log_level="DEBUG",
+        log_dir=tmp_path,
+        log_to_file=False,
     )
     c = MockComponent(settings=settings)
     t = threading.Thread(target=c.run, daemon=True)
