@@ -27,8 +27,8 @@ def test_parser_messages() -> list:
             "EventID": 1,
             "template": "User <*> logged in from <*>",
             "variables": ["john", "192.168.1.100"],
-            "parsedLogID": "101",
-            "logID": "1",
+            "parsedLogID": 101,
+            "logID": 1,
             "log": "User john logged in from 192.168.1.100",
             "logFormatVariables": {
                 "username": "john",
@@ -44,8 +44,8 @@ def test_parser_messages() -> list:
             "EventID": 2,
             "template": "Database query failed: <*>",
             "variables": ["connection timeout"],
-            "parsedLogID": "102",
-            "logID": "2",
+            "parsedLogID": 102,
+            "logID": 2,
             "log": "Database query failed: connection timeout",
             "logFormatVariables": {
                 "error": "connection timeout",
@@ -61,8 +61,8 @@ def test_parser_messages() -> list:
             "EventID": 3,
             "template": "File <*> accessed by <*> at <*>",
             "variables": ["config.txt", "admin", "10:45:30"],
-            "parsedLogID": "103",
-            "logID": "3",
+            "parsedLogID": 103,
+            "logID": 3,
             "log": "File config.txt accessed by admin at 10:45:30",
             "logFormatVariables": {
                 "filename": "config.txt",
