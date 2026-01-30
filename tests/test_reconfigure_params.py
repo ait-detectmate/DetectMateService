@@ -3,6 +3,7 @@ import tempfile
 import yaml
 import json
 import os
+import shutil
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -47,9 +48,7 @@ def temp_config_file():
     if os.path.exists(f.name):
         os.unlink(f.name)
     if os.path.isdir(temp_log_dir):
-        for entry in os.listdir(temp_log_dir):
-            os.unlink(os.path.join(temp_log_dir, entry))
-        os.rmdir(temp_log_dir)
+        shutil.rmtree(temp_log_dir)
 
 
 @pytest.fixture
