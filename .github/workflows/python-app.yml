@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
 permissions:
   contents: read
@@ -27,6 +27,22 @@ jobs:
         python-version: "3.12"
         activate-environment: true
         enable-cache: true
+
+    - name: Resolve DetectMateLibrary branch
+      run: |
+        CURRENT_BRANCH="${{ github.ref_name }}"
+        REPO_URL="https://github.com/ait-detectmate/DetectMateLibrary.git"
+        if [ "$CURRENT_BRANCH" = "main" ]; then
+          echo "LIB_BRANCH=main" >> $GITHUB_ENV
+        elif git ls-remote --heads "$REPO_URL" "$CURRENT_BRANCH" | grep -q .; then
+          echo "LIB_BRANCH=$CURRENT_BRANCH" >> $GITHUB_ENV
+        else
+          echo "LIB_BRANCH=development" >> $GITHUB_ENV
+        fi
+
+    - name: Patch pyproject.toml for the right DetectMateLibrary branch
+      run: |
+        sed -i 's#detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git#detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git@'"${LIB_BRANCH}"'#' pyproject.toml
 
     - name: Install project deps
       run: uv pip install -e .[dev]
