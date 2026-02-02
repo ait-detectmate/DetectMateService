@@ -128,6 +128,8 @@ We're happily taking patches and other contributions. Please see the following l
 
 - [GitHub Workflow](https://ait-detectmate.github.io/DetectMateService/latest/Contribution)
 
+If you encounter any bugs, please create an issue on [Github](https://github.com/ait-detectmate/DetectMateService/issues).
+
 ## License
 
 [EUPL-1.2](https://github.com/ait-detectmate/DetectMateService/blob/main/LICENSE.md)
