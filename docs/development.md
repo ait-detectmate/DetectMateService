@@ -28,6 +28,12 @@ and can be installed as part of the `dev` extras. To ensure pre-commit hooks run
 uv run prek install
 ```
 
+To run the checks manually, you can execute:
+
+```bash
+uv run prek run -a
+```
+
 ## Add tests and run pytest
 
 In oder to run the tests run the following command:
