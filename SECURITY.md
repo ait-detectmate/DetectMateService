@@ -7,7 +7,7 @@
 | 1.x.x   | :white_check_mark: |
 | < 1.0.0   | :x:                |
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Currently DetectMateService is a work in progress and heavily under development. Possible vulnerabilities will not be treated any special and can be issued using [GitHub-Issues](https://github.com/ait-detectmate/DetectMateService/issues)
 
 ## Reporting a Vulnerability
