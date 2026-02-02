@@ -15,3 +15,7 @@ nav:
       - Running a Pipeline: pipeline.md
     - Contribution: contribution.md
     - Development: development.md
+
+markdown_extensions:
+  - admonition
+
