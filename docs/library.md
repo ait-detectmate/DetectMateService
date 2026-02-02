@@ -1,3 +1,5 @@
+> **Note**: For implementing custom library components, see the [Library Interface Contract](interfaces.md).
+
 ## Using a Library Component
 
 The Service can be run as any component imported from the [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary).

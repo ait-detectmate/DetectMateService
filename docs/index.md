@@ -17,3 +17,7 @@ It uses NNG's messaging architecture to process data in real-time.
 
 Check out the [Installation](installation.md) guide to set up the service, and then proceed to
 [Configuration](configuration.md) and [Usage](usage.md) to learn how to run it.
+
+
+For a list of imports from the DetectMateLinbrary in the Service and their usage [Library Imports](library-imports.md).
+For library developers implementing custom components, see the [Library Interface Contract](interfaces.md).

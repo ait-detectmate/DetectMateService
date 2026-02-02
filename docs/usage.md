@@ -82,7 +82,7 @@ Output:
 You can update the component configuration of a running service without restarting it:
 
 ```bash
-detectmate-client  --url <http_host:http_port> reconfigure new_config.yaml
+detectmate-client --url <http_host:http_port> reconfigure new_config.yaml
 ```
 
 Add `--persist` to save the new configuration to the original config file (if supported).
