@@ -35,4 +35,3 @@ We're happily taking patches and other contributions. Please see the following l
 ## License
 
 DetectMateService is Free Open Source Software and uses the [EUPL-1.2 License](https://github.com/ait-detectmate/DetectMateService/blob/main/LICENSE.md)
-

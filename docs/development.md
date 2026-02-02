@@ -1,6 +1,13 @@
 # Development
 
-## Setup
+This section describes how to setup a development environment and how to contribute to `DetectMateService`.
+
+!!! note
+
+    Read the [Contribution Guide](contribution.md) to follow and understand the development workflow.
+
+
+## Setup a development environment
 
 For development, you can install with optional dependencies:
 
@@ -8,10 +15,23 @@ For development, you can install with optional dependencies:
 uv sync --dev
 ```
 
-We are insisting to use [`prek`](https://github.com/j178/prek) to run basic checks at commit time.
+*Please note that this step is not necessary. `uv run --dev` will automatically download all dependencies.*
+
+
+## Use prek to run code checks
+
+Every code contributer must use [`prek`](https://github.com/j178/prek) to run basic checks at commit time.
 `prek` is configured via the existing `.pre-commit-config.yaml`
 and can be installed as part of the `dev` extras. To ensure pre-commit hooks run before each commit, run:
+
 ```bash
 uv run prek install
 ```
 
+## Add tests and run pytest
+
+In oder to run the tests run the following command:
+
+```bash
+uv run --dev pytest
+```
