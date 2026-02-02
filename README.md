@@ -73,19 +73,31 @@ Example configuration files can be found in the `tests/config` directory.
 Start the service:
 
 ```bash
-uv run detectmate start --settings examples/service_settings.yaml
+uv run detectmate --settings examples/service_settings.yaml
 ```
+To survey the state of your component and interact with the running service, use the detectmate-client tool.
 
 Get the service status:
 
 ```bash
-uv run detectmate status --settings examples/service_settings.yaml
+uv run detectmate-client status --url <http_host:http_port>
 ```
 
-Stop the service:
+Stop the engine:
 
 ```bash
-uv run detectmate stop --settings examples/service_settings.yaml
+uv run detectmate-client stop --url <http_host:http_port>
+```
+
+Start the engine:
+```bash
+uv run detectmate-client start --url <http_host:http_port>
+```
+
+Shutdown entire service:
+
+```bash
+uv run detectmate-client shutdown --url <http_host:http_port>
 ```
 
 

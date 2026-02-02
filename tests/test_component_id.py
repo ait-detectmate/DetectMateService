@@ -27,7 +27,6 @@ def test_uuid5_from_addresses_expected_and_stable():
     # No component_name -> derive from addresses + type
     s1 = ServiceSettings(
         component_type="detector",
-        manager_addr="ipc:///tmp/a.ipc",
         engine_addr="ipc:///tmp/b.ipc",
         component_name=None,
         component_id=None,
@@ -41,7 +40,6 @@ def test_uuid5_from_addresses_expected_and_stable():
     # Recreate with same addresses -> same ID
     s2 = ServiceSettings(
         component_type="detector",
-        manager_addr="ipc:///tmp/a.ipc",
         engine_addr="ipc:///tmp/b.ipc",
     )
     assert s2.component_id == expected
@@ -50,13 +48,11 @@ def test_uuid5_from_addresses_expected_and_stable():
 def test_changing_addresses_changes_id():
     s1 = ServiceSettings(
         component_type="detector",
-        manager_addr="ipc:///tmp/a.ipc",
         engine_addr="ipc:///tmp/b.ipc",
     )
     s2 = ServiceSettings(
         component_type="detector",
-        manager_addr="ipc:///tmp/c.ipc",  # changed
-        engine_addr="ipc:///tmp/b.ipc",
+        engine_addr="ipc:///tmp/c.ipc",  # changed
     )
     assert s1.component_id != s2.component_id
 
