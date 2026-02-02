@@ -8,15 +8,44 @@ import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
+from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
-from service.features.web.server import WebServer
-
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
+from prometheus_client import REGISTRY, Counter, Enum
+
+
+engine_running = Enum(
+    "engine_running",
+    "Whether the service engine is running (running or stopped)",
+    ["component_type", "component_id"],
+    states=['running', 'stopped'],
+)
+
+engine_starts_total = Counter(
+    "engine_starts_total",
+    "Number of times the engine was started",
+    ["component_type", "component_id"]
+)
+
+
+def get_counter(name: str, documentation: str, labelnames: list[str]) -> Counter:
+    """Safely get or create a Prometheus counter."""
+    # Search the registry for an existing collector with this name
+    for collector in REGISTRY._collector_to_names:
+        if name in REGISTRY._collector_to_names[collector]:
+            return collector
+    # If not found, create it
+    return Counter(name, documentation, labelnames)
+
+
+data_processed_bytes_total = get_counter("data_processed_bytes_total",
+                                         "Total bytes processed by the engine", [
+                                             "component_type", "component_id"])
 
 
 class ServiceProcessorAdapter(BaseProcessor):
@@ -140,6 +169,13 @@ class Service(Engine, ABC):
     def process(self, raw_message: bytes) -> bytes | None | Any:
         """Process the raw message using the library component or default
         implementation."""
+
+        if raw_message:
+            data_processed_bytes_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc(len(raw_message))
+
         if self.library_component:
             # use the library component's process method
             return self.library_component.process(raw_message)
@@ -194,7 +230,19 @@ class Service(Engine, ABC):
             msg = "Ignored: Engine is already running"
             self.log.debug(msg)
             return msg
+
+        engine_starts_total.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).inc()
+
         msg = Engine.start(self)
+
+        engine_running.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).state('running')
+
         self.log.info(msg)
         return msg
 
@@ -206,6 +254,10 @@ class Service(Engine, ABC):
         self.log.info("Stop command received")
         try:
             Engine.stop(self)
+            engine_running.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).state('stopped')
             self.log.info("Engine stopped successfully")
             return "engine stopped"
         except EngineException as e:
