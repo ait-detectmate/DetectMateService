@@ -9,7 +9,7 @@ This section describes how to setup a development environment and how to contrib
 
 ## Setup a development environment
 
-For development, you can install with optional dependencies:
+For development we recommend using [uv](https://docs.astral.sh/uv/). You can install all optional dependencies:
 
 ```bash
 uv sync --dev
