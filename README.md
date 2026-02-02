@@ -120,7 +120,13 @@ docker compose up demo
 
 ## Documentation
 
-- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/)
+- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/latest)
+
+## Contribution
+
+We're happily taking patches and other contributions. Please see the following links for how to get started:
+
+- [GitHub Workflow](https://ait-detectmate.github.io/DetectMateService/latest/Contribution)
 
 ## License
 
