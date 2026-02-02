@@ -17,3 +17,9 @@ It uses NNG's messaging architecture to process data in real-time.
 
 Check out the [Installation](installation.md) guide to set up the service, and then proceed to
 [Configuration](configuration.md) and [Usage](usage.md) to learn how to run it.
+
+## Contribution
+
+We're happily taking patches and other contributions. Please see the following links for how to get started:
+
+- [Git Workflow](contribution.md)
