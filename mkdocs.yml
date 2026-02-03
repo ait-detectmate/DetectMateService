@@ -14,7 +14,12 @@ nav:
       - Using a Library Component: library.md
       - Running a Pipeline: pipeline.md
     - Contribution: contribution.md
-    - Development: development.md
+    - Development:
+      - Overview: development.md
+      - Library Imports: library-imports.md
+      - Interfaces: interfaces.md
+
+
 
 markdown_extensions:
   - admonition
