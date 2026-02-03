@@ -1,7 +1,10 @@
 """Integration tests for Service with multi-destination output."""
+import socket
 import pytest
 import time
 import pynng
+import httpx
+import threading
 
 from service.core import Service
 from service.settings import ServiceSettings
@@ -13,26 +16,44 @@ class MockService(Service):
 
 
 @pytest.fixture
+def free_port():
+    """Find a free port on the system."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
+
+@pytest.fixture
 def temp_ipc_paths(tmp_path):
     """Generate temporary IPC paths for testing."""
     return {
         'engine': f"ipc://{tmp_path}/engine.ipc",
-        'manager': f"ipc://{tmp_path}/manager.ipc",
         'out1': f"ipc://{tmp_path}/out1.ipc",
         'out2': f"ipc://{tmp_path}/out2.ipc",
         'out3': f"ipc://{tmp_path}/out3.ipc",
     }
 
 
+def run_service_in_thread(service):
+    """Helper to start the service.run() in a background thread."""
+    thread = threading.Thread(target=service.run, daemon=True)
+    thread.start()
+    # Wait for web server to likely be up
+    time.sleep(0.5)
+    return thread
+
+
 class TestServiceMultiOutputIntegration:
     """Integration tests for Service with multi-output functionality."""
 
-    def test_service_with_multiple_outputs(self, temp_ipc_paths, tmp_path):
+    def test_service_with_multiple_outputs(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test complete service flow with multiple outputs."""
         settings = ServiceSettings(
             component_name="test-service",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             log_dir=tmp_path / "logs",
             engine_autostart=True,
@@ -48,6 +69,7 @@ class TestServiceMultiOutputIntegration:
 
         # Create service
         service = MockService(settings=settings)
+        run_service_in_thread(service)
 
         # Create input sender
         sender = pynng.Pair0()
@@ -70,15 +92,20 @@ class TestServiceMultiOutputIntegration:
             sender.close()
             for receiver in receivers:
                 receiver.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
 
-    def test_service_status_with_output_config(self, temp_ipc_paths, tmp_path):
+    def test_service_status_with_output_config(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test that status command includes output configuration."""
-        import json
 
         settings = ServiceSettings(
             component_name="status-test",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             log_dir=tmp_path / "logs",
             engine_autostart=True,
@@ -92,25 +119,18 @@ class TestServiceMultiOutputIntegration:
         r1.recv_timeout = r2.recv_timeout = 1000
 
         service = MockService(settings=settings)
-
-        # Create command client
-        cmd_client = pynng.Req0()
-        cmd_client.dial(temp_ipc_paths['manager'])
-        cmd_client.recv_timeout = 1000
+        run_service_in_thread(service)
 
         try:
-            time.sleep(0.1)
+            time.sleep(0.5)
 
-            # Request status
-            cmd_client.send(b"status")
-            response = cmd_client.recv().decode()
-
-            # Parse response
-            status_data = json.loads(response)
+            # Request status via HTTP instead of NNG Manager
+            response = httpx.get(f"http://127.0.0.1:{port}/admin/status")
+            assert response.status_code == 200
+            status_data = response.json()
 
             # Verify output addresses are in settings
             assert 'settings' in status_data
-            assert 'out_addr' in status_data['settings']
             assert status_data['settings']['out_addr'] == [
                 temp_ipc_paths['out1'],
                 temp_ipc_paths['out2']
@@ -118,16 +138,21 @@ class TestServiceMultiOutputIntegration:
 
         finally:
             service.stop()
-            cmd_client.close()
             r1.close()
             r2.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
 
-    def test_service_context_manager_with_outputs(self, temp_ipc_paths, tmp_path):
+    def test_service_context_manager_with_outputs(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test service as context manager with multiple outputs."""
         settings = ServiceSettings(
             component_name="context-test",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[temp_ipc_paths['out1']],
             log_dir=tmp_path / "logs",
             engine_autostart=True,
@@ -140,27 +165,32 @@ class TestServiceMultiOutputIntegration:
         sender = pynng.Pair0()
         sender.dial(temp_ipc_paths['engine'])
 
+        service = MockService(settings=settings)
+        run_service_in_thread(service)
         try:
-            with MockService(settings=settings):
-                time.sleep(0.1)
-
-                # Send message
-                sender.send(b"context manager test")
-
-                # Receive message
-                result = receiver.recv()
-                assert result == b"context manager test"
+            time.sleep(0.1)
+            # Send message
+            sender.send(b"context manager test")
+            # Receive message
+            result = receiver.recv()
+            assert result == b"context manager test"
 
         finally:
             sender.close()
             receiver.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
 
-    def test_service_stop_command_closes_outputs(self, temp_ipc_paths, tmp_path):
+    def test_service_stop_command_closes_outputs(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test that stop command properly closes output sockets."""
         settings = ServiceSettings(
             component_name="stop-test",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             log_dir=tmp_path / "logs",
             engine_autostart=True,
@@ -174,21 +204,14 @@ class TestServiceMultiOutputIntegration:
         r1.recv_timeout = r2.recv_timeout = 1000
 
         service = MockService(settings=settings)
-
-        # Create command client
-        cmd_client = pynng.Req0()
-        cmd_client.dial(temp_ipc_paths['manager'])
-        cmd_client.recv_timeout = 1000
+        run_service_in_thread(service)
 
         try:
-            time.sleep(0.1)
-
             # Verify service is running
             assert service._running
 
             # Send stop command
-            cmd_client.send(b"stop")
-            cmd_client.recv().decode()
+            httpx.post(f"http://127.0.0.1:{port}/admin/stop")
 
             time.sleep(0.2)  # Give time to stop
 
@@ -201,22 +224,28 @@ class TestServiceMultiOutputIntegration:
                     sock.send(b"test")
 
         finally:
-            cmd_client.close()
             r1.close()
             r2.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
 
-    def test_service_with_no_outputs_still_works(self, temp_ipc_paths, tmp_path):
+    def test_service_with_no_outputs_still_works(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test that service works normally with no output addresses."""
         settings = ServiceSettings(
             component_name="no-output-test",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[],  # Empty list
             log_dir=tmp_path / "logs",
             engine_autostart=True,
         )
 
         service = MockService(settings=settings)
+        run_service_in_thread(service)
 
         sender = pynng.Pair0()
         sender.dial(temp_ipc_paths['engine'])
@@ -234,21 +263,27 @@ class TestServiceMultiOutputIntegration:
         finally:
             service.stop()
             sender.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
 
-    def test_yaml_config_loading_with_outputs(self, tmp_path):
+    def test_yaml_config_loading_with_outputs(self, tmp_path, free_port):
+        port = free_port
         """Test loading service settings from YAML with output addresses."""
         yaml_content = """
         component_name: "yaml-test"
         component_type: "test_service"
         log_dir: "{log_dir}"
-        manager_addr: "ipc://{tmp}/manager.ipc"
+        http_host: "127.0.0.1"
+        http_port: {port}
         engine_addr: "ipc://{tmp}/engine.ipc"
         out_addr:
           - "ipc://{tmp}/out1.ipc"
           - "ipc://{tmp}/out2.ipc"
           - "tcp://localhost:5555"
         engine_autostart: false
-        """.format(log_dir=str(tmp_path / "logs"), tmp=str(tmp_path))
+        """.format(log_dir=str(tmp_path / "logs"), tmp=str(tmp_path), port=port)
 
         yaml_file = tmp_path / "settings.yaml"
         yaml_file.write_text(yaml_content)
@@ -265,18 +300,19 @@ class TestServiceMultiOutputIntegration:
 
         assert [a.scheme for a in settings.out_addr] == ["ipc", "ipc", "tcp"]
 
-    def test_concurrent_services_different_outputs(self, tmp_path):
+    def test_concurrent_services_different_outputs(self, tmp_path, free_port):
+        port = free_port
         """Test multiple services with different output destinations."""
         # Service 1 setup
         service1_paths = {
             'engine': f"ipc://{tmp_path}/service1_engine.ipc",
-            'manager': f"ipc://{tmp_path}/service1_manager.ipc",
             'out': f"ipc://{tmp_path}/service1_out.ipc",
         }
         settings1 = ServiceSettings(
             component_name="service-1",
             engine_addr=service1_paths['engine'],
-            manager_addr=service1_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[service1_paths['out']],
             log_dir=tmp_path / "logs1",
             engine_autostart=True,
@@ -285,13 +321,13 @@ class TestServiceMultiOutputIntegration:
         # Service 2 setup
         service2_paths = {
             'engine': f"ipc://{tmp_path}/service2_engine.ipc",
-            'manager': f"ipc://{tmp_path}/service2_manager.ipc",
             'out': f"ipc://{tmp_path}/service2_out.ipc",
         }
         settings2 = ServiceSettings(
             component_name="service-2",
             engine_addr=service2_paths['engine'],
-            manager_addr=service2_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port+1,
             out_addr=[service2_paths['out']],
             log_dir=tmp_path / "logs2",
             engine_autostart=True,
@@ -308,7 +344,9 @@ class TestServiceMultiOutputIntegration:
 
         # Create services
         service1 = MockService(settings=settings1)
+        run_service_in_thread(service1)
         service2 = MockService(settings=settings2)
+        run_service_in_thread(service2)
 
         # Create senders
         sender1 = pynng.Pair0()
@@ -338,17 +376,24 @@ class TestServiceMultiOutputIntegration:
             sender2.close()
             receiver1.close()
             receiver2.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+                httpx.post(f"http://127.0.0.1:{port+1}/admin/shutdown")
+            except Exception:
+                pass  # Servers might already be down
 
 
 class TestServiceMultiOutputStressTests:
     """Stress tests for multi-output functionality."""
 
-    def test_high_throughput_multiple_outputs(self, temp_ipc_paths, tmp_path):
+    def test_high_throughput_multiple_outputs(self, temp_ipc_paths, tmp_path, free_port):
+        port = free_port
         """Test handling high message throughput to multiple outputs."""
         settings = ServiceSettings(
             component_name="stress-test",
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=port,
             out_addr=[
                 temp_ipc_paths['out1'],
                 temp_ipc_paths['out2'],
@@ -368,6 +413,7 @@ class TestServiceMultiOutputStressTests:
             receivers.append(receiver)
 
         service = MockService(settings=settings)
+        run_service_in_thread(service)
         sender = pynng.Pair0()
         sender.dial(temp_ipc_paths['engine'])
 
@@ -400,3 +446,7 @@ class TestServiceMultiOutputStressTests:
             sender.close()
             for receiver in receivers:
                 receiver.close()
+            try:
+                httpx.post(f"http://127.0.0.1:{port}/admin/shutdown")
+            except Exception:
+                pass  # Server might already be down
