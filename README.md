@@ -24,19 +24,19 @@ If you plan to contribute to the development of this package, follow these steps
 
 ```bash
 uv sync --dev
-uv run prek install
+uv run --dev prek install
 ```
 
 Run the tests:
 
 ```bash
-uv run pytest -q
+uv run --dev pytest -q
 ```
 
 Run the tests with coverage (add `--cov-report=html` to generate an HTML report):
 
 ```bash
-uv run pytest --cov=. --cov-report=term-missing
+uv run --dev pytest --cov=. --cov-report=term-missing
 ```
 
 
