@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from service.cli import reconfigure_service
+#from service.cli import reconfigure_service
 from service.core import Service
 from service.settings import ServiceSettings
 from pydantic import Field
