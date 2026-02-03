@@ -229,7 +229,7 @@ wheels = [
 [[package]]
 name = "detectmatelibrary"
 version = "0.1.0"
-source = { git = "https://github.com/ait-detectmate/DetectMateLibrary.git?rev=development#4689b1c1cb55c87107a3286d5a3843213a9c7c88" }
+source = { git = "https://github.com/ait-detectmate/DetectMateLibrary.git#ecdda5586965a091836cde050768c0d5d6adfd15" }
 dependencies = [
     { name = "drain3" },
     { name = "kafka-python" },
@@ -269,7 +269,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "detectmatelibrary", git = "https://github.com/ait-detectmate/DetectMateLibrary.git?rev=development" },
+    { name = "detectmatelibrary", git = "https://github.com/ait-detectmate/DetectMateLibrary.git" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "pathlib", specifier = ">=1.0.1" },
     { name = "prometheus-client", specifier = ">=0.20.0" },
