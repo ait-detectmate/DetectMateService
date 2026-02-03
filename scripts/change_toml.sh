@@ -15,5 +15,6 @@ else
 	BRANCH="main"
 fi
 
+echo "Using branch: $BRANCH"
 
 sed -i "s/$REPLACE/$REPLACE@$BRANCH/g" pyproject.toml
