@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
 permissions:
   contents: read
@@ -28,11 +28,11 @@ jobs:
         activate-environment: true
         enable-cache: true
 
-    - name: Install project deps
-      run: uv pip install -e .[dev]
+    - name: Use specific detematelibrary version
+      run: chmod +x scripts/change_toml.sh && scripts/change_toml.sh $GITHUB_BASE_REF
 
     - name: Run pre-commit with prek
-      run: uv run prek run -a
-
+      run: uv run --dev prek run -a
+        
     - name: Test with pytest
-      run: uv run pytest
+      run: uv run --dev pytest
