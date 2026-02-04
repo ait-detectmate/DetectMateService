@@ -12,7 +12,8 @@
 # Checklist
 <!-- Go over all the following points, and put an `x` in all the boxes that apply -->
 
-- [ ] I have successfully run overcommit locally
-- [ ] I have added tests to cover my changes
-- [ ] I have linked the issue-id to the task-description
-- [ ] I have performed a self-review of my own code
+- [ ] This Pull-Request goes to the **development** branch.
+- [ ] I have successfully run prek locally.
+- [ ] I have added tests to cover my changes.
+- [ ] I have linked the issue-id to the task-description.
+- [ ] I have performed a self-review of my own code.
