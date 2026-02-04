@@ -1,10 +1,19 @@
 import time
 import threading
 import pynng
+import socket
 import pytest
 
 from service.core import Service
 from service.settings import ServiceSettings
+
+
+@pytest.fixture
+def free_port():
+    """Find a free port on the system."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
 
 
 class SmokeTestService(Service):
@@ -17,12 +26,12 @@ class SmokeTestService(Service):
 
 
 @pytest.fixture
-def smoke_service(tmp_path):
+def smoke_service(tmp_path, free_port):
     """Fixture to create a smoke test service."""
     settings = ServiceSettings(
-        manager_addr=f"ipc://{tmp_path}/smoke_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/smoke_engine.ipc",
         engine_autostart=True,
+        http_port=free_port,
         log_level="ERROR",
     )
     service = SmokeTestService(settings=settings)
@@ -77,12 +86,8 @@ def test_engine_processing(smoke_service):
 
 def test_service_stop_command(smoke_service):
     """Test that the stop command works correctly."""
-    with pynng.Req0(dial=smoke_service.settings.manager_addr) as req:
-        # Test stop
-        req.send(b"stop")
-        response = req.recv().decode()
-        assert "stopped" in response
-        assert smoke_service._stop_event.is_set()
+    smoke_service.stop()
+    assert smoke_service._stop_event.is_set()
 
 
 def test_service_id_stability():
@@ -91,14 +96,12 @@ def test_service_id_stability():
     settings1 = ServiceSettings(
         component_name="test-service",
         component_type="test",
-        manager_addr="ipc:///tmp/test1.ipc",
         engine_addr="ipc:///tmp/test2.ipc",
     )
 
     settings2 = ServiceSettings(
         component_name="test-service",
         component_type="test",
-        manager_addr="ipc:///tmp/test1.ipc",
         engine_addr="ipc:///tmp/test2.ipc",
     )
 
@@ -108,7 +111,6 @@ def test_service_id_stability():
     settings3 = ServiceSettings(
         component_name="test-service-different",
         component_type="test",
-        manager_addr="ipc:///tmp/test1.ipc",
         engine_addr="ipc:///tmp/test2.ipc",
     )
 
