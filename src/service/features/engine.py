@@ -129,6 +129,7 @@ class Engine(ABC):
     def start(self) -> str:
         if not self._running:
             self._running = True
+            self._stop_event.clear()
             # RECREATE THE THREAD if it's dead or doesn't exist
             if not self._thread.is_alive():
                 self._thread = threading.Thread(
@@ -251,6 +252,12 @@ class Engine(ABC):
         self._running = False
         self._stop_event.set()
 
+        # WAIT for engine loop to exit recv()
+        self._thread.join(timeout=2.0)
+
+        if self._thread.is_alive():
+            raise EngineException("Engine thread failed to stop cleanly")
+
         # Close input socket
         try:
             self._pair_sock.close()
@@ -265,12 +272,7 @@ class Engine(ABC):
             except pynng.NNGException as e:
                 self.log.error(f"Failed to close output socket {i}: {e}")
 
-        try:
-            self._thread.join(timeout=1.0)
-            if self._thread.is_alive():
-                raise EngineException("Engine thread failed to stop within timeout")
-            elif self.log:
-                self.log.debug("Engine stopped successfully")
-        except Exception as e:
-            raise EngineException(f"Failed to join engine thread: {e}") from e
+        if self.log:
+            self.log.debug("Engine stopped successfully")
+
         return None
