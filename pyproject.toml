@@ -1,9 +1,10 @@
 [project]
 name = "DetectMateService"
-version = "0.1.0"
 description = "A modular framework for building log processing and anomaly detection services."
 readme = "README.md"
 requires-python = ">=3.12"
+
+dynamic = ["version"]
 
 dependencies = [
     "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git",
@@ -40,3 +41,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 namespaces = true
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "service.metadata.__version__"}
