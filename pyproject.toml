@@ -44,4 +44,3 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 version = {attr = "service.metadata.__version__"}
-
