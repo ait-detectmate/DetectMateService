@@ -10,4 +10,4 @@ class BaseProcessor:
 
 class ProcessorException(Exception):
     """Custom exception for processor-related errors."""
-    ...
+    pass
