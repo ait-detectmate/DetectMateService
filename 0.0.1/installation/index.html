@@ -50,9 +50,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#setup-with-uv-recommended">Setup with uv (recommended)</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#1-create-and-activate-a-virtual-environment-with-uv">1. Create and activate a virtual environment with uv</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#2-install-the-project">2. Install the project</a>
+    <li class="toctree-l3"><a class="reference internal" href="#1-download-the-dependencies">1. Download the dependencies</a>
     </li>
         </ul>
     </li>
@@ -107,12 +105,8 @@ cd DetectMateService
 <h2 id="setup-with-uv-recommended">Setup with uv (recommended)</h2>
 <p>We recommend using <a href="https://github.com/astral-sh/uv">uv</a> to manage the environment
 and dependencies.</p>
-<h3 id="1-create-and-activate-a-virtual-environment-with-uv">1. Create and activate a virtual environment with uv</h3>
-<pre><code class="language-bash">uv venv
-source .venv/bin/activate
-</code></pre>
-<h3 id="2-install-the-project">2. Install the project</h3>
-<pre><code class="language-bash">uv pip install .
+<h3 id="1-download-the-dependencies">1. Download the dependencies</h3>
+<pre><code class="language-bash">uv sync
 </code></pre>
 <h2 id="alternative-setup-with-pip">Alternative setup with pip</h2>
 <p>If you prefer plain <code>pip</code>, you can set things up like this instead:</p>
@@ -125,12 +119,12 @@ pip install .
 </code></pre>
 <h2 id="developer-setup">Developer setup</h2>
 <p>For development, you can install with optional dependencies:</p>
-<pre><code class="language-bash">pip install -e &quot;.[dev]&quot;
+<pre><code class="language-bash">uv sync --dev
 </code></pre>
 <p>We recommend using <a href="https://github.com/j178/prek"><code>prek</code></a> to manage Git
 pre-commit hooks. <code>prek</code> is configured via the existing <code>.pre-commit-config.yaml</code>
 and can be installed as part of the <code>dev</code> extras. To ensure pre-commit hooks run before each commit, run:</p>
-<pre><code class="language-bash">prek install
+<pre><code class="language-bash">uv run prek install
 </code></pre>
               
             </div>
