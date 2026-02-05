@@ -24,19 +24,19 @@ If you plan to contribute to the development of this package, follow these steps
 
 ```bash
 uv sync --dev
-uv run prek install
+uv run --dev prek install
 ```
 
 Run the tests:
 
 ```bash
-uv run pytest -q
+uv run --dev pytest -q
 ```
 
 Run the tests with coverage (add `--cov-report=html` to generate an HTML report):
 
 ```bash
-uv run pytest --cov=. --cov-report=term-missing
+uv run --dev pytest --cov=. --cov-report=term-missing
 ```
 
 
@@ -73,19 +73,31 @@ Example configuration files can be found in the `tests/config` directory.
 Start the service:
 
 ```bash
-uv run detectmate start --settings examples/service_settings.yaml
+uv run detectmate --settings examples/service_settings.yaml
 ```
+To survey the state of your component and interact with the running service, use the detectmate-client tool.
 
 Get the service status:
 
 ```bash
-uv run detectmate status --settings examples/service_settings.yaml
+uv run detectmate-client status --url <http_host:http_port>
 ```
 
-Stop the service:
+Stop the engine:
 
 ```bash
-uv run detectmate stop --settings examples/service_settings.yaml
+uv run detectmate-client stop --url <http_host:http_port>
+```
+
+Start the engine:
+```bash
+uv run detectmate-client start --url <http_host:http_port>
+```
+
+Shutdown entire service:
+
+```bash
+uv run detectmate-client shutdown --url <http_host:http_port>
 ```
 
 
@@ -108,7 +120,15 @@ docker compose up demo
 
 ## Documentation
 
-- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/)
+- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/latest)
+
+## Contribution
+
+We're happily taking patches and other contributions. Please see the following links for how to get started:
+
+- [GitHub Workflow](https://ait-detectmate.github.io/DetectMateService/latest/Contribution)
+
+If you encounter any bugs, please create an issue on [Github](https://github.com/ait-detectmate/DetectMateService/issues).
 
 ## License
 

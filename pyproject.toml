@@ -1,9 +1,10 @@
 [project]
 name = "DetectMateService"
-version = "0.1.0"
 description = "A modular framework for building log processing and anomaly detection services."
 readme = "README.md"
 requires-python = ">=3.12"
+
+dynamic = ["version"]
 
 dependencies = [
     "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git",
@@ -13,6 +14,11 @@ dependencies = [
     "pynng>=0.8.1",
     "pyyaml>=6.0.2",
     "types-pyyaml>=6.0.12.20250915",
+    "requests>=2.31.0",
+    "prometheus-client>=0.20.0",
+    "uvicorn[standard]>=0.34.0",
+    "fastapi>=0.115.0",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
@@ -21,10 +27,12 @@ dev = [
     "prek>=0.2.8",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "types-requests",
 ]
 
 [project.scripts]
 detectmate = "service.cli:main"
+detectmate-client = "service.client:main"
 
 [build-system]
 requires = ["setuptools"]
@@ -33,3 +41,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 namespaces = true
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "service.metadata.__version__"}
