@@ -1,4 +1,5 @@
-__authors__ = ['Thorina Boenke', 'Anna Erdi', 'Viktor Beck', 'André García Gómez', 'Ernst Leierzopf', 'Wolfgang Hotwagner']
+__authors__ = ['Thorina Boenke', 'Anna Erdi', 'Viktor Beck',
+               'André García Gómez', 'Ernst Leierzopf', 'Wolfgang Hotwagner']
 __contact__ = 'aecid@ait.ac.at'
 __copyright__ = 'Copyright 2026, AIT Austrian Institute of Technology GmbH'
 __date__ = '2026/02/05'
