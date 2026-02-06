@@ -3,7 +3,7 @@ import threading
 import pynng
 import httpx
 import pytest
-
+from contextlib import contextmanager
 from service.settings import ServiceSettings
 from service.core import Service
 
@@ -16,16 +16,42 @@ class MockComponent(Service):
             raise ValueError("boom!")
         if raw_message == b"skip":
             return None
-        return raw_message[::-1]  # just reverse
+        return raw_message[::-1]
 
-    def _log_engine_error(self, phase: str, exc: Exception) -> None:
-        # Minimal logging stub for the test
-        if hasattr(self, "log"):
-            self.log.debug("err %s: %s", phase, exc)
+
+@contextmanager
+def pair_socket(addr: str, recv_timeout: int = 100):
+    """Context manager for PAIR socket with automatic cleanup."""
+    sock = pynng.Pair0(dial=addr)
+    sock.recv_timeout = recv_timeout
+    time.sleep(0.1)
+    try:
+        yield sock
+    finally:
+        sock.close()
 
 
 @pytest.fixture
-def comp(tmp_path):
+def service_thread():
+    """Manages service thread lifecycle across tests."""
+    threads = []
+
+    def start(service):
+        t = threading.Thread(target=service.run, daemon=True)
+        t.start()
+        threads.append((service, t))
+        time.sleep(0.3)
+        return t
+
+    yield start
+
+    for service, thread in threads:
+        service._service_exit_event.set()
+        thread.join(timeout=2.0)
+
+
+@pytest.fixture
+def comp(tmp_path, service_thread):
     settings = ServiceSettings(
         engine_addr=f"ipc://{tmp_path}/t_engine.ipc",
         engine_autostart=True,
@@ -33,49 +59,34 @@ def comp(tmp_path):
         http_port=8001
     )
     c = MockComponent(settings=settings)
-
-    t = threading.Thread(target=c.run, daemon=True)
-    t.start()
-
-    time.sleep(0.3)
-    yield c
-
-    if c._running:
-        # Trigger graceful shutdown
-        try:
-            httpx.post("http://127.0.0.1:8000/admin/shutdown", timeout=1.0)
-        except Exception:
-            c.stop()  # Fallback
-
-    # WAIT for the thread to actually die before Pytest closes the pipes
-    t.join(timeout=2.0)
+    service_thread(c)
+    return c
 
 
-def test_normal_and_error_paths(comp):
-    # Connect a PAIR client
-    with pynng.Pair0(dial=comp.settings.engine_addr) as sock:
-        time.sleep(0.1)
-        # normal
+def test_message_processing(comp):
+    with pair_socket(comp.settings.engine_addr) as sock:
         sock.send(b"hello")
         assert sock.recv() == b"olleh"
 
-        # error -> engine logs, but no response
+
+def test_error_handling(comp):
+    with pair_socket(comp.settings.engine_addr) as sock:
         sock.send(b"boom")
-        sock.recv_timeout = 100  # ms
         with pytest.raises(pynng.Timeout):
             sock.recv()
 
-        # skip -> None, no response
+
+def test_skip_processing(comp):
+    with pair_socket(comp.settings.engine_addr) as sock:
         sock.send(b"skip")
         with pytest.raises(pynng.Timeout):
             sock.recv()
 
-    # Stop via HTTP Admin API ---
+
+def test_admin_stop(comp):
     admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
-
-    # Send stop command to the engine
     response = httpx.post(f"{admin_url}/admin/stop")
-    assert response.status_code == 200
 
+    assert response.status_code == 200
     time.sleep(0.1)
     assert comp._running is False
