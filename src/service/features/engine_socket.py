@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 @runtime_checkable
 class EngineSocket(Protocol):
     """Minimal socket interface the Engine depends on."""
+
     def recv(self) -> bytes: ...
     def send(self, data: bytes) -> None: ...
     def close(self) -> None: ...
@@ -21,11 +22,13 @@ class EngineSocket(Protocol):
 class EngineSocketFactory(Protocol):
     """Factory that creates bound EngineSocket instances for a given
     address."""
+
     def create(self, addr: str, logger: logging.Logger) -> EngineSocket: ...
 
 
 class NngPairSocketFactory:
     """Default factory using pynng.Pair0 and binding to the given address."""
+
     def create(self, addr: str, logger: logging.Logger) -> EngineSocket:
         sock = pynng.Pair0()
         parsed = urlparse(addr)

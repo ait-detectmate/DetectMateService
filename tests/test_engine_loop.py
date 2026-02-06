@@ -1,6 +1,7 @@
 import time
 import threading
 import pynng
+import httpx
 import pytest
 
 from service.settings import ServiceSettings
@@ -26,20 +27,28 @@ class MockComponent(Service):
 @pytest.fixture
 def comp(tmp_path):
     settings = ServiceSettings(
-        manager_addr=f"ipc://{tmp_path}/t_cmd.ipc",
         engine_addr=f"ipc://{tmp_path}/t_engine.ipc",
         engine_autostart=True,
         log_level="DEBUG",
+        http_port=8001
     )
     c = MockComponent(settings=settings)
+
     t = threading.Thread(target=c.run, daemon=True)
     t.start()
-    # Give it a moment to spin up
-    time.sleep(0.2)
+
+    time.sleep(0.3)
     yield c
-    c.stop()
-    time.sleep(0.1)
-    assert c._stop_event.is_set()
+
+    if c._running:
+        # Trigger graceful shutdown
+        try:
+            httpx.post("http://127.0.0.1:8000/admin/shutdown", timeout=1.0)
+        except Exception:
+            c.stop()  # Fallback
+
+    # WAIT for the thread to actually die before Pytest closes the pipes
+    t.join(timeout=2.0)
 
 
 def test_normal_and_error_paths(comp):
@@ -61,8 +70,12 @@ def test_normal_and_error_paths(comp):
         with pytest.raises(pynng.Timeout):
             sock.recv()
 
-    # Stop via manager
-    with pynng.Req0(dial=comp.settings.manager_addr) as req:
-        req.send(b"stop")
-        assert req.recv() == b"engine stopped"
-        assert comp._stop_event.is_set()
+    # Stop via HTTP Admin API ---
+    admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
+
+    # Send stop command to the engine
+    response = httpx.post(f"{admin_url}/admin/stop")
+    assert response.status_code == 200
+
+    time.sleep(0.1)
+    assert comp._running is False

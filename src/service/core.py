@@ -8,19 +8,49 @@ import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
+from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
-from service.features.manager import Manager, manager_command
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
-
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
+from prometheus_client import REGISTRY, Counter, Enum
+
+
+engine_running = Enum(
+    "engine_running",
+    "Whether the service engine is running (running or stopped)",
+    ["component_type", "component_id"],
+    states=['running', 'stopped'],
+)
+
+engine_starts_total = Counter(
+    "engine_starts_total",
+    "Number of times the engine was started",
+    ["component_type", "component_id"]
+)
+
+
+def get_counter(name: str, documentation: str, labelnames: list[str]) -> Counter:
+    """Safely get or create a Prometheus counter."""
+    # Search the registry for an existing collector with this name
+    for collector in REGISTRY._collector_to_names:
+        if name in REGISTRY._collector_to_names[collector]:
+            return collector
+    # If not found, create it
+    return Counter(name, documentation, labelnames)
+
+
+data_processed_bytes_total = get_counter("data_processed_bytes_total",
+                                         "Total bytes processed by the engine", [
+                                             "component_type", "component_id"])
 
 
 class ServiceProcessorAdapter(BaseProcessor):
     """Adapter class to use a Service's process method as a BaseProcessor."""
+
     def __init__(self, service: Service) -> None:
         self.service = service
 
@@ -44,7 +74,7 @@ class LibraryComponentProcessor(BaseProcessor):
             return None
 
 
-class Service(Manager, Engine, ABC):
+class Service(Engine, ABC):
     """Abstract base for every DetectMate service/component."""
 
     def __init__(
@@ -55,7 +85,9 @@ class Service(Manager, Engine, ABC):
         # Prepare attributes & logger first
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
-        self._stop_event: threading.Event = threading.Event()
+        self._service_exit_event: threading.Event = threading.Event()
+        self.web_server = None
+        self.web_server = WebServer(self)
 
         # set component_type
         if hasattr(self, 'component_type'):  # prioritize class attribute over settings
@@ -113,13 +145,9 @@ class Service(Manager, Engine, ABC):
         # Create processor instance
         self.processor = self.create_processor()
 
-        # now init Manager (opens REP socket & discovers commands)
-        Manager.__init__(self, settings=settings, logger=self.log)
-
-        # then init Engine with the processor (opens PAIR socket, may autostart)
+        # then init Engine with the processor (opens PAIR socket)
         Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
-
-        self.log.debug("%s[%s] created", self.component_type, self.component_id)
+        self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
         """Return the configuration schema for this service.
@@ -141,6 +169,13 @@ class Service(Manager, Engine, ABC):
     def process(self, raw_message: bytes) -> bytes | None | Any:
         """Process the raw message using the library component or default
         implementation."""
+
+        if raw_message:
+            data_processed_bytes_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc(len(raw_message))
+
         if self.library_component:
             # use the library component's process method
             return self.library_component.process(raw_message)
@@ -163,40 +198,72 @@ class Service(Manager, Engine, ABC):
         self.log.info("setup_io: ready to process messages")
 
     def run(self) -> None:
-        """Kick off the engine, then await stop."""
-        if not getattr(self, '_running', False):
-            self.log.info(self.start())  # start engine loop
+        """Starts the WebServer and waits for the shutdown signal."""
+        # 1. Start Web Server (Admin API)
+        if self.web_server:
+            self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+            self.web_server.start()
+
+        # 2. Engine Start logic
+        # __init__ is 100% finished
+        if self.settings.engine_autostart:
+            self.log.info("Auto-starting engine...")
+            self.start()
         else:
-            self.log.debug("Engine already running")
-        self._stop_event.wait()
-        if getattr(self, '_running', False):  # don't call stop() again if it was already called by a command
-            self.log.info(self.stop())  # ensure engine thread is joined
+            self.log.info("Engine idle. Awaiting /admin/start")
+
+        # 3. Wait for the global shutdown event
+        self._service_exit_event.wait()
+
+        # 4. Final teardown
+        if self.web_server:
+            self.web_server.stop()
+        if getattr(self, "_running", False):
+            self.stop()  # This calls the Service.stop which calls Engine.stop
         else:
             self.log.debug("Engine already stopped")
 
-    @manager_command()
     def start(self) -> str:
         """Expose engine start as a command."""
+        # Check if already running to avoid redundant starts
+        if getattr(self, '_running', False):
+            msg = "Ignored: Engine is already running"
+            self.log.debug(msg)
+            return msg
+
+        engine_starts_total.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).inc()
+
         msg = Engine.start(self)
+
+        engine_running.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).state('running')
+
         self.log.info(msg)
         return msg
 
-    @manager_command()
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
-        if self._stop_event.is_set():
-            return "already stopping or stopped"
+        if not getattr(self, "_running", False):
+            return "engine already stopped"
+
         self.log.info("Stop command received")
-        self._stop_event.set()
         try:
             Engine.stop(self)
+            engine_running.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).state('stopped')
             self.log.info("Engine stopped successfully")
             return "engine stopped"
         except EngineException as e:
             self.log.error("Failed to stop engine: %s", e)
             return f"error: failed to stop engine - {e}"
 
-    @manager_command()
     def status(self, cmd: str | None = None) -> str:
         """Comprehensive status report including settings and configs."""
         if self.config_manager:
@@ -216,46 +283,44 @@ class Service(Manager, Engine, ABC):
         status_info = self._create_status_report(running)
         return json.dumps(status_info, indent=2)
 
-    @manager_command()
-    def reconfigure(self, cmd: str | None = None) -> str:
+    def reconfigure(self, config_data: Dict[str, Any], persist: bool = False) -> str:
         """Reconfigure service configurations dynamically."""
         if not self.config_manager:
             return "reconfigure: no config manager configured"
 
-        payload = ""
-        persist = False
-
-        if cmd:
-            # Parse the command: "reconfigure [persist] <json>"
-            parts = cmd.split(maxsplit=2)  # Split into at most 3 parts
-            if len(parts) >= 2:
-                # Check if the second part is "persist"
-                if parts[1].lower() == "persist":
-                    persist = True
-                    # Use the third part as payload if it exists
-                    payload = parts[2] if len(parts) > 2 else ""
-                else:
-                    # Use the rest of the command as payload
-                    payload = cmd.split(maxsplit=1)[1] if len(parts) > 1 else ""
-
-        if not payload:
-            return "reconfigure: no-op (no payload)"
-
+        if not config_data:
+            return "reconfigure: no-op (empty config data)"
         try:
-            data = json.loads(payload)
-        except json.JSONDecodeError:
-            return "reconfigure: invalid JSON"
+            self.config_manager.update(config_data)
+            #  problem: update() validates against the Schema,
+            # model_validate()constructs a pydantic model instance of for example
+            # (NewValueDetectorConfig), but save() expects a dict to serialize to YAML
+            # pydantic automatically fills in default values, including
+            # inherited from CoreDetectorConfig like parser, start_id)
+            # class CoreDetectorConfig(CoreConfig):
+            # comp_type: str = "detectors"
+            # method_type: str = "core_detector"
+            # parser: str = "<PLACEHOLDER>"
+            # on save these get written in the config.yaml file
+            # -> then this file is missing "detectors" and other important fields and cannot be used
 
-        try:
-            self.config_manager.update(data)
             if persist:
                 self.config_manager.save()
-            self.log.info("Reconfigured with: %s", data)
+            self.log.info("Reconfigured with: %s", config_data)
             return "reconfigure: ok"
+
         except Exception as e:
+            self.log.error("Reconfiguration error: %s", e)
             return f"reconfigure: error - {e}"
 
+    def shutdown(self) -> str:
+        """Stops everything and exits the process."""
+        self.log.info("Process shutdown initiated.")
+        self._service_exit_event.set()
+        return "Service is shutting down..."
+
     # helpers
+
     def _build_logger(self) -> logging.Logger:
         Path(self.settings.log_dir).mkdir(parents=True, exist_ok=True)
         name = f"{self.component_type}.{self.component_id}"
@@ -333,7 +398,6 @@ class Service(Manager, Engine, ABC):
             _exc_val: BaseException | None,
             _exc_tb: TracebackType | None
     ) -> Literal[False]:
-        if not self._stop_event.is_set():  # only stop if not already stopped
-            self.stop()  # shut down gracefully
-        self._close_manager()  # close REP socket & thread
+        if not self._service_exit_event.is_set():  # only stop if not already stopped
+            self.shutdown()  # shut down gracefully  # close REP socket & thread
         return False  # propagate exceptions

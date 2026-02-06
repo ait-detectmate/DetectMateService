@@ -1,7 +1,8 @@
 component_type: "detectors.dummy_detector.DummyDetector"
 component_config_class: "detectors.dummy_detector.DummyDetectorConfig"
 component_name: "detector-1"
-manager_addr: "ipc:///tmp/detector_cmd.ipc"
+http_host: "127.0.0.1"
+http_port: 8030
 engine_addr: "ipc:///tmp/detector_engine.ipc"
 log_level: "DEBUG"
 log_dir: "./logs"

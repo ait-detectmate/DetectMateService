@@ -16,7 +16,8 @@ These settings control the service infrastructure.
 | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
 | `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
 | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
-| `manager_addr`                | `DETECTMATE_MANAGER_ADDR`                | `ipc:///tmp/detectmate.cmd.ipc`    | Address for management commands (REQ/REP).                                                                |
+| `http_host`                | `DETECTMATE_HTTP_HOST`                | `127.0.0.1`    | Host address for the HTTP server.
+| `http_port`                | `DETECTMATE_HTTP_PORT`                | `8000`    | Port for the HTTP server.                                                            |
 | `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
 | `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
 | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
@@ -35,8 +36,9 @@ component_name: "my-detector"
 log_level: "DEBUG"
 log_dir: "./logs"
 
-# Manager Interface (Command Channel)
-manager_addr: "ipc:///tmp/detectmate.cmd.ipc"
+# Manager Interface
+http_host: 127.0.0.1
+http_port: 8000
 
 # Engine Interface (Data Channel)
 engine_addr: "ipc:///tmp/detectmate.engine.ipc"
@@ -66,13 +68,40 @@ detectmate start
 
 In addition to the service settings (which configure the *runner*), you can also pass a separate configuration file for the specific component logic (e.g., detector parameters) using the `--config` flag in the CLI. This file is specific to the implementation of the component you are running.
 
+Component configuration controls the specific logic of the detector or parser. To support dynamic library loading, this file uses a nested structure.
+The configuration must be namespaced by the component category (detectors or parsers) and the specific class name to allow the library to correctly route parameters.
+Example detector_config.yaml
 
 
 ```yaml
-# detector-config.yaml
-threshold: 0.85
-sensitivity: high
-enabled: true
+detectors:                 # Category Level
+  NewValueDetector:        # Class Name Level
+    auto_config: false
+    method_type: new_value_detector
+    params:                # Implementation Specific Level
+      log_variables:
+        - id: test
+          template: dummy_template
+          variables:
+            - name: var1
+              pos: 0
+              params:
+                threshold: 0.0
 ```
 
 You can read more about Components in the [Using a Library Component](library.md) section.
+
+
+## HTTP Admin Interface
+
+The service provides a REST API for runtime management and monitoring.
+
+### Core Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/admin/status` | Returns the health, running state, and current effective configurations. |
+| `POST` | `/admin/start` | Starts the data processing engine thread. |
+| `POST` | `/admin/stop` | Stops the data processing engine thread. |
+| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. |
+| `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |

@@ -1,7 +1,8 @@
 component_type: "detectors.new_value_detector.NewValueDetector"
 component_config_class: "detectors.new_value_detector.NewValueDetectorConfig"
 component_name: "test-nvd"
-manager_addr: "tcp://detector:8020"
+http_host: "127.0.0.1"
+http_port: 8020
 engine_addr: "tcp://detector:8021"
 log_level: "DEBUG"
 log_dir: "./logs"

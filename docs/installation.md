@@ -32,17 +32,4 @@ pip install .
 ```
 
 
-## Developer setup
 
-For development, you can install with optional dependencies:
-
-```bash
-uv sync --dev
-```
-
-We recommend using [`prek`](https://github.com/j178/prek) to manage Git
-pre-commit hooks. `prek` is configured via the existing `.pre-commit-config.yaml`
-and can be installed as part of the `dev` extras. To ensure pre-commit hooks run before each commit, run:
-```bash
-uv run prek install
-```

@@ -9,6 +9,11 @@ from pydantic import BaseModel, ValidationError
 from detectmatelibrary.common.core import CoreConfig
 
 
+class ServiceConfig(BaseModel):
+    detectors: Optional[Dict[str, Dict[str, Any]]] = None
+    parsers: Optional[Dict[str, Dict[str, Any]]] = None
+
+
 class ConfigManager:
     def __init__(
             self,
@@ -45,7 +50,13 @@ class ConfigManager:
             self.logger.debug(f"Loaded data from file: {data}")
 
             if self.schema and data:
-                self._configs = data  # self.schema.model_validate(data)
+                # Problem: mismatch between component config schema and structure the library expects
+                # cannot validate against self.schema
+                # self.schema does not accept "detectors" or "parsers" key which the library expects
+                # cannot nest, because self.schema does not accept a params field, which the library expects
+                # --> validate against ServiceConfig here, let library handle the rest
+
+                self._configs = ServiceConfig.model_validate(data)
                 self.logger.debug(f"Validated params: {self._configs}")
             elif data:
                 # If no schema, store as raw dict
@@ -94,7 +105,7 @@ class ConfigManager:
         """Update parameters with validation."""
         with self._lock:
             if self.schema:
-                self._configs = self.schema.model_validate(new_configs)
+                self._configs = ServiceConfig.model_validate(new_configs)
             else:
                 self._configs = new_configs
             self.logger.info(f"Parameters updated: {self._configs}")

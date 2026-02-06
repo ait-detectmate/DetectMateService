@@ -4,6 +4,7 @@ import time
 import pynng
 from pydantic import ValidationError
 
+
 from service.settings import ServiceSettings
 from service.features.engine import Engine
 from library.processor import BaseProcessor
@@ -39,7 +40,6 @@ def temp_ipc_paths(tmp_path):
         'out1': f"ipc://{tmp_path}/out1.ipc",
         'out2': f"ipc://{tmp_path}/out2.ipc",
         'out3': f"ipc://{tmp_path}/out3.ipc",
-        'manager': f"ipc://{tmp_path}/manager.ipc",
     }
 
 
@@ -60,7 +60,8 @@ class TestEngineMultiOutput:
         """Test engine with a single output destination."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8001,
             out_addr=[temp_ipc_paths['out1']],
             engine_autostart=False,
         )
@@ -100,7 +101,8 @@ class TestEngineMultiOutput:
         """Test engine sending to multiple output destinations."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],
                 temp_ipc_paths['out2'],
@@ -155,7 +157,8 @@ class TestEngineMultiOutput:
         """Test engine with no output destinations configured."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[],  # Empty list
             engine_autostart=False,
         )
@@ -188,7 +191,8 @@ class TestEngineMultiOutput:
         """Test engine with both IPC and TCP output destinations."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],
                 'tcp://127.0.0.1:15555',
@@ -238,7 +242,8 @@ class TestEngineMultiOutput:
         """Test that no output is sent when processor returns None."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1']],
             engine_autostart=False,
         )
@@ -274,7 +279,8 @@ class TestEngineMultiOutput:
         """Engine continues with remaining sockets if one fails mid-run."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],
                 temp_ipc_paths['out2'],
@@ -328,7 +334,8 @@ class TestEngineMultiOutput:
         """Test sending multiple messages in sequence to multiple outputs."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             engine_autostart=False,
         )
@@ -373,7 +380,8 @@ class TestEngineMultiOutput:
         """Test that stopping engine closes all output sockets."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             engine_autostart=False,
         )
@@ -417,7 +425,8 @@ class TestEngineMultiOutput:
 component_name: "test-component"
 component_type: "core"
 log_dir: "./logs"
-manager_addr: "ipc:///tmp/test.cmd.ipc"
+http_host: "127.0.0.1"
+http_port: "8002"
 engine_addr: "ipc:///tmp/test.engine.ipc"
 out_addr:
   - "ipc:///tmp/out1.ipc"
@@ -442,7 +451,8 @@ out_addr:
         """Test that messages are processed and sent correctly under load."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1']],
             engine_autostart=False,
         )
@@ -489,7 +499,8 @@ out_addr:
         with pytest.raises(ValidationError):
             ServiceSettings(
                 engine_addr=temp_ipc_paths['engine'],
-                manager_addr=temp_ipc_paths['manager'],
+                http_host="127.0.0.1",
+                http_port=8002,
                 out_addr=[
                     temp_ipc_paths['out1'],  # Valid
                     "invalid://bad.address",  # Invalid scheme -> rejected
@@ -504,7 +515,8 @@ out_addr:
         during runtime."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],
                 temp_ipc_paths['out2'],
@@ -556,7 +568,8 @@ out_addr:
         """Engine should start even if output is unreachable at startup."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],  # acts as unreachable (no listener)
             ],
@@ -573,7 +586,8 @@ out_addr:
         """Engine starts if one reachable and one unreachable output exist."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[
                 temp_ipc_paths['out1'],  # available
                 temp_ipc_paths['out2'],  # unreachable
@@ -599,7 +613,8 @@ out_addr:
         engine start."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1']],
             engine_autostart=False,
         )
@@ -650,7 +665,8 @@ class TestEngineMultiOutputEdgeCases:
         """Test handling of empty messages."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1']],
             engine_autostart=False,
         )
@@ -686,7 +702,8 @@ class TestEngineMultiOutputEdgeCases:
         """Test handling of large messages to multiple outputs."""
         settings = ServiceSettings(
             engine_addr=temp_ipc_paths['engine'],
-            manager_addr=temp_ipc_paths['manager'],
+            http_host="127.0.0.1",
+            http_port=8002,
             out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
             engine_autostart=False,
         )

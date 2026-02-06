@@ -3,6 +3,7 @@ import pynng
 import logging
 from abc import ABC
 from typing import Optional, List
+from prometheus_client import Counter
 from service.settings import ServiceSettings
 from service.features.engine_socket import (
     EngineSocketFactory,
@@ -12,10 +13,27 @@ from service.features.engine_socket import (
 # TODO: replace these imports with the actual library implementations
 from library.processor import BaseProcessor, ProcessorException
 
+data_read_bytes_total = Counter(
+    "data_read_bytes_total",
+    "Total bytes read from input interfaces",
+    ["component_type", "component_id"]
+)
+
+data_written_bytes_total = Counter(
+    "data_written_bytes_total",
+    "Total bytes written to output interfaces",
+    ["component_type", "component_id"]
+)
+
+data_dropped_bytes_total = Counter(
+    "data_dropped_bytes_total",
+    "Total bytes dropped due to disconnected or slow downstream peers",
+    ["component_type", "component_id"]
+)
+
 
 class EngineException(Exception):
     """Custom exception for engine-related errors."""
-    pass
 
 
 class DefaultProcessor(BaseProcessor):
@@ -23,6 +41,7 @@ class DefaultProcessor(BaseProcessor):
 
     This is necessary to satisfy the abstract BaseProcessor requirement.
     """
+
     def __call__(self, raw: bytes) -> bytes | None:
         return raw
 
@@ -73,9 +92,7 @@ class Engine(ABC):
                 self.log.warning("Failed to close engine input socket after setup failure: %s", e)
             raise
 
-        # autostart if enabled
-        if getattr(self.settings, "engine_autostart", True):
-            self.start()
+        self.log.debug("Engine initialized and ready.")
 
     def _setup_output_sockets(self) -> None:
         """Create and connect output sockets for all destinations in out_addr.
@@ -112,11 +129,24 @@ class Engine(ABC):
     def start(self) -> str:
         if not self._running:
             self._running = True
+            self._stop_event.clear()
+            # RECREATE THE THREAD if it's dead or doesn't exist
+            if not self._thread.is_alive():
+                self._thread = threading.Thread(
+                    target=self._run_loop,
+                    name="EngineLoop",
+                    daemon=True
+                )
             self._thread.start()
             return "engine started"
         return "engine already running"
 
     def _run_loop(self) -> None:
+        labels = {
+            "component_type": getattr(self, "component_type", "core"),
+            "component_id": self.settings.component_id
+        }
+
         while self._running and not self._stop_event.is_set():
 
             # recv phase
@@ -125,6 +155,9 @@ class Engine(ABC):
                 if raw is None or len(raw) == 0:
                     self.log.debug("Engine: Received empty message, skipping")
                     continue
+
+                # TRACK read bytes
+                data_read_bytes_total.labels(**labels).inc(len(raw))
 
                 self.log.debug(f"Engine: Received {len(raw)} bytes from socket")
             except pynng.Timeout:
@@ -143,6 +176,9 @@ class Engine(ABC):
             try:
                 self.log.debug("Engine: Calling processor...")
                 out = self.processor(raw)
+                if out is not None:
+                    # TRACK written bytes
+                    data_written_bytes_total.labels(**labels).inc(len(out))
                 self.log.debug(f"Engine: Processor returned: {out!r}")
             except ProcessorException as e:
                 self.log.error("Processor error: %s", e)
@@ -167,6 +203,8 @@ class Engine(ABC):
                         "sending reply back via engine socket"
                     )
                     self._pair_sock.send(out)
+                    # TRACK written bytes (Fallback mode)
+                    data_written_bytes_total.labels(**labels).inc(len(out))
                     self.log.debug("Engine: Reply sent on engine socket")
                 except pynng.NNGException as e:
                     self.log.error("Engine error sending reply on engine socket: %s", e)
@@ -174,6 +212,10 @@ class Engine(ABC):
 
     def _send_to_outputs(self, data: bytes) -> None:
         """Send processed data to all configured output destinations."""
+        labels = {
+            "component_type": getattr(self, "component_type", "core"),
+            "component_id": self.settings.component_id
+        }
         if not self._out_sockets:
             self.log.debug("Engine: No output sockets configured, skipping send")
             return
@@ -184,8 +226,12 @@ class Engine(ABC):
                 # Non-blocking send is preferred to avoid stalling the engine loop
                 # Pair0 with block=False will raise TryAgain if the peer is disconnected
                 sock.send(data, block=False)
+                # TRACK written bytes
+                data_written_bytes_total.labels(**labels).inc(len(data))
                 self.log.debug(f"Engine: Send completed to output socket {i}")
             except pynng.TryAgain:
+                # TRACK dropped bytes
+                data_dropped_bytes_total.labels(**labels).inc(len(data))
                 self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
             except pynng.NNGException as e:
                 self.log.error(f"Engine error sending to output socket {i}: {e}")
@@ -206,6 +252,12 @@ class Engine(ABC):
         self._running = False
         self._stop_event.set()
 
+        # WAIT for engine loop to exit recv()
+        self._thread.join(timeout=2.0)
+
+        if self._thread.is_alive():
+            raise EngineException("Engine thread failed to stop cleanly")
+
         # Close input socket
         try:
             self._pair_sock.close()
@@ -220,12 +272,7 @@ class Engine(ABC):
             except pynng.NNGException as e:
                 self.log.error(f"Failed to close output socket {i}: {e}")
 
-        try:
-            self._thread.join(timeout=1.0)
-            if self._thread.is_alive():
-                raise EngineException("Engine thread failed to stop within timeout")
-            elif self.log:
-                self.log.debug("Engine stopped successfully")
-        except Exception as e:
-            raise EngineException(f"Failed to join engine thread: {e}") from e
+        if self.log:
+            self.log.debug("Engine stopped successfully")
+
         return None
