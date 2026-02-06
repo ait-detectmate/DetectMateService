@@ -2,39 +2,47 @@
 import pytest
 import time
 import pynng
+from contextlib import contextmanager
 from pydantic import ValidationError
-
 
 from service.settings import ServiceSettings
 from service.features.engine import Engine
 from library.processor import BaseProcessor
 
 
+# Timing constants
+STARTUP_DELAY = 0.1
+CONNECTION_DELAY = 0.2
+RECV_TIMEOUT = 1000
+SHORT_TIMEOUT = 500
+
+
+# Test processors
 class SimpleProcessor(BaseProcessor):
-    """Test processor that transforms input."""
+    """Transforms input to uppercase with prefix."""
 
     def __call__(self, raw_message: bytes) -> bytes:
-        # Simple transformation: uppercase and add prefix
         return b"PROCESSED: " + raw_message.upper()
 
 
 class NullProcessor(BaseProcessor):
-    """Test processor that returns None."""
+    """Returns None to test skip behavior."""
 
     def __call__(self, raw_message: bytes) -> None:
         return None
 
 
 class FailingProcessor(BaseProcessor):
-    """Test processor that raises an exception."""
+    """Raises exception to test error handling."""
 
     def __call__(self, raw_message: bytes) -> bytes:
         raise ValueError("Processor failure")
 
 
+# Fixtures
 @pytest.fixture
-def temp_ipc_paths(tmp_path):
-    """Generate temporary IPC paths for testing."""
+def ipc_paths(tmp_path):
+    """Generate temporary IPC paths."""
     return {
         'engine': f"ipc://{tmp_path}/engine.ipc",
         'out1': f"ipc://{tmp_path}/out1.ipc",
@@ -43,385 +51,233 @@ def temp_ipc_paths(tmp_path):
     }
 
 
+@contextmanager
+def pair_socket(mode='dial', addr=None, timeout=RECV_TIMEOUT):
+    """Context manager for PAIR socket with automatic cleanup."""
+    sock = pynng.Pair0()
+    sock.recv_timeout = timeout
+
+    if addr:
+        if mode == 'listen':
+            sock.listen(addr)
+        else:
+            sock.dial(addr)
+
+    try:
+        yield sock
+    finally:
+        sock.close()
+
+
 @pytest.fixture
-def tcp_ports():
-    """Generate TCP ports for testing."""
-    return {
-        'out1': 'tcp://127.0.0.1:15555',
-        'out2': 'tcp://127.0.0.1:15556',
-        'out3': 'tcp://127.0.0.1:15557',
-    }
+def engine_manager():
+    """Manages engine lifecycle across tests."""
+    engines = []
 
+    def create(settings, processor=None):
+        proc = processor or SimpleProcessor()
+        engine = Engine(settings=settings, processor=proc)
+        engines.append(engine)
+        return engine
 
-class TestEngineMultiOutput:
-    """Test suite for Engine multi-destination output."""
+    yield create
 
-    def test_single_output_destination(self, temp_ipc_paths):
-        """Test engine with a single output destination."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8001,
-            out_addr=[temp_ipc_paths['out1']],
-            engine_autostart=False,
-        )
-
-        # Create output receiver
-        receiver = pynng.Pair0()
-        receiver.listen(temp_ipc_paths['out1'])
-        receiver.recv_timeout = 1000
-
-        # Create engine with processor
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
-
-        # Create input sender
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            # Start engine
-            engine.start()
-            time.sleep(0.1)  # Give engine time to start
-
-            # Send test message
-            test_message = b"hello world"
-            sender.send(test_message)
-
-            # Receive processed message
-            result = receiver.recv()
-            assert result == b"PROCESSED: HELLO WORLD"
-
-        finally:
+    for engine in engines:
+        if engine._running:
             engine.stop()
-            sender.close()
-            receiver.close()
 
-    def test_multiple_output_destinations(self, temp_ipc_paths):
-        """Test engine sending to multiple output destinations."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],
-                temp_ipc_paths['out2'],
-                temp_ipc_paths['out3'],
-            ],
-            engine_autostart=False,
-        )
 
-        # Create multiple output receivers
-        receivers = []
-        for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2'], temp_ipc_paths['out3']]:
-            receiver = pynng.Pair0()
-            receiver.listen(addr)
-            receiver.recv_timeout = 1000
-            receivers.append(receiver)
+@pytest.fixture
+def receiver_manager():
+    """Manages multiple receiver sockets with proper cleanup."""
+    sockets = []
 
-        # Create engine
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+    def create_receivers(addrs, timeout=RECV_TIMEOUT):
+        for addr in addrs:
+            sock = pynng.Pair0()
+            sock.recv_timeout = timeout
+            sock.listen(addr)
+            sockets.append(sock)
+        return sockets
 
-        # Create input sender
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+    yield create_receivers
 
+    for sock in sockets:
         try:
-            # Start engine
-            engine.start()
-            time.sleep(0.1)
+            sock.close()
+        except pynng.NNGException:
+            pass
 
-            # Send test message
-            test_message = b"test message"
-            sender.send(test_message)
 
-            # All receivers should get the same processed message
-            results = []
-            for receiver in receivers:
-                result = receiver.recv()
-                results.append(result)
+def create_settings(ipc_paths, out_addrs=None, port=8001):
+    """Helper to create ServiceSettings with common defaults."""
+    return ServiceSettings(
+        engine_addr=ipc_paths['engine'],
+        http_host="127.0.0.1",
+        http_port=port,
+        out_addr=out_addrs or [],
+        engine_autostart=False,
+    )
 
-            # Verify all receivers got the same message
-            expected = b"PROCESSED: TEST MESSAGE"
-            assert all(r == expected for r in results)
-            assert len(results) == 3
 
-        finally:
-            engine.stop()
-            sender.close()
-            for receiver in receivers:
-                receiver.close()
+# Tests
+def test_single_output_destination(ipc_paths, engine_manager):
+    """Engine sends to single output destination."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
 
-    def test_no_output_destinations(self, temp_ipc_paths):
-        """Test engine with no output destinations configured."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[],  # Empty list
-            engine_autostart=False,
-        )
+    with pair_socket('listen', ipc_paths['out1']) as receiver, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(STARTUP_DELAY)
 
-        # Create input sender
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+        sender.send(b"hello world")
+        assert receiver.recv() == b"PROCESSED: HELLO WORLD"
 
-        try:
-            # Start engine
-            engine.start()
-            time.sleep(0.1)
 
-            # Send test message - should not cause error even with no outputs
-            test_message = b"test message"
-            sender.send(test_message)
-            time.sleep(0.1)  # Give time to process
+def test_multiple_output_destinations(ipc_paths, engine_manager, receiver_manager):
+    """Engine broadcasts to multiple outputs."""
+    out_addrs = [ipc_paths['out1'], ipc_paths['out2'], ipc_paths['out3']]
+    settings = create_settings(ipc_paths, out_addrs)
 
-            # Engine should continue running without error
-            assert engine._running
+    receivers = receiver_manager(out_addrs)
 
-        finally:
-            engine.stop()
-            sender.close()
+    with pair_socket('dial', ipc_paths['engine']) as sender:
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)  # Need longer for multiple connections
 
-    def test_mixed_ipc_tcp_destinations(self, temp_ipc_paths):
-        """Test engine with both IPC and TCP output destinations."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],
-                'tcp://127.0.0.1:15555',
-            ],
-            engine_autostart=False,
-        )
+        sender.send(b"test message")
 
-        # Create IPC receiver
-        ipc_receiver = pynng.Pair0()
-        ipc_receiver.listen(temp_ipc_paths['out1'])
-        ipc_receiver.recv_timeout = 1000
+        results = [r.recv() for r in receivers]
+        assert all(r == b"PROCESSED: TEST MESSAGE" for r in results)
+        assert len(results) == 3
 
-        # Create TCP receiver
-        tcp_receiver = pynng.Pair0()
-        tcp_receiver.listen('tcp://127.0.0.1:15555')
-        tcp_receiver.recv_timeout = 1000
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+def test_no_output_destinations(ipc_paths, engine_manager):
+    """Engine with no outputs configured continues running."""
+    settings = create_settings(ipc_paths, [])
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+    with pair_socket('dial', ipc_paths['engine']) as sender:
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(STARTUP_DELAY)
 
-        try:
-            engine.start()
-            time.sleep(0.1)
+        sender.send(b"test message")
+        time.sleep(STARTUP_DELAY)
 
-            # Send test message
-            test_message = b"mixed transport"
-            sender.send(test_message)
+        assert engine._running
 
-            # Both receivers should get the message
-            ipc_result = ipc_receiver.recv()
-            tcp_result = tcp_receiver.recv()
 
-            expected = b"PROCESSED: MIXED TRANSPORT"
-            assert ipc_result == expected
-            assert tcp_result == expected
+def test_mixed_ipc_tcp_destinations(ipc_paths, engine_manager):
+    """Engine sends to both IPC and TCP destinations."""
+    tcp_addr = 'tcp://127.0.0.1:15555'
+    settings = create_settings(ipc_paths, [ipc_paths['out1'], tcp_addr])
 
-        finally:
-            engine.stop()
-            sender.close()
-            ipc_receiver.close()
-            tcp_receiver.close()
+    with pair_socket('listen', ipc_paths['out1']) as ipc_recv, \
+            pair_socket('listen', tcp_addr) as tcp_recv, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
 
-    def test_processor_returns_none(self, temp_ipc_paths):
-        """Test that no output is sent when processor returns None."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1']],
-            engine_autostart=False,
-        )
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(STARTUP_DELAY)
 
-        receiver = pynng.Pair0()
-        receiver.listen(temp_ipc_paths['out1'])
-        receiver.recv_timeout = 500  # Short timeout
+        sender.send(b"mixed transport")
 
-        processor = NullProcessor()
-        engine = Engine(settings=settings, processor=processor)
+        assert ipc_recv.recv() == b"PROCESSED: MIXED TRANSPORT"
+        assert tcp_recv.recv() == b"PROCESSED: MIXED TRANSPORT"
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
 
-        try:
-            engine.start()
-            time.sleep(0.1)
+def test_processor_returns_none(ipc_paths, engine_manager):
+    """No output sent when processor returns None."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
 
-            # Send message
-            sender.send(b"test")
-            time.sleep(0.1)
+    with pair_socket('listen', ipc_paths['out1'], SHORT_TIMEOUT) as receiver, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
 
-            # Should timeout because no message is sent
-            with pytest.raises(pynng.Timeout):
-                receiver.recv()
+        engine = engine_manager(settings, NullProcessor())
+        engine.start()
+        time.sleep(STARTUP_DELAY)
 
-        finally:
-            engine.stop()
-            sender.close()
-            receiver.close()
+        sender.send(b"test")
+        time.sleep(STARTUP_DELAY)
 
-    def test_output_socket_failure_resilience(self, temp_ipc_paths):
-        """Engine continues with remaining sockets if one fails mid-run."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],
-                temp_ipc_paths['out2'],
-            ],
-            engine_autostart=False,
-        )
+        with pytest.raises(pynng.Timeout):
+            receiver.recv()
 
-        # Receivers for both outputs so startup succeeds
-        receiver1 = pynng.Pair0()
-        receiver1.listen(temp_ipc_paths['out1'])
-        receiver1.recv_timeout = 2000
 
-        receiver2 = pynng.Pair0()
-        receiver2.listen(temp_ipc_paths['out2'])
-        receiver2.recv_timeout = 2000
+def test_output_socket_failure_resilience(ipc_paths, engine_manager):
+    """Engine continues with remaining sockets if one fails."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1'], ipc_paths['out2']])
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+    with pair_socket('listen', ipc_paths['out1']) as recv1, \
+            pair_socket('listen', ipc_paths['out2']), \
+            pair_socket('dial', ipc_paths['engine']) as sender:
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)
 
-        try:
-            engine.start()
-            time.sleep(0.2)  # Give time for connections
+        # Simulate mid-run failure
+        engine._out_sockets[1].close()
 
-            # Simulate mid-run failure of the second output socket
-            # (closed socket will cause send() to raise NNGException)
-            engine._out_sockets[1].close()
+        for _ in range(3):
+            sender.send(b"resilience test")
+            time.sleep(0.05)
 
-            # Send a few messages; even if out2 fails, out1 should still work
-            test_message = b"resilience test"
-            for _ in range(3):
-                sender.send(test_message)
-                time.sleep(0.05)
+        assert recv1.recv() == b"PROCESSED: RESILIENCE TEST"
+        assert engine._running
 
-            # Receiver 1 should still get the processed message
-            result1 = receiver1.recv()
-            expected = b"PROCESSED: RESILIENCE TEST"
-            assert result1 == expected
 
-            # Engine should still be running
-            assert engine._running
-        finally:
-            engine.stop()
-            sender.close()
-            receiver1.close()
-            receiver2.close()
+def test_multiple_messages_sequence(ipc_paths, engine_manager, receiver_manager):
+    """Multiple messages sent in sequence to multiple outputs."""
+    out_addrs = [ipc_paths['out1'], ipc_paths['out2']]
+    settings = create_settings(ipc_paths, out_addrs)
 
-    def test_multiple_messages_sequence(self, temp_ipc_paths):
-        """Test sending multiple messages in sequence to multiple outputs."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
-            engine_autostart=False,
-        )
+    receivers = receiver_manager(out_addrs)
 
-        receivers = []
-        for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2']]:
-            receiver = pynng.Pair0()
-            receiver.listen(addr)
-            receiver.recv_timeout = 1000
-            receivers.append(receiver)
+    with pair_socket('dial', ipc_paths['engine']) as sender:
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+        messages = [b"msg1", b"msg2", b"msg3"]
+        for msg in messages:
+            sender.send(msg)
+            time.sleep(0.05)
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            engine.start()
-            time.sleep(0.5)
-
-            # Send multiple messages
-            messages = [b"msg1", b"msg2", b"msg3"]
+        for receiver in receivers:
             for msg in messages:
-                sender.send(msg)
-                time.sleep(0.05)
+                result = receiver.recv()
+                expected = b"PROCESSED: " + msg.upper()
+                assert result == expected
 
-            # Collect results from all receivers
-            for receiver in receivers:
-                for msg in messages:
-                    result = receiver.recv()
-                    expected = b"PROCESSED: " + msg.upper()
-                    assert result == expected
 
-        finally:
-            engine.stop()
-            sender.close()
-            for receiver in receivers:
-                receiver.close()
+def test_engine_stop_closes_all_sockets(ipc_paths, engine_manager, receiver_manager):
+    """Stopping engine closes all output sockets."""
+    out_addrs = [ipc_paths['out1'], ipc_paths['out2']]
+    settings = create_settings(ipc_paths, out_addrs)
 
-    def test_engine_stop_closes_all_sockets(self, temp_ipc_paths):
-        """Test that stopping engine closes all output sockets."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
-            engine_autostart=False,
-        )
+    receiver_manager(out_addrs)
 
-        # Create receivers
-        receivers = []
-        for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2']]:
-            receiver = pynng.Pair0()
-            receiver.listen(addr)
-            receivers.append(receiver)
+    with pair_socket('dial', ipc_paths['engine']):
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+        assert len(engine._out_sockets) == 2
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+        engine.stop()
 
-        try:
-            engine.start()
-            time.sleep(0.1)
+        for sock in engine._out_sockets:
+            with pytest.raises(pynng.NNGException):
+                sock.send(b"test")
 
-            # Verify engine has output sockets
-            assert len(engine._out_sockets) == 2
 
-            # Stop engine
-            engine.stop()
-
-            # Verify sockets are closed (attempting to send should fail)
-            for sock in engine._out_sockets:
-                with pytest.raises(pynng.NNGException):
-                    sock.send(b"test")
-
-        finally:
-            sender.close()
-            for receiver in receivers:
-                receiver.close()
-
-    def test_settings_from_yaml(self, tmp_path):
-        """Test loading multi-output configuration from YAML."""
-        yaml_content = """
+def test_settings_from_yaml(tmp_path):
+    """Load multi-output configuration from YAML."""
+    yaml_content = """
 component_name: "test-component"
 component_type: "core"
 log_dir: "./logs"
@@ -433,310 +289,159 @@ out_addr:
   - "ipc:///tmp/out2.ipc"
   - "tcp://localhost:5555"
 """
-        yaml_file = tmp_path / "settings.yaml"
-        yaml_file.write_text(yaml_content)
+    yaml_file = tmp_path / "settings.yaml"
+    yaml_file.write_text(yaml_content)
 
-        settings = ServiceSettings.from_yaml(yaml_file)
+    settings = ServiceSettings.from_yaml(yaml_file)
 
-        assert [str(a) for a in settings.out_addr] == [
-            "ipc:///tmp/out1.ipc",
-            "ipc:///tmp/out2.ipc",
-            "tcp://localhost:5555",
-        ]
+    assert [str(a) for a in settings.out_addr] == [
+        "ipc:///tmp/out1.ipc",
+        "ipc:///tmp/out2.ipc",
+        "tcp://localhost:5555",
+    ]
+    assert [a.scheme for a in settings.out_addr] == ["ipc", "ipc", "tcp"]
 
-        schemes = [a.scheme for a in settings.out_addr]
-        assert schemes == ["ipc", "ipc", "tcp"]
 
-    def test_concurrent_message_processing(self, temp_ipc_paths):
-        """Test that messages are processed and sent correctly under load."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1']],
-            engine_autostart=False,
-        )
+def test_concurrent_message_processing(ipc_paths, engine_manager):
+    """Messages processed correctly under load."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
 
-        receiver = pynng.Pair0()
-        receiver.listen(temp_ipc_paths['out1'])
-        receiver.recv_timeout = 2000
+    with pair_socket('listen', ipc_paths['out1'], timeout=2000) as receiver, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
 
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
-
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            engine.start()
-            time.sleep(0.1)
-
-            # Send multiple messages rapidly
-            num_messages = 10
-            for i in range(num_messages):
-                sender.send(f"message {i}".encode())
-                time.sleep(0.01)  # Small delay
-
-            # Receive all messages
-            received = []
-            for i in range(num_messages):
-                result = receiver.recv()
-                received.append(result)
-
-            # Verify all messages received
-            assert len(received) == num_messages
-            for i, msg in enumerate(received):
-                expected = f"PROCESSED: MESSAGE {i}".encode()
-                assert msg == expected
-
-        finally:
-            engine.stop()
-            sender.close()
-            receiver.close()
-
-    def test_invalid_output_address_validation(self, temp_ipc_paths):
-        """Invalid schemes should fail at settings validation time."""
-        with pytest.raises(ValidationError):
-            ServiceSettings(
-                engine_addr=temp_ipc_paths['engine'],
-                http_host="127.0.0.1",
-                http_port=8002,
-                out_addr=[
-                    temp_ipc_paths['out1'],  # Valid
-                    "invalid://bad.address",  # Invalid scheme -> rejected
-                    temp_ipc_paths['out2'],  # Won't be reached
-                ],
-                engine_autostart=False,
-                log_level="DEBUG",
-            )
-
-    def test_output_socket_failure_resilience_runtime(self, temp_ipc_paths):
-        """Engine keeps sending to reachable outputs even if another fails
-        during runtime."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],
-                temp_ipc_paths['out2'],
-            ],
-            engine_autostart=False,
-        )
-
-        # Receivers for both outputs so startup succeeds
-        receiver1 = pynng.Pair0()
-        receiver1.listen(temp_ipc_paths['out1'])
-        receiver1.recv_timeout = 2000
-
-        receiver2 = pynng.Pair0()
-        receiver2.listen(temp_ipc_paths['out2'])
-        receiver2.recv_timeout = 2000
-
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
-
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            engine.start()
-            time.sleep(0.2)
-
-            # First message: both outputs working
-            sender.send(b"initial")
-            assert receiver1.recv() == b"PROCESSED: INITIAL"
-            assert receiver2.recv() == b"PROCESSED: INITIAL"
-
-            # Now simulate runtime failure of the second output socket
-            engine._out_sockets[1].close()
-
-            # Second message: out1 still must receive processed data
-            sender.send(b"resilience test")
-            result1 = receiver1.recv()
-            assert result1 == b"PROCESSED: RESILIENCE TEST"
-
-            # Engine should still be running despite repeated send errors on out2
-            assert engine._running
-        finally:
-            engine.stop()
-            sender.close()
-            receiver1.close()
-            receiver2.close()
-
-    def test_unreachable_output_does_not_fail_startup(self, temp_ipc_paths):
-        """Engine should start even if output is unreachable at startup."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],  # acts as unreachable (no listener)
-            ],
-            engine_autostart=False,
-        )
-
-        processor = SimpleProcessor()
-        # Should not raise EngineException
-        engine = Engine(settings=settings, processor=processor)
+        engine = engine_manager(settings)
         engine.start()
+        time.sleep(STARTUP_DELAY)
+
+        num_messages = 10
+        for i in range(num_messages):
+            sender.send(f"message {i}".encode())
+            time.sleep(0.01)
+
+        received = [receiver.recv() for _ in range(num_messages)]
+
+        assert len(received) == num_messages
+        for i, msg in enumerate(received):
+            assert msg == f"PROCESSED: MESSAGE {i}".encode()
+
+
+def test_invalid_output_address_validation(ipc_paths):
+    """Invalid schemes rejected at settings validation."""
+    with pytest.raises(ValidationError):
+        ServiceSettings(
+            engine_addr=ipc_paths['engine'],
+            http_host="127.0.0.1",
+            http_port=8002,
+            out_addr=[
+                ipc_paths['out1'],
+                "invalid://bad.address",
+                ipc_paths['out2'],
+            ],
+            engine_autostart=False,
+            log_level="DEBUG",
+        )
+
+
+def test_output_socket_failure_resilience_runtime(ipc_paths, engine_manager):
+    """Engine continues sending to working outputs after runtime failure."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1'], ipc_paths['out2']])
+
+    with pair_socket('listen', ipc_paths['out1']) as recv1, \
+            pair_socket('listen', ipc_paths['out2']) as recv2, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
+
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)
+
+        # First message: both working
+        sender.send(b"initial")
+        assert recv1.recv() == b"PROCESSED: INITIAL"
+        assert recv2.recv() == b"PROCESSED: INITIAL"
+
+        # Simulate runtime failure
+        engine._out_sockets[1].close()
+
+        # Second message: out1 still works
+        sender.send(b"resilience test")
+        assert recv1.recv() == b"PROCESSED: RESILIENCE TEST"
+        assert engine._running
+
+
+def test_unreachable_output_does_not_fail_startup(ipc_paths, engine_manager):
+    """Engine starts even if output unreachable at startup."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
+
+    engine = engine_manager(settings)
+    engine.start()
+    engine.stop()
+
+
+def test_output_socket_unavailable_does_not_fail_startup(ipc_paths, engine_manager):
+    """Engine starts with mixed reachable/unreachable outputs."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1'], ipc_paths['out2']])
+
+    with pair_socket('listen', ipc_paths['out1']):
+        engine = engine_manager(settings)
+        engine.start()
+        assert engine._running
         engine.stop()
 
-    def test_output_socket_unavailable_does_not_fail_startup(self, temp_ipc_paths):
-        """Engine starts if one reachable and one unreachable output exist."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[
-                temp_ipc_paths['out1'],  # available
-                temp_ipc_paths['out2'],  # unreachable
-            ],
-            engine_autostart=False,
-        )
 
-        receiver1 = pynng.Pair0()
-        receiver1.listen(temp_ipc_paths['out1'])
-        receiver1.recv_timeout = 1000
+def test_late_binding_output(ipc_paths, engine_manager):
+    """Engine connects to output that comes online after start."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
 
-        try:
-            # Should not raise exception
-            engine = Engine(settings=settings, processor=SimpleProcessor())
-            engine.start()
-            assert engine._running
-            engine.stop()
-        finally:
-            receiver1.close()
-
-    def test_late_binding_output(self, temp_ipc_paths):
-        """Test that engine connects to an output that comes online AFTER
-        engine start."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1']],
-            engine_autostart=False,
-        )
-
-        # Start engine first (output is offline)
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
+    with pair_socket('dial', ipc_paths['engine']) as sender:
+        engine = engine_manager(settings)
         engine.start()
 
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
+        # Send while output down
+        sender.send(b"msg1")
+        time.sleep(STARTUP_DELAY)
 
-        try:
-            # Send a message while output is down
-            # It should be dropped (or queued depending on internal buffers, but we expect drop/no-block)
-            sender.send(b"msg1")
-            time.sleep(0.1)
+        # Bring up output
+        with pair_socket('listen', ipc_paths['out1'], timeout=2000) as receiver:
+            time.sleep(1.0)  # Background connection
 
-            # Now bring up the output
-            receiver = pynng.Pair0()
-            receiver.listen(temp_ipc_paths['out1'])
-            receiver.recv_timeout = 2000
-
-            # Give it a moment to connect in background
-            time.sleep(1.0)
-
-            # Send another message
             sender.send(b"msg2")
+            assert receiver.recv() == b"PROCESSED: MSG2"
 
-            # Receiver should get msg2.
-            # msg1 might be lost or received depending on NNG PUSH buffering.
-            # We strictly care that msg2 IS received, proving connection was established.
+
+def test_empty_message_handling(ipc_paths, engine_manager):
+    """Empty messages are skipped."""
+    settings = create_settings(ipc_paths, [ipc_paths['out1']])
+
+    with pair_socket('listen', ipc_paths['out1'], SHORT_TIMEOUT) as receiver, \
+            pair_socket('dial', ipc_paths['engine']) as sender:
+
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(STARTUP_DELAY)
+
+        sender.send(b"")
+        time.sleep(STARTUP_DELAY)
+
+        with pytest.raises(pynng.Timeout):
+            receiver.recv()
+
+
+def test_large_message_handling(ipc_paths, engine_manager, receiver_manager):
+    """Large messages handled correctly to multiple outputs."""
+    out_addrs = [ipc_paths['out1'], ipc_paths['out2']]
+    settings = create_settings(ipc_paths, out_addrs)
+
+    receivers = receiver_manager(out_addrs, timeout=2000)
+
+    with pair_socket('dial', ipc_paths['engine']) as sender:
+        engine = engine_manager(settings)
+        engine.start()
+        time.sleep(CONNECTION_DELAY)
+
+        large_message = b"x" * (1024 * 1024)
+        sender.send(large_message)
+
+        for receiver in receivers:
             result = receiver.recv()
-            assert result == b"PROCESSED: MSG2"
-
-        finally:
-            engine.stop()
-            sender.close()
-            # receiver might not be defined if it failed earlier, check locals
-            if 'receiver' in locals():
-                receiver.close()
-
-
-class TestEngineMultiOutputEdgeCases:
-    """Test edge cases and error conditions."""
-
-    def test_empty_message_handling(self, temp_ipc_paths):
-        """Test handling of empty messages."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1']],
-            engine_autostart=False,
-        )
-
-        receiver = pynng.Pair0()
-        receiver.listen(temp_ipc_paths['out1'])
-        receiver.recv_timeout = 500
-
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
-
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            engine.start()
-            time.sleep(0.1)
-
-            # Send empty message
-            sender.send(b"")
-            time.sleep(0.1)
-
-            # Should timeout - empty messages are skipped
-            with pytest.raises(pynng.Timeout):
-                receiver.recv()
-
-        finally:
-            engine.stop()
-            sender.close()
-            receiver.close()
-
-    def test_large_message_handling(self, temp_ipc_paths):
-        """Test handling of large messages to multiple outputs."""
-        settings = ServiceSettings(
-            engine_addr=temp_ipc_paths['engine'],
-            http_host="127.0.0.1",
-            http_port=8002,
-            out_addr=[temp_ipc_paths['out1'], temp_ipc_paths['out2']],
-            engine_autostart=False,
-        )
-
-        receivers = []
-        for addr in [temp_ipc_paths['out1'], temp_ipc_paths['out2']]:
-            receiver = pynng.Pair0()
-            receiver.listen(addr)
-            receiver.recv_timeout = 2000
-            receivers.append(receiver)
-
-        processor = SimpleProcessor()
-        engine = Engine(settings=settings, processor=processor)
-
-        sender = pynng.Pair0()
-        sender.dial(temp_ipc_paths['engine'])
-
-        try:
-            engine.start()
-            time.sleep(0.1)
-
-            # Send large message (1MB)
-            large_message = b"x" * (1024 * 1024)
-            sender.send(large_message)
-
-            # All receivers should get the processed large message
-            for receiver in receivers:
-                result = receiver.recv()
-                assert len(result) > 1024 * 1024  # Should be larger due to prefix
-                assert result.startswith(b"PROCESSED: ")
-
-        finally:
-            engine.stop()
-            sender.close()
-            for receiver in receivers:
-                receiver.close()
+            assert len(result) > 1024 * 1024
+            assert result.startswith(b"PROCESSED: ")
