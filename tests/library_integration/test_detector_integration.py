@@ -6,14 +6,12 @@ DummyDetector alternates: False, True, False
 """
 import time
 from pathlib import Path
-from subprocess import Popen
 from typing import Generator
 import pytest
 import pynng
-import yaml
-import sys
 import os
 from detectmatelibrary.schemas import DetectorSchema, ParserSchema
+from library_integration_base import start_service, cleanup_service
 
 
 @pytest.fixture(scope="session")
@@ -88,12 +86,12 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
     info."""
     timestamp = int(time.time() * 1000)
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
     settings = {
         "component_type": "detectors.dummy_detector.DummyDetector",
         "component_config_class": "detectors.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
-        "manager_addr": f"ipc:///tmp/test_detector_cmd_{timestamp}.ipc",
+        "http_host": "127.0.0.1",
+        "http_port": "8010",
         "engine_addr": f"ipc:///tmp/test_detector_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
@@ -101,57 +99,18 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
         "log_to_file": False,
         "engine_autostart": True,
     }
-
     config = {}  # DummyDetectorConfig has no additional config
-
-    # Write YAML files
-    settings_file = tmp_path / "detector_settings.yaml"
-    config_file = tmp_path / "detector_config.yaml"
-
-    with open(settings_file, "w") as f:
-        yaml.dump(settings, f)
-
-    with open(config_file, "w") as f:
-        yaml.dump(config, f)
-
-    # Start service
-    proc = Popen(
-        [sys.executable, "-m", "service.cli", "start",
-         "--settings", str(settings_file),
-         "--config", str(config_file)],
-        cwd=module_path,
-    )
-
+    proc, url = start_service(module_path, settings, config, tmp_path / "detector_settings.yaml", tmp_path / "detector_config.yaml")
     service_info = {
         "process": proc,
-        "manager_addr": settings["manager_addr"],
+        "http_host": settings["http_host"],
+        "http_port": settings["http_port"],
         "engine_addr": settings["engine_addr"],
     }
 
-    # Wait for service to be ready
-    max_retries = 10
-    for attempt in range(max_retries):
-        try:
-            with pynng.Req0(dial=service_info["manager_addr"], recv_timeout=1000) as sock:
-                sock.send(b"ping")
-                if sock.recv().decode() == "pong":
-                    break
-        except Exception:
-            if attempt == max_retries - 1:
-                proc.terminate()
-                proc.wait(timeout=5)
-                raise RuntimeError(f"Detector service not ready within {max_retries} attempts")
-        time.sleep(0.2)
-
     yield service_info
 
-    # Cleanup
-    try:
-        with pynng.Req0(dial=service_info["manager_addr"], recv_timeout=5000) as sock:
-            sock.send(b"stop")
-            sock.recv()
-    except Exception:
-        pass
+    cleanup_service(module_path, proc, url)
 
 
 class TestDetectorServiceViaEngine:
