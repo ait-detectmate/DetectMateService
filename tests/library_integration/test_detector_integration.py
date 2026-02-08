@@ -100,7 +100,8 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
         "engine_autostart": True,
     }
     config = {}  # DummyDetectorConfig has no additional config
-    proc, url = start_service(module_path, settings, config, tmp_path / "detector_settings.yaml", tmp_path / "detector_config.yaml")
+    proc, url = start_service(module_path, settings, config, tmp_path /
+                              "detector_settings.yaml", tmp_path / "detector_config.yaml")
     service_info = {
         "process": proc,
         "http_host": settings["http_host"],

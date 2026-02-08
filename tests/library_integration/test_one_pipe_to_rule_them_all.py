@@ -16,7 +16,7 @@ import json
 import sys
 import os
 from subprocess import Popen, PIPE
-from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
+from detectmatelibrary.schemas import LogSchema, ParserSchema
 from library_integration_base import start_service, cleanup_service
 
 
@@ -91,9 +91,12 @@ def running_pipeline_services(tmp_path: Path, test_log_file: Path) -> Generator[
     }
     detector_config = {}
 
-    reader_proc, reader_url = start_service(module_path, reader_settings, reader_config, tmp_path / "reader_settings.yaml", tmp_path / "reader_config.yaml")
-    parser_proc, parser_url = start_service(module_path, parser_settings, parser_config, tmp_path / "parser_settings.yaml", tmp_path / "parser_config.yaml")
-    detector_proc, detector_url = start_service(module_path, detector_settings, detector_config, tmp_path / "detector_settings.yaml", tmp_path / "detector_config.yaml")
+    reader_proc, reader_url = start_service(
+        module_path, reader_settings, reader_config, tmp_path / "reader_settings.yaml", tmp_path / "reader_config.yaml")
+    parser_proc, parser_url = start_service(
+        module_path, parser_settings, parser_config, tmp_path / "parser_settings.yaml", tmp_path / "parser_config.yaml")
+    detector_proc, detector_url = start_service(
+        module_path, detector_settings, detector_config, tmp_path / "detector_settings.yaml", tmp_path / "detector_config.yaml")
 
     time.sleep(1.0)
     service_info = {
@@ -125,12 +128,14 @@ class TestFullPipeline:
         for service_name, host, port in [
             ("reader", running_pipeline_services["http_host"], running_pipeline_services["reader_http_port"]),
             ("parser", running_pipeline_services["http_host"], running_pipeline_services["parser_http_port"]),
-            ("detector", running_pipeline_services["http_host"], running_pipeline_services["detector_http_port"]),
+            ("detector", running_pipeline_services["http_host"],
+             running_pipeline_services["detector_http_port"]),
         ]:
             max_retries = 10
             url = f"http://{host}:{port}"
             for attempt in range(max_retries):
-                status = Popen([sys.executable, "-m", "service.client", "--url", url, "status"], cwd=module_path, stdout=PIPE)
+                status = Popen([sys.executable, "-m", "service.client", "--url",
+                               url, "status"], cwd=module_path, stdout=PIPE)
                 stdout = status.communicate(timeout=5)
                 time.sleep(1)
                 try:

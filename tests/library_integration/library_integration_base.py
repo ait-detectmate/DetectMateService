@@ -12,11 +12,13 @@ def start_service(module_path, settings, config, settings_file, config_file):
     with open(config_file, "w") as f:
         yaml.dump(config, f)
     url = f"http://{settings["http_host"]}:{settings["http_port"]}"
-    proc = Popen([sys.executable, "-m", "service.cli", "--settings", str(settings_file), "--config", str(config_file)], cwd=module_path)
+    proc = Popen([sys.executable, "-m", "service.cli", "--settings",
+                 str(settings_file), "--config", str(config_file)], cwd=module_path)
 
     max_retries = 10
     for attempt in range(max_retries):
-        status = Popen([sys.executable, "-m", "service.client", "--url", url, "status"], cwd=module_path, stdout=PIPE)
+        status = Popen([sys.executable, "-m", "service.client", "--url",
+                       url, "status"], cwd=module_path, stdout=PIPE)
         stdout = status.communicate(timeout=5)
         time.sleep(1)
         try:
