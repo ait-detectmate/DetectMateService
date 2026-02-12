@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.1.2/library-imports/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Library Imports - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Library Imports";
+        var mkdocs_page_input_path = "library-imports.md";
+        var mkdocs_page_url = "/DetectMateService/0.1.2/library-imports/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../pipeline/">Running a Pipeline</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Development</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Library Imports</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#summary-of-imports">Summary of Imports</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#corecomponent">CoreComponent</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#usage-points">Usage Points</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#what-the-service-expects-from-corecomponent">What the Service Expects from CoreComponent</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#coreconfig">CoreConfig</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#usage-points_1">Usage Points</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#what-the-service-expects-from-coreconfig">What the Service Expects from CoreConfig</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#protobuf-schemas">Protobuf Schemas</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#usage-points_2">Usage Points</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#data-flow">Data Flow</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#what-the-service-expects-from-schemas">What the Service Expects from Schemas</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#import-resolution">Import Resolution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#file-reference">File Reference</a>
+    </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Library Imports</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="library-import-points">Library Import Points</h1>
+<p>This document provides an overview of where DetectMateService imports from DetectMateLibrary and how those imports are used. For implementation details of the library classes, refer to the DetectMateLibrary documentation.</p>
+<h2 id="summary-of-imports">Summary of Imports</h2>
+<table>
+<thead>
+<tr>
+<th>Import</th>
+<th>Source Module</th>
+<th>Used In</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CoreComponent</code></td>
+<td><code>detectmatelibrary.common.core</code></td>
+<td><code>core.py</code>, <code>component_loader.py</code></td>
+<td>Base class for all processing components</td>
+</tr>
+<tr>
+<td><code>CoreConfig</code></td>
+<td><code>detectmatelibrary.common.core</code></td>
+<td><code>core.py</code>, <code>config_loader.py</code>, <code>config_manager.py</code></td>
+<td>Base class for configuration schemas</td>
+</tr>
+<tr>
+<td><code>LogSchema</code></td>
+<td><code>detectmatelibrary.schemas</code></td>
+<td>Integration tests</td>
+<td>Reader output format</td>
+</tr>
+<tr>
+<td><code>ParserSchema</code></td>
+<td><code>detectmatelibrary.schemas</code></td>
+<td>Integration tests</td>
+<td>Parser output format</td>
+</tr>
+<tr>
+<td><code>DetectorSchema</code></td>
+<td><code>detectmatelibrary.schemas</code></td>
+<td>Integration tests</td>
+<td>Detector output format</td>
+</tr>
+</tbody>
+</table>
+<h2 id="corecomponent">CoreComponent</h2>
+<p><strong>Import location:</strong> <code>src/service/core.py</code>, <code>src/service/features/component_loader.py</code></p>
+<pre><code class="language-python">from detectmatelibrary.common.core import CoreComponent
+</code></pre>
+<h3 id="usage-points">Usage Points</h3>
+<h4 id="1-component-loading-component_loaderpy">1. Component Loading (<code>component_loader.py</code>)</h4>
+<p>The <code>ComponentLoader</code> dynamically imports component classes and validates they inherit from <code>CoreComponent</code>:</p>
+<ul>
+<li><strong>Instantiation</strong>: Components are instantiated with an optional config parameter</li>
+<li><strong>Type checking</strong>: <code>isinstance(instance, CoreComponent)</code> validates the loaded class</li>
+</ul>
+<pre><code class="language-python">instance = component_class(config=config)
+if not isinstance(instance, CoreComponent):
+    raise TypeError(...)
+</code></pre>
+<h4 id="2-processor-adapter-corepy">2. Processor Adapter (<code>core.py</code>)</h4>
+<p>The <code>LibraryComponentProcessor</code> wraps a <code>CoreComponent</code> to use it as the service's message processor:</p>
+<ul>
+<li><strong>process() invocation</strong>: The service calls <code>component.process(raw_message)</code> for each incoming message</li>
+<li><strong>Return handling</strong>: <code>bytes</code> output is forwarded; <code>None</code> skips the message</li>
+</ul>
+<pre><code class="language-python">result = self.component.process(raw_message)
+</code></pre>
+<h3 id="what-the-service-expects-from-corecomponent">What the Service Expects from CoreComponent</h3>
+<!-- TODO: Link to DetectMateLibrary CoreComponent documentation -->
+
+<ul>
+<li>Constructor accepts optional <code>config</code> parameter</li>
+<li><code>process(data: bytes) -&gt; bytes | None</code> method handles message processing</li>
+<li>See <a href="../interfaces/">Library Interface Contract</a> for the full interface specification</li>
+</ul>
+<h2 id="coreconfig">CoreConfig</h2>
+<p><strong>Import location:</strong> <code>src/service/core.py</code>, <code>src/service/features/config_loader.py</code>, <code>src/service/features/config_manager.py</code></p>
+<pre><code class="language-python">from detectmatelibrary.common.core import CoreConfig
+</code></pre>
+<h3 id="usage-points_1">Usage Points</h3>
+<h4 id="1-config-class-loading-config_loaderpy">1. Config Class Loading (<code>config_loader.py</code>)</h4>
+<p>The <code>ConfigClassLoader</code> dynamically imports config classes and validates they inherit from <code>CoreConfig</code>:</p>
+<ul>
+<li><strong>Subclass checking</strong>: <code>issubclass(config_class, CoreConfig)</code> validates the class hierarchy</li>
+</ul>
+<pre><code class="language-python">if not issubclass(config_class, CoreConfig):
+    raise TypeError(...)
+</code></pre>
+<h4 id="2-schema-for-configmanager-config_managerpy">2. Schema for ConfigManager (<code>config_manager.py</code>)</h4>
+<p>The <code>ConfigManager</code> uses <code>CoreConfig</code> subclasses as Pydantic schemas for validation:</p>
+<ul>
+<li><strong>Default creation</strong>: <code>self.schema()</code> creates default config instances</li>
+<li><strong>Validation</strong>: <code>self.schema.model_validate(data)</code> validates incoming config data</li>
+<li><strong>Serialization</strong>: <code>model_dump()</code> converts config to dict for YAML storage</li>
+</ul>
+<pre><code class="language-python"># Validation
+self._configs = self.schema.model_validate(new_configs)
+
+# Serialization
+data = self._configs.model_dump()
+</code></pre>
+<h4 id="3-service-initialization-corepy">3. Service Initialization (<code>core.py</code>)</h4>
+<p>The <code>Service.get_config_schema()</code> method returns the appropriate <code>CoreConfig</code> subclass for the component.</p>
+<h3 id="what-the-service-expects-from-coreconfig">What the Service Expects from CoreConfig</h3>
+<!-- TODO: Link to DetectMateLibrary CoreConfig documentation -->
+
+<ul>
+<li>Must be a Pydantic <code>BaseModel</code> subclass</li>
+<li>Must support <code>model_validate(data)</code> for validation</li>
+<li>Must support <code>model_dump()</code> for serialization</li>
+<li>See <a href="../interfaces/">Library Interface Contract</a> for the full interface specification</li>
+</ul>
+<h2 id="protobuf-schemas">Protobuf Schemas</h2>
+<p><strong>Import location:</strong> Integration tests only (<code>tests/library_integration/</code>)</p>
+<pre><code class="language-python">from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
+</code></pre>
+<h3 id="usage-points_2">Usage Points</h3>
+<p>The schemas are used in integration tests to verify correct data flow between pipeline stages:</p>
+<ul>
+<li><strong>LogSchema</strong>: Serialized output from Reader components</li>
+<li><strong>ParserSchema</strong>: Serialized output from Parser components</li>
+<li><strong>DetectorSchema</strong>: Serialized output from Detector components</li>
+</ul>
+<h3 id="data-flow">Data Flow</h3>
+<pre><code>Reader                    Parser                     Detector
+   |                         |                          |
+   v                         v                          v
+LogSchema bytes  ---&gt;  ParserSchema bytes  ---&gt;  DetectorSchema bytes
+</code></pre>
+<h3 id="what-the-service-expects-from-schemas">What the Service Expects from Schemas</h3>
+<!-- TODO: Link to DetectMateLibrary schema documentation -->
+
+<ul>
+<li>Protobuf message classes with <code>SerializeToString()</code> and <code>ParseFromString()</code> methods</li>
+<li>Consistent structure for pipeline interoperability</li>
+</ul>
+<h2 id="import-resolution">Import Resolution</h2>
+<p>The service uses a two-step import resolution for library components:</p>
+<ol>
+<li><strong>DetectMateLibrary-relative</strong> (tried first): Prepends <code>detectmatelibrary.</code> to the path</li>
+<li><strong>Absolute import</strong> (fallback): Uses the path as-is</li>
+</ol>
+<p>This allows short paths like <code>detectors.RandomDetector</code> to resolve to <code>detectmatelibrary.detectors.RandomDetector</code>, while still supporting custom components from external packages.</p>
+<h2 id="file-reference">File Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Service File</th>
+<th>Library Imports</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/service/core.py</code></td>
+<td><code>CoreComponent</code>, <code>CoreConfig</code></td>
+<td>Service base class, processor adapter</td>
+</tr>
+<tr>
+<td><code>src/service/features/component_loader.py</code></td>
+<td><code>CoreComponent</code></td>
+<td>Dynamic component loading</td>
+</tr>
+<tr>
+<td><code>src/service/features/config_loader.py</code></td>
+<td><code>CoreConfig</code></td>
+<td>Dynamic config class loading</td>
+</tr>
+<tr>
+<td><code>src/service/features/config_manager.py</code></td>
+<td><code>CoreConfig</code></td>
+<td>Configuration validation and persistence</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../development/" class="btn btn-neutral float-left" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../interfaces/" class="btn btn-neutral float-right" title="Interfaces">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../development/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../interfaces/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
