@@ -16,7 +16,7 @@ from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
-from prometheus_client import REGISTRY, Counter, Enum
+from prometheus_client import REGISTRY, Counter, Enum, Histogram
 
 
 engine_running = Enum(
@@ -30,6 +30,13 @@ engine_starts_total = Counter(
     "engine_starts_total",
     "Number of times the engine was started",
     ["component_type", "component_id"]
+)
+
+processing_duration_seconds = Histogram(
+    "processing_duration_seconds",
+    "Time spent processing messages in seconds",
+    ["component_type", "component_id"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 )
 
 
@@ -169,19 +176,23 @@ class Service(Engine, ABC):
     def process(self, raw_message: bytes) -> bytes | None | Any:
         """Process the raw message using the library component or default
         implementation."""
-
         if raw_message:
             data_processed_bytes_total.labels(
                 component_type=self.component_type,
                 component_id=self.component_id
             ).inc(len(raw_message))
 
-        if self.library_component:
-            # use the library component's process method
-            return self.library_component.process(raw_message)
-        else:
-            # default implementation for core service
-            return raw_message
+        # Track processing time
+        with processing_duration_seconds.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).time():
+            if self.library_component:
+                # use the library component's process method
+                return self.library_component.process(raw_message)
+            else:
+                # default implementation for core service
+                return raw_message
 
     def create_processor(self) -> BaseProcessor:
         """Create processor based on available components."""
