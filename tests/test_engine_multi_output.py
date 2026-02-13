@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from service.settings import ServiceSettings
 from service.features.engine import Engine
-from library.processor import BaseProcessor
 
 
 # Timing constants
@@ -18,24 +17,24 @@ SHORT_TIMEOUT = 500
 
 
 # Test processors
-class SimpleProcessor(BaseProcessor):
+class SimpleProcessor:
     """Transforms input to uppercase with prefix."""
 
-    def __call__(self, raw_message: bytes) -> bytes:
+    def process(self, raw_message: bytes) -> bytes:
         return b"PROCESSED: " + raw_message.upper()
 
 
-class NullProcessor(BaseProcessor):
+class NullProcessor:
     """Returns None to test skip behavior."""
 
-    def __call__(self, raw_message: bytes) -> None:
+    def process(self, raw_message: bytes) -> None:
         return None
 
 
-class FailingProcessor(BaseProcessor):
+class FailingProcessor:
     """Raises exception to test error handling."""
 
-    def __call__(self, raw_message: bytes) -> bytes:
+    def process(self, raw_message: bytes) -> bytes:
         raise ValueError("Processor failure")
 
 
