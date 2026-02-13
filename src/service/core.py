@@ -14,7 +14,6 @@ from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
-from library.processor import BaseProcessor
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
 from prometheus_client import REGISTRY, Counter, Enum, Histogram
 
@@ -55,34 +54,12 @@ data_processed_bytes_total = get_counter("data_processed_bytes_total",
                                              "component_type", "component_id"])
 
 
-class ServiceProcessorAdapter(BaseProcessor):
-    """Adapter class to use a Service's process method as a BaseProcessor."""
-
-    def __init__(self, service: Service) -> None:
-        self.service = service
-
-    def __call__(self, raw_message: bytes) -> bytes | None:
-        return self.service.process(raw_message)
-
-
-class LibraryComponentProcessor(BaseProcessor):
-    """Adapter to use DetectMate library components as BaseProcessor."""
-
-    def __init__(self, component: CoreComponent) -> None:
-        self.component = component
-
-    def __call__(self, raw_message: bytes) -> bytes | None | Any:
-        """Process message using the library component."""
-        try:
-            result = self.component.process(raw_message)
-            return result
-        except Exception as e:
-            logging.getLogger(__name__).error(f"Component processing error: {e}")
-            return None
-
-
 class Service(Engine, ABC):
-    """Abstract base for every DetectMate service/component."""
+    """Abstract base for every DetectMate service/component.
+
+    Service acts as the processor - it implements the process() method
+    that Engine calls directly.
+    """
 
     def __init__(
             self,
@@ -149,11 +126,8 @@ class Service(Engine, ABC):
                 self.log.error(f"Failed to load component {settings.component_type}: {e}")
                 raise
 
-        # Create processor instance
-        self.processor = self.create_processor()
-
-        # then init Engine with the processor (opens PAIR socket)
-        Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
+        # Service IS the processor - Engine will call self.process() directly
+        Engine.__init__(self, settings=settings, processor=self, logger=self.log)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
@@ -174,8 +148,13 @@ class Service(Engine, ABC):
         return cast(Type[CoreConfig], CoreConfig)  # help mypy
 
     def process(self, raw_message: bytes) -> bytes | None | Any:
-        """Process the raw message using the library component or default
-        implementation."""
+        """Process the raw message.
+
+        This is the main processing method that Engine calls directly.
+
+        Tracks metrics and delegates to library component if available,
+        otherwise returns raw message unchanged.
+        """
         if raw_message:
             data_processed_bytes_total.labels(
                 component_type=self.component_type,
@@ -188,20 +167,11 @@ class Service(Engine, ABC):
             component_id=self.component_id
         ).time():
             if self.library_component:
-                # use the library component's process method
+                # Delegate to the library component's process method
                 return self.library_component.process(raw_message)
             else:
-                # default implementation for core service
+                # Default passthrough behavior for core services without components
                 return raw_message
-
-    def create_processor(self) -> BaseProcessor:
-        """Create processor based on available components."""
-        if self.library_component:
-            return LibraryComponentProcessor(self.library_component)
-        else:
-            # fall back to service's own process method
-            # TODO: do we need this?
-            return ServiceProcessorAdapter(self)
 
     # public API
     def setup_io(self) -> None:

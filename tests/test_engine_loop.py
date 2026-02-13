@@ -1,3 +1,4 @@
+import socket
 import time
 import threading
 import pynng
@@ -51,12 +52,20 @@ def service_thread():
 
 
 @pytest.fixture
-def comp(tmp_path, service_thread):
+def free_port():
+    """Find a free port on the system."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
+
+@pytest.fixture
+def comp(tmp_path, service_thread, free_port):
     settings = ServiceSettings(
         engine_addr=f"ipc://{tmp_path}/t_engine.ipc",
         engine_autostart=True,
         log_level="DEBUG",
-        http_port=8001
+        http_port=free_port
     )
     c = MockComponent(settings=settings)
     service_thread(c)
