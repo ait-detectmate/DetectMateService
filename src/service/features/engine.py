@@ -190,7 +190,6 @@ class Engine(ABC):
                     data_written_bytes_total.labels(**labels).inc(len(out))
                 self.log.debug(f"Engine: Processor returned: {out!r}")
             except Exception as e:
-                # Catch all processing exceptions - no special ProcessorException needed
                 self.log.exception("Engine error during process: %s", e)
                 continue
 
