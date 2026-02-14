@@ -4,16 +4,15 @@ Tests verify log reading via engine socket.
 """
 import time
 from pathlib import Path
-from subprocess import Popen
 from typing import Generator
-
 import pytest
 import pynng
-import yaml
 import sys
 import os
-
+import json
+from subprocess import Popen, PIPE
 from detectmatelibrary.schemas import LogSchema
+from library_integration_base import start_service, cleanup_service
 
 
 # fixtures and configuration
@@ -35,13 +34,14 @@ def running_service(tmp_path: Path, test_log_file: Path) -> Generator[dict, None
         "component_type": "readers.log_file.LogFileReader",
         "component_config_class": "readers.log_file.LogFileConfig",
         "component_name": "test-reader",
-        "manager_addr": f"ipc:///tmp/test_reader_cmd_{timestamp}.ipc",
+        "http_host": "127.0.0.1",
+        "http_port": "8010",
         "engine_addr": f"ipc:///tmp/test_reader_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": False,
         "log_to_file": False,
-        "engine_autostart": True,
+        "engine_autostart": True
     }
 
     config = {
@@ -56,53 +56,21 @@ def running_service(tmp_path: Path, test_log_file: Path) -> Generator[dict, None
         }
     }
 
-    # Write YAML files
-    settings_file = tmp_path / "reader_settings.yaml"
-    config_file = tmp_path / "reader_config.yaml"
-    with open(settings_file, "w") as f:
-        yaml.dump(settings, f)
-    with open(config_file, "w") as f:
-        yaml.dump(config, f)
-
-    # Start service
-    proc = Popen(
-        [sys.executable, "-m", "service.cli", "start",
-         "--settings", str(settings_file),
-         "--config", str(config_file)],
-        cwd=module_path,
-    )
+    proc, url = start_service(module_path, settings, config, tmp_path /
+                              "reader_settings.yaml", tmp_path / "reader_config.yaml")
 
     time.sleep(0.5)
 
     service_info = {
         "process": proc,
-        "manager_addr": settings["manager_addr"],
+        "http_host": settings["http_host"],
+        "http_port": settings["http_port"],
         "engine_addr": settings["engine_addr"],
     }
 
-    # Verify service is running
-    max_retries = 5
-    for attempt in range(max_retries):
-        try:
-            with pynng.Req0(dial=service_info["manager_addr"], recv_timeout=2000) as sock:
-                sock.send(b"ping")
-                if sock.recv().decode() == "pong":
-                    break
-        except Exception:
-            if attempt == max_retries - 1:
-                proc.terminate()
-                proc.wait(timeout=5)
-                raise RuntimeError("Service did not start within timeout")
-            time.sleep(0.5)
-
     yield service_info
 
-    try:
-        proc.terminate()
-        proc.wait(timeout=5)
-    except Exception:
-        proc.kill()
-        proc.wait()
+    cleanup_service(module_path, proc, url)
 
 
 # Tests
@@ -111,12 +79,26 @@ class TestReaderServiceInitialization:
 
     def test_service_starts_successfully(self, running_service: dict) -> None:
         """Verify the service starts and is responsive to ping."""
-        manager_addr = running_service["manager_addr"]
-
-        with pynng.Req0(dial=manager_addr, recv_timeout=2000) as sock:
-            sock.send(b"ping")
-            reply = sock.recv().decode()
-            assert reply == "pong", "Service should respond to ping"
+        module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for service_name, host, port in [
+            ("reader", running_service["http_host"], running_service["http_port"])
+        ]:
+            max_retries = 10
+            url = f"http://{host}:{port}"
+            for attempt in range(max_retries):
+                status = Popen([sys.executable, "-m", "service.client", "--url",
+                                url, "status"], cwd=module_path, stdout=PIPE)
+                stdout = status.communicate(timeout=5)
+                time.sleep(1)
+                try:
+                    data = json.loads(stdout[0])
+                    if data.get("status", {}).get("running"):
+                        break
+                except json.JSONDecodeError:
+                    pass
+                if attempt == max_retries - 1:
+                    raise RuntimeError(f"Service not ready within {max_retries} attempts")
+                time.sleep(0.2)
 
 
 class TestReaderServiceViaEngine:

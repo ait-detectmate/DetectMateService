@@ -12,6 +12,7 @@ from detectmatelibrary.common.core import CoreConfig
 class ServiceConfig(BaseModel):
     detectors: Optional[Dict[str, Dict[str, Any]]] = None
     parsers: Optional[Dict[str, Dict[str, Any]]] = None
+    readers: Optional[Dict[str, Dict[str, Any]]] = None
 
 
 class ConfigManager:
@@ -52,9 +53,9 @@ class ConfigManager:
             if self.schema and data:
                 # Problem: mismatch between component config schema and structure the library expects
                 # cannot validate against self.schema
-                # self.schema does not accept "detectors" or "parsers" key which the library expects
-                # cannot nest, because self.schema does not accept a params field, which the library expects
-                # --> validate against ServiceConfig here, let library handle the rest
+                # self.schema does not accept "detectors", "parsers" or "readers" key which the library
+                # expects cannot nest, because self.schema does not accept a params field, which the library
+                # expects --> validate against ServiceConfig here, let library handle the rest
 
                 self._configs = ServiceConfig.model_validate(data)
                 self.logger.debug(f"Validated params: {self._configs}")
