@@ -2,6 +2,7 @@
 
 Tests verify log reading via engine socket.
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
 from typing import Generator
@@ -12,14 +13,7 @@ import os
 import json
 from subprocess import Popen, PIPE
 from detectmatelibrary.schemas import LogSchema
-from library_integration_base import start_service, cleanup_service
-
-
-# fixtures and configuration
-@pytest.fixture(scope="session")
-def test_log_file() -> Path:
-    """Return path to the test log file in this folder."""
-    return Path(__file__).parent / "test_logs.log"
+pytest_plugins = ["library_integration_base"]
 
 
 @pytest.fixture

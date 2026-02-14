@@ -4,6 +4,7 @@ Tests verify detection via engine socket with ParserSchema input.
 Timeout means no detection occurred (detector returns None/False).
 DummyDetector alternates: False, True, False
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
 from typing import Generator
@@ -11,7 +12,7 @@ import pytest
 import pynng
 import os
 from detectmatelibrary.schemas import DetectorSchema
-from library_integration_base import start_service, cleanup_service, test_parser_messages
+pytest_plugins = ["library_integration_base_fixtures"]
 
 
 @pytest.fixture(scope="function")

@@ -7,6 +7,7 @@ Tests verify the full data flow where:
 
 The DummyDetector alternates: False, True, False
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
 from typing import Generator
@@ -17,7 +18,7 @@ import sys
 import os
 from subprocess import Popen, PIPE
 from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
-from library_integration_base import start_service, cleanup_service, test_log_file
+pytest_plugins = ["library_integration_base_fixtures"]
 
 
 @pytest.fixture(scope="function")

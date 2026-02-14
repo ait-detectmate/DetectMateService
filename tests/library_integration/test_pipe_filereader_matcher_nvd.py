@@ -5,6 +5,7 @@ Tests verify the full data flow where:
 2. Parser consumes LogSchema and outputs ParserSchema
 3. Detector consumes ParserSchema and outputs DetectorSchema (or None)
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
 from subprocess import Popen
@@ -16,7 +17,7 @@ import os
 import json
 from subprocess import PIPE
 from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
-from library_integration_base import start_service, cleanup_service, audit_log_file, test_templates_file
+pytest_plugins = ["library_integration_base_fixtures"]
 
 
 @pytest.fixture(scope="function")

@@ -2,6 +2,7 @@
 
 Tests verify parsing via engine socket with LogSchema input.
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
 from typing import Generator
@@ -9,16 +10,7 @@ import pytest
 import pynng
 import os
 from detectmatelibrary.schemas import ParserSchema
-from library_integration_base import start_service, cleanup_service, create_test_log_messages
-
-
-TEST_LOG_MESSAGES = create_test_log_messages()
-
-
-@pytest.fixture(scope="session")
-def test_log_messages() -> list:
-    """Fixture providing test LogSchema messages for parser input."""
-    return TEST_LOG_MESSAGES
+pytest_plugins = ["library_integration_base_fixtures"]
 
 
 @pytest.fixture(scope="function")
