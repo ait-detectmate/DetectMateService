@@ -95,6 +95,7 @@ class TestReaderServiceInitialization:
                     if data.get("status", {}).get("running"):
                         break
                 except json.JSONDecodeError:
+                    # Service may not yet be returning valid JSON; retry until max_retries is reached.
                     pass
                 if attempt == max_retries - 1:
                     raise RuntimeError(f"Service not ready within {max_retries} attempts")
