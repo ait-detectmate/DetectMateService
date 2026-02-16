@@ -29,14 +29,15 @@ detectors:                 # Category Level
     auto_config: false
     method_type: new_value_detector
     params:                # Implementation Specific Level
-      log_variables:
-        - id: test
-          template: dummy_template
-          variables:
-            - name: var1
-              pos: 0
-              params:
-                threshold: 0.0
+    events:
+      1:
+          test:
+              params: {}
+              variables:
+                  - pos: 0
+                    name: var1
+                    params:
+                        threshold: 0.5
 ```
 
 ### 3. Start with configuration
@@ -55,14 +56,18 @@ detectors:
     auto_config: false
     method_type: new_value_detector
     params:
-      log_variables:
-        - id: test
-          template: dummy_template
-          variables:
-            - name: var1
-              pos: 0
-              params:
-                threshold: 0.8
+        events:
+            1:
+                test:
+                    params: {}
+                    variables:
+                        - pos: 0
+                          name: var1
+                          params:
+                              threshold: 0.5
+                    header_variables:
+                        - pos: level
+                          params: {}
 ```
 
 The service supports dynamic reconfiguration with two modes:
