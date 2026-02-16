@@ -1,5 +1,5 @@
-component_type: "detectors.dummy_detector.DummyDetector"
-component_config_class: "detectors.dummy_detector.DummyDetectorConfig"
+component_type: "detectors.new_value_detector.NewValueDetector"
+component_config_class: "detectors.new_value_detector.NewValueDetectorConfig"
 component_name: "detector-1"
 http_host: "127.0.0.1"
 http_port: 8030
