@@ -67,13 +67,32 @@ class ConfigManager:
             self.logger.error(f"Failed to load parameters from {self.config_file}: {e}")
             raise
 
-    def save(self) -> None:
-        """Save parameters to file."""
-        with self._lock:
-            if self._configs is None:
-                return
+    def save(self, config_dict: Optional[Dict[str, Any]] = None) -> None:
+        """Save component configs to file.
 
-            # Ensure directory exists with proper error handling
+        Args:
+            config_dict: Optional dict to save directly. If None, serializes
+                        current config model using to_dict() if available,
+                        otherwise model_dump().
+        """
+        with self._lock:
+            if config_dict is not None:
+                data = config_dict
+                self.logger.debug("Saving provided config dict")
+            elif self._configs is None:
+                return
+            elif isinstance(self._configs, BaseModel):
+                # Prefer to_dict() over model_dump() to avoid defaults
+                if hasattr(self._configs, 'to_dict'):
+                    data = self._configs.to_dict()
+                    self.logger.debug("Using to_dict() for serialization")
+                else:
+                    data = self._configs.model_dump()
+                    self.logger.debug("Using model_dump() for serialization")
+            else:
+                # Already a dict
+                data = self._configs
+
             param_dir = Path(self.config_file).parent
             try:
                 param_dir.mkdir(parents=True, exist_ok=True)
@@ -84,22 +103,16 @@ class ConfigManager:
                 self.logger.error(f"Failed to create directory {param_dir}: {e}")
                 raise
 
-            # Convert to dict for YAML serialization
-            if isinstance(self._configs, BaseModel):
-                data = self._configs.model_dump()
-            else:
-                data = self._configs
-
-            try:
-                with open(self.config_file, 'w') as f:
-                    yaml.dump(data, f, default_flow_style=False)
-                self.logger.debug(f"Parameters saved to {self.config_file}")
-            except PermissionError:
-                self.logger.error(f"Permission denied writing to file {self.config_file}")
-                raise
-            except Exception as e:
-                self.logger.error(f"Failed to save parameters to {self.config_file}: {e}")
-                raise
+        try:
+            with open(self.config_file, 'w') as f:
+                yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+            self.logger.debug(f"Parameters saved to {self.config_file}")
+        except PermissionError:
+            self.logger.error(f"Permission denied writing to file {self.config_file}")
+            raise
+        except Exception as e:
+            self.logger.error(f"Failed to save parameters to {self.config_file}: {e}")
+            raise
 
     def update(self, new_configs: Dict[str, Any]) -> None:
         """Update parameters with validation."""
