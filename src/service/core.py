@@ -8,6 +8,8 @@ import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
+from pydantic import BaseModel
+
 from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
@@ -265,28 +267,46 @@ class Service(Engine, ABC):
         return json.dumps(status_info, indent=2)
 
     def reconfigure(self, config_data: Dict[str, Any], persist: bool = False) -> str:
-        """Reconfigure service configurations dynamically."""
+        """Reconfigure service configurations dynamically.
+
+        Args:
+            config_data: Configuration dictionary to apply
+            persist: If True, save the configuration to disk using to_dict()
+                    to preserve only user-specified values without defaults
+
+        Returns:
+            Status message indicating success or failure
+        """
         if not self.config_manager:
             return "reconfigure: no config manager configured"
 
         if not config_data:
             return "reconfigure: no-op (empty config data)"
+
         try:
+            # update in memory
             self.config_manager.update(config_data)
-            #  problem: update() validates against the Schema,
-            # model_validate()constructs a pydantic model instance of for example
-            # (NewValueDetectorConfig), but save() expects a dict to serialize to YAML
-            # pydantic automatically fills in default values, including
-            # inherited from CoreDetectorConfig like parser, start_id)
-            # class CoreDetectorConfig(CoreConfig):
-            # comp_type: str = "detectors"
-            # method_type: str = "core_detector"
-            # parser: str = "<PLACEHOLDER>"
-            # on save these get written in the config.yaml file
-            # -> then this file is missing "detectors" and other important fields and cannot be used
 
             if persist:
-                self.config_manager.save()
+                # Get the validated config
+                validated_config = self.config_manager.get()
+                if validated_config is None:
+                    config_dict = {}
+                # Convert to dict using to_dict() to strip defaults and maintain YAML structure
+                elif validated_config and hasattr(validated_config, 'to_dict'):
+                    config_dict = validated_config.to_dict()
+                    self.log.debug(f"Converted config to dict for persistence: {config_dict}")
+                elif isinstance(validated_config, dict):
+                    config_dict = validated_config
+                elif isinstance(validated_config, BaseModel):
+                    config_dict = validated_config.model_dump()
+                else:
+                    config_dict = {}
+
+                # Save to disk
+                self.config_manager.save(config_dict)
+                self.log.info("Persisted configuration to disk")
+
             self.log.info("Reconfigured with: %s", config_data)
             return "reconfigure: ok"
 
