@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.1.3/interfaces/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Interfaces - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Interfaces";
+        var mkdocs_page_input_path = "interfaces.md";
+        var mkdocs_page_url = "/DetectMateService/0.1.3/interfaces/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../pipeline/">Running a Pipeline</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Development</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Interfaces</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#corecomponent-interface">CoreComponent Interface</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#key-requirements">Key Requirements</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#coreconfig-interface">CoreConfig Interface</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#key-requirements_1">Key Requirements</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#configuration-flow">Configuration Flow</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#component-loading">Component Loading</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#path-format">Path Format</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#resolution-order">Resolution Order</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#service-settings">Service Settings</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#data-flow-schemas">Data Flow Schemas</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#complete-example">Complete Example</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-config-class-detectorsrandom_detectorpy">1. Config Class (detectors/random_detector.py)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-service-settings-settingsyaml">2. Service Settings (settings.yaml)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-component-config-random-configyaml">3. Component Config (random-config.yaml)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#4-run-the-service">4. Run the Service</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a>
+    </li>
+    </ul>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Interfaces</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="library-interface-contract">Library Interface Contract</h1>
+<p>This document describes the interface contract between DetectMateService and DetectMateLibrary. If you're implementing custom components in the library, your classes must adhere to these interfaces.</p>
+<h2 id="corecomponent-interface">CoreComponent Interface</h2>
+<p>All processing components (readers, parsers, detectors) must inherit from <code>CoreComponent</code>:</p>
+<pre><code class="language-python">from detectmatelibrary.common.core import CoreComponent
+
+class MyComponent(CoreComponent):
+    def __init__(self, config=None):
+        &quot;&quot;&quot;Initialize the component.
+
+        Args:
+            config: Optional configuration dictionary or CoreConfig instance.
+                    May be None if no configuration is provided.
+        &quot;&quot;&quot;
+        super().__init__(config)
+        # Your initialization here
+
+    def process(self, data: bytes) -&gt; bytes | None:
+        &quot;&quot;&quot;Process incoming data.
+
+        Args:
+            data: Raw bytes received from the upstream component.
+
+        Returns:
+            bytes: Processed data to forward to downstream components.
+            None: Skip forwarding (filter out this message).
+        &quot;&quot;&quot;
+        # Your processing logic here
+        return processed_data
+</code></pre>
+<h3 id="key-requirements">Key Requirements</h3>
+<ul>
+<li><strong>Constructor</strong>: Must accept an optional <code>config</code> parameter (can be <code>dict</code> or <code>CoreConfig</code> instance)</li>
+<li><strong>process() method</strong>: Must accept <code>bytes</code> and return <code>bytes | None</code></li>
+<li><strong>Return behavior</strong>:</li>
+<li>Return <code>bytes</code> to forward output to downstream components</li>
+<li>Return <code>None</code> to skip/filter the message (no output sent)</li>
+</ul>
+<h2 id="coreconfig-interface">CoreConfig Interface</h2>
+<p>Configuration classes must inherit from <code>CoreConfig</code>, which extends Pydantic's <code>BaseModel</code>:</p>
+<pre><code class="language-python">from detectmatelibrary.common.core import CoreConfig
+
+class MyComponentConfig(CoreConfig):
+    &quot;&quot;&quot;Configuration for MyComponent.&quot;&quot;&quot;
+    threshold: float = 0.5
+    window_size: int = 10
+    enabled: bool = True
+</code></pre>
+<h3 id="key-requirements_1">Key Requirements</h3>
+<ul>
+<li><strong>Pydantic BaseModel</strong>: Must support <code>model_validate()</code> and <code>model_dump()</code> methods</li>
+<li><strong>Type hints</strong>: All fields should have type annotations</li>
+<li><strong>Defaults</strong>: Provide sensible defaults where appropriate</li>
+</ul>
+<h3 id="configuration-flow">Configuration Flow</h3>
+<ol>
+<li>Service loads config from YAML file via <code>ConfigManager</code></li>
+<li>Schema identification: The service calls <code>get_config_schema()</code>, which uses <code>ConfigClassLoader</code> to dynamically import and verify the configuration class.</li>
+<li>Validation: It ensures the config class is a subclass of <code>CoreConfig</code>.</li>
+<li>Component Instantiation: The service identifies the <code>component_type</code> from settings. It uses <code>ComponentLoader</code> to dynamically load the class.</li>
+<li>Validation: It ensures the component class is an instance of <code>CoreComponent</code></li>
+<li>Config from <code>ConfigManager</code> is passed to component constructor</li>
+<li>The Library processes and validates the configuration internally</li>
+<li>
+<p>Validation: The library checks if <code>auto_config</code> is enabled. If disabled and no <code>params</code> exist, it raises an AutoConfigError.</p>
+</li>
+<li>
+<p>Type Checking: It ensures the method_type matches the expected component type (via <code>check_type</code>).</p>
+</li>
+<li>
+<p>Formatting (<code>apply_format</code>): It iterates through the params dictionary. For every parameter, it applies a specific format.</p>
+</li>
+<li>
+<p>Keyword Cleaning: If a parameter key starts with <code>all_</code>, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).</p>
+</li>
+<li>
+<p>Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant <code>params</code> key.</p>
+</li>
+<li>Processor Adaptation: The service wraps the <code>CoreComponent</code> in a <code>LibraryComponentProcessor</code> (an adapter) to make it compatible with the <code>Engine</code> loop.</li>
+<li>At runtime, <code>reconfigure</code> command can update configs dynamically</li>
+</ol>
+<h2 id="component-loading">Component Loading</h2>
+<p>Components are loaded dynamically by <code>ComponentLoader</code>. Specify components using a dot-separated path:</p>
+<h3 id="path-format">Path Format</h3>
+<pre><code>module.ClassName
+</code></pre>
+<p>Examples:
+- <code>detectors.RandomDetector</code>
+- <code>parsers.JsonParser</code>
+- <code>readers.FileReader</code></p>
+<h3 id="resolution-order">Resolution Order</h3>
+<ol>
+<li><strong>DetectMateLibrary-relative</strong> (tried first): <code>detectmatelibrary.{path}</code></li>
+<li><code>detectors.RandomDetector</code> → <code>detectmatelibrary.detectors.RandomDetector</code></li>
+<li><strong>Absolute import</strong> (fallback): <code>{path}</code> as-is</li>
+<li><code>mypackage.detectors.CustomDetector</code> → <code>mypackage.detectors.CustomDetector</code></li>
+</ol>
+<p>This allows you to use library components with short paths while still supporting custom components from external packages.</p>
+<h3 id="service-settings">Service Settings</h3>
+<p>In your service settings YAML, specify:</p>
+<pre><code class="language-yaml">component_type: detectors.MyDetector          # Component class path
+component_config_class: detectors.MyDetectorConfig  # Config class path
+config_file: detector-config.yaml             # Path to component config
+</code></pre>
+<h2 id="data-flow-schemas">Data Flow Schemas</h2>
+<p>Components in the processing pipeline use protobuf schemas for structured data exchange:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Input</th>
+<th>Output Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reader</td>
+<td>Raw source (file, network, etc.)</td>
+<td><code>LogSchema</code></td>
+</tr>
+<tr>
+<td>Parser</td>
+<td><code>LogSchema</code> bytes</td>
+<td><code>ParserSchema</code></td>
+</tr>
+<tr>
+<td>Detector</td>
+<td><code>ParserSchema</code> bytes</td>
+<td><code>DetectorSchema</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each component receives serialized protobuf bytes, deserializes them, processes the data, and serializes the output for the next stage.</p>
+<h2 id="complete-example">Complete Example</h2>
+<p>Here's a minimal detector component implementation:</p>
+<h3 id="1-config-class-detectorsrandom_detectorpy">1. Config Class (<code>detectors/random_detector.py</code>)</h3>
+<pre><code class="language-python">from detectmatelibrary.common._config._formats import LogVariables, AllLogVariables
+
+from detectmatelibrary.common.detector import CoreDetector, CoreDetectorConfig
+
+from detectmatelibrary.utils.data_buffer import BufferMode
+
+import detectmatelibrary.schemas as schemas
+
+from typing_extensions import override
+from typing import List, Any
+import numpy as np
+
+
+class RandomDetectorConfig(CoreDetectorConfig):
+    method_type: str = &quot;random_detector&quot;
+
+    log_variables: LogVariables | AllLogVariables | dict[str, Any] = {}
+
+
+class RandomDetector(CoreDetector):
+    &quot;&quot;&quot;Detects anomalies randomly in logs, completely independent of the input
+    data.&quot;&quot;&quot;
+
+    def __init__(
+        self, name: str = &quot;RandomDetector&quot;, config: RandomDetectorConfig = RandomDetectorConfig()
+    ) -&gt; None:
+        if isinstance(config, dict):
+            config = RandomDetectorConfig.from_dict(config, name)
+        super().__init__(name=name, buffer_mode=BufferMode.NO_BUF, config=config)
+        self.config: RandomDetectorConfig
+
+    @override
+    def train(self, input_: List[schemas.ParserSchema] | schemas.ParserSchema) -&gt; None:  # type: ignore
+        &quot;&quot;&quot;Training is not applicable for RandomDetector.&quot;&quot;&quot;
+        return
+
+    @override
+    def detect(
+        self, input_: schemas.ParserSchema, output_: schemas.DetectorSchema  # type: ignore
+    ) -&gt; bool:
+        &quot;&quot;&quot;Detect anomalies randomly in the input data.&quot;&quot;&quot;
+        overall_score = 0.0
+        alerts = {}
+
+        relevant_log_fields = self.config.log_variables[input_[&quot;EventID&quot;]].get_all()  # type: ignore
+        for log_variable in relevant_log_fields.values():
+            score = 0.0
+            random = np.random.rand()
+            if random &gt; log_variable.params[&quot;threshold&quot;]:
+                score = 1.0
+                alerts.update({log_variable.name: str(score)})  # type: ignore
+            overall_score += score
+
+        if overall_score &gt; 0:
+            output_[&quot;score&quot;] = overall_score
+            output_[&quot;alertsObtain&quot;].update(alerts)
+            return True
+
+        return False
+</code></pre>
+<h3 id="2-service-settings-settingsyaml">2. Service Settings (<code>settings.yaml</code>)</h3>
+<pre><code class="language-yaml">component_name: random-detector
+component_type: detectors.random_detector.RandomDetector
+component_config_class: detectors.random_detector.RandomDetectorConfig
+config_file: random-config.yaml
+log_level: INFO
+http_host: 127.0.0.1
+http_port: 8000
+engine_addr: ipc:///tmp/threshold.engine.ipc
+</code></pre>
+<h3 id="3-component-config-random-configyaml">3. Component Config (<code>random-config.yaml</code>)</h3>
+<p>Component configuration uses a nested structure:</p>
+<pre><code class="language-yaml">detectors:
+    RandomDetector:
+        method_type: random_detector
+        auto_config: False
+        params:
+            log_variables:
+                - id: test
+                  event: 1
+                  template: dummy_template
+                  variables:
+                    - pos: 0
+                      name: var1
+                      params:
+                        threshold: 0.
+                  header_variables:
+                    - pos: level
+                      params: {}
+</code></pre>
+<p>This hierarchical format allows the library to correctly route parameters based on category and class name.</p>
+<h3 id="4-run-the-service">4. Run the Service</h3>
+<pre><code class="language-bash">detectmate --settings settings.yaml --configs random-config.yaml
+</code></pre>
+<h2 id="validation">Validation</h2>
+<p>The service validates components at load time:</p>
+<ol>
+<li><strong>Component class</strong>: Must be an instance of <code>CoreComponent</code> (in <code>ComponentLoader</code>)</li>
+<li><strong>Config class</strong>: Must be a subclass of <code>CoreConfig</code> (in <code>ConfigClassLoader</code>)</li>
+</ol>
+<p>If validation fails, the service raises an error.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../library-imports/" class="btn btn-neutral float-left" title="Library Imports"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../library-imports/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.1.3/library/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Using a Library Component - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Using a Library Component";
+        var mkdocs_page_input_path = "library.md";
+        var mkdocs_page_url = "/DetectMateService/0.1.3/library/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Usage</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Using a Library Component</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#1-update-settings">1. Update settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-create-component-configuration">2. Create component configuration</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-start-with-configuration">3. Start with configuration</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-reconfigure-at-runtime">4. Reconfigure at runtime</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-in-memory-update-default">1. In-memory update (default)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-persistent-update-with-persist-flag">2. Persistent update (with --persist flag)</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../pipeline/">Running a Pipeline</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Usage</li>
+      <li class="breadcrumb-item active">Using a Library Component</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <blockquote>
+<p><strong>Note</strong>: For implementing custom library components, see the <a href="../interfaces/">Library Interface Contract</a>.</p>
+</blockquote>
+<h2 id="using-a-library-component">Using a Library Component</h2>
+<p>The Service can be run as any component imported from the <a href="https://github.com/ait-detectmate/DetectMateLibrary">DetectMateLibrary</a>.
+For this, ensure that the library is installed in the same activated virtual environment, where the service is installed.</p>
+<h3 id="1-update-settings">1. Update settings</h3>
+<p>Modify <code>settings.yaml</code> to use a library component:</p>
+<pre><code class="language-yaml">component_name: new_value_detector
+component_type: detectors.NewValueDetector
+component_config_class: detectors.NewValueDetectorConfig
+config_file: detector-config.yaml
+log_level: INFO
+manager_addr: ipc:///tmp/detectmate.cmd.ipc
+engine_addr: ipc:///tmp/detectmate.engine.ipc
+</code></pre>
+<h3 id="2-create-component-configuration">2. Create component configuration</h3>
+<p>Create <code>detector-config.yaml</code>:</p>
+<pre><code class="language-yaml">detectors:                 # Category Level
+  NewValueDetector:        # Class Name Level
+    auto_config: false
+    method_type: new_value_detector
+    params:                # Implementation Specific Level
+      log_variables:
+        - id: test
+          template: dummy_template
+          variables:
+            - name: var1
+              pos: 0
+              params:
+                threshold: 0.0
+</code></pre>
+<h3 id="3-start-with-configuration">3. Start with configuration</h3>
+<pre><code class="language-bash">detectmate --settings settings.yaml --config detector-config.yaml
+</code></pre>
+<h3 id="4-reconfigure-at-runtime">4. Reconfigure at runtime</h3>
+<p>Create <code>new-config.yaml</code>:</p>
+<pre><code class="language-yaml">detectors:
+  NewValueDetector:
+    auto_config: false
+    method_type: new_value_detector
+    params:
+      log_variables:
+        - id: test
+          template: dummy_template
+          variables:
+            - name: var1
+              pos: 0
+              params:
+                threshold: 0.8
+</code></pre>
+<p>The service supports dynamic reconfiguration with two modes:</p>
+<h4 id="1-in-memory-update-default">1. In-memory update (default)</h4>
+<p>Changes are applied to the running service but not saved to disk. The changes will be lost when the service restarts.</p>
+<pre><code class="language-bash">detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml
+</code></pre>
+<h4 id="2-persistent-update-with-persist-flag">2. Persistent update (with --persist flag)</h4>
+<p>Changes are applied to the running service AND saved to the original parameter file. The changes persist across service restarts.</p>
+<pre><code class="language-bash">detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml --persist
+</code></pre>
+<p><strong>Note:</strong> The <code>--persist</code> flag will overwrite the original parameter file specified in your service configuration with the new values.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../usage/" class="btn btn-neutral float-left" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline/" class="btn btn-neutral float-right" title="Running a Pipeline">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../pipeline/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
