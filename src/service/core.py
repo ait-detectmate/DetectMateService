@@ -136,7 +136,7 @@ class Service(Engine, ABC):
         """Return the configuration schema for this service.
 
         If component_config_class is specified in settings, load and
-        return it. Otherwise return the default CoreConfig.
+        return it. Otherwise, return the default CoreConfig.
         """
         if hasattr(self.settings, 'component_config_class') and self.settings.component_config_class:
             try:

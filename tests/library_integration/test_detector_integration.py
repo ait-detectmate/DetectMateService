@@ -4,82 +4,15 @@ Tests verify detection via engine socket with ParserSchema input.
 Timeout means no detection occurred (detector returns None/False).
 DummyDetector alternates: False, True, False
 """
+from library_integration_base import start_service, cleanup_service
 import time
 from pathlib import Path
-from subprocess import Popen
 from typing import Generator
 import pytest
 import pynng
-import yaml
-import sys
 import os
-from detectmatelibrary.schemas import DetectorSchema, ParserSchema
-
-
-@pytest.fixture(scope="session")
-def test_parser_messages() -> list:
-    """Generate test ParserSchema messages for detector input."""
-    messages = []
-    parser_configs = [
-        {
-            "parserType": "LogParser",
-            "parserID": "parser_001",
-            "EventID": 1,
-            "template": "User <*> logged in from <*>",
-            "variables": ["john", "192.168.1.100"],
-            "parsedLogID": "101",
-            "logID": "1",
-            "log": "User john logged in from 192.168.1.100",
-            "logFormatVariables": {
-                "username": "john",
-                "ip": "192.168.1.100",
-                "Time": "1634567890"
-            },
-            "receivedTimestamp": 1634567890,
-            "parsedTimestamp": 1634567891,
-        },
-        {
-            "parserType": "LogParser",
-            "parserID": "parser_002",
-            "EventID": 2,
-            "template": "Database query failed: <*>",
-            "variables": ["connection timeout"],
-            "parsedLogID": "102",
-            "logID": "2",
-            "log": "Database query failed: connection timeout",
-            "logFormatVariables": {
-                "error": "connection timeout",
-                "severity": "HIGH",
-                "Time": "1634567900"
-            },
-            "receivedTimestamp": 1634567900,
-            "parsedTimestamp": 1634567901,
-        },
-        {
-            "parserType": "LogParser",
-            "parserID": "parser_003",
-            "EventID": 3,
-            "template": "File <*> accessed by <*> at <*>",
-            "variables": ["config.txt", "admin", "10:45:30"],
-            "parsedLogID": "103",
-            "logID": "3",
-            "log": "File config.txt accessed by admin at 10:45:30",
-            "logFormatVariables": {
-                "filename": "config.txt",
-                "user": "admin",
-                "Time": "1634567910"
-            },
-            "receivedTimestamp": 1634567910,
-            "parsedTimestamp": 1634567911,
-        },
-    ]
-
-    for config in parser_configs:
-        parser_msg = ParserSchema(config)
-        byte_message = parser_msg.serialize()
-        messages.append(byte_message)
-
-    return messages
+from detectmatelibrary.schemas import DetectorSchema
+pytest_plugins = ["library_integration_base_fixtures"]
 
 
 @pytest.fixture(scope="function")
@@ -88,12 +21,12 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
     info."""
     timestamp = int(time.time() * 1000)
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
     settings = {
         "component_type": "detectors.dummy_detector.DummyDetector",
         "component_config_class": "detectors.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
-        "manager_addr": f"ipc:///tmp/test_detector_cmd_{timestamp}.ipc",
+        "http_host": "127.0.0.1",
+        "http_port": "8010",
         "engine_addr": f"ipc:///tmp/test_detector_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
@@ -101,57 +34,19 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
         "log_to_file": False,
         "engine_autostart": True,
     }
-
     config = {}  # DummyDetectorConfig has no additional config
-
-    # Write YAML files
-    settings_file = tmp_path / "detector_settings.yaml"
-    config_file = tmp_path / "detector_config.yaml"
-
-    with open(settings_file, "w") as f:
-        yaml.dump(settings, f)
-
-    with open(config_file, "w") as f:
-        yaml.dump(config, f)
-
-    # Start service
-    proc = Popen(
-        [sys.executable, "-m", "service.cli", "start",
-         "--settings", str(settings_file),
-         "--config", str(config_file)],
-        cwd=module_path,
-    )
-
+    proc, url = start_service(module_path, settings, config, tmp_path /
+                              "detector_settings.yaml", tmp_path / "detector_config.yaml")
     service_info = {
         "process": proc,
-        "manager_addr": settings["manager_addr"],
+        "http_host": settings["http_host"],
+        "http_port": settings["http_port"],
         "engine_addr": settings["engine_addr"],
     }
 
-    # Wait for service to be ready
-    max_retries = 10
-    for attempt in range(max_retries):
-        try:
-            with pynng.Req0(dial=service_info["manager_addr"], recv_timeout=1000) as sock:
-                sock.send(b"ping")
-                if sock.recv().decode() == "pong":
-                    break
-        except Exception:
-            if attempt == max_retries - 1:
-                proc.terminate()
-                proc.wait(timeout=5)
-                raise RuntimeError(f"Detector service not ready within {max_retries} attempts")
-        time.sleep(0.2)
-
     yield service_info
 
-    # Cleanup
-    try:
-        with pynng.Req0(dial=service_info["manager_addr"], recv_timeout=5000) as sock:
-            sock.send(b"stop")
-            sock.recv()
-    except Exception:
-        pass
+    cleanup_service(module_path, proc, url)
 
 
 class TestDetectorServiceViaEngine:
