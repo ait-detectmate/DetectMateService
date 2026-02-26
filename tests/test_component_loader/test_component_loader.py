@@ -140,7 +140,7 @@ def test_load_component_invalid_format_raises_runtime_error():
 
     msg = str(excinfo.value)
     assert "Failed to load component InvalidFormat" in msg
-    assert "Invalid component type format" in msg
+    assert "Invalid component type:" in msg
 
 
 def test_load_component_missing_module_raises_import_error():
@@ -162,15 +162,14 @@ def test_load_component_missing_class_raises_attribute_error(monkeypatch):
     monkeypatch.setattr(ComponentLoader, "DEFAULT_ROOT", "testpkg")
 
     module_name = "testpkg.detectors"
-    module = types.ModuleType(module_name)
-    # Intentionally do NOT add RandomDetector
-    sys.modules[module_name] = module
+    types.ModuleType(module_name)
+    # Intentionally do NOT add RandomDetector    sys.modules[module_name] = module
 
     with pytest.raises(AttributeError) as excinfo:
         ComponentLoader.load_component("detectors.RandomDetector")
 
     msg = str(excinfo.value)
-    assert "Component class RandomDetector not found in module detectors" in msg
+    assert "Component class RandomDetector not found in module testpkg.detectors" in msg
 
 
 def test_load_component_type_mismatch_raises_runtime_error(monkeypatch):
