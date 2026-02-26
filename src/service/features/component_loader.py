@@ -1,9 +1,9 @@
 import importlib
 from typing import Any, Dict
-from logging import Logger
+import logging
 
 from detectmatelibrary.common.core import CoreComponent
-from uvicorn import logging
+from logging import Logger
 
 
 class ComponentLoader:
@@ -60,7 +60,9 @@ class ComponentLoader:
             raise ImportError(f"Failed to import component {component_type}: {e}")
         except AttributeError:
             raise AttributeError(f"Component Class {class_name} not found in module {module_name}")
-        except (TypeError, ValueError):
-            raise
+        except TypeError as e:
+            raise RuntimeError(f"Failed to load component {component_type}: {e}") from e
+        except ValueError as e:
+            raise RuntimeError(f"Failed to load component {component_type}: {e}") from e
         except Exception as e:
-            raise RuntimeError(f"Failed to load component {component_type}: {e}")
+            raise RuntimeError(f"Failed to load component {component_type}: {e}") from e
