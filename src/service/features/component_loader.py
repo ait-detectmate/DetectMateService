@@ -1,64 +1,66 @@
 import importlib
 from typing import Any, Dict
+from logging import Logger
 
 from detectmatelibrary.common.core import CoreComponent
+from uvicorn import logging
 
 
 class ComponentLoader:
     """Loads components dynamically, with DetectMate-relative fallback."""
+
     DEFAULT_ROOT = "detectmatelibrary"
 
     @classmethod
-    def load_component(
-        cls,
-        component_type: str,  # "detectors.RandomDetector" or "pkg.mod.Class"
-        config: Dict[str, Any] | None = None,
-    ) -> CoreComponent:
-        """Load a component from the DetectMate library or from any installed
-        package.
+    def load_component(cls,
+                       component_type: str, config: Dict[str, Any] | None = None,
+                       logger: Logger | None = None) -> CoreComponent:
+        """Load a component from a fully-qualified dotted path.
 
-        Args:
-            component_type:
-                - DetectMate-style relative path: "detectors.dummy_detector.DummyDetector"
-                - OR fully-qualified path:        "somepkg.detectors.FancyDetector"
-            config: configuration dictionary / config object for the component
-
-        Returns:
-            Initialized component instance
+        Expects ComponentResolver.resolve() to have already been called —
+        component_type must be a fully-qualified path from the library
+        (or installed package) like:
+        'detectmatelibrary.detectors.new_value_detector.NewValueComboDetector'
         """
+        log = logger or logging.getLogger(__name__)
         try:
-            # parse component path (e.g. "detectors.dummy_detector.DummyDetector")
             if '.' not in component_type:
-                raise ValueError(f"Invalid component type format: {component_type}. "
-                                 f"Expected 'module.ClassName or 'package.module.ClassName'")
+                raise ValueError(
+                    f"Invalid component type: {component_type}. "
+                    f"ComponentResolver.resolve() must be called before load_component()."
+                )
 
             module_name, class_name = component_type.rsplit('.', 1)
-
-            # first try as DetectMate-relative
+            log.debug("Importing module %r, class %r", module_name, class_name)
+            # Try as-is first, then fall back to detectmatelibrary-relative
             try:
-                full_module_path = f"{cls.DEFAULT_ROOT}.{module_name}"
-                module = importlib.import_module(full_module_path)
-            except ImportError:
-                # If that fails, treat it as an absolute module path
                 module = importlib.import_module(module_name)
+            except ImportError:
+                full_module = f"{cls.DEFAULT_ROOT}.{module_name}"
+                log.debug("Direct import failed, retrying as %r", full_module)
+                try:
+                    module = importlib.import_module(full_module)
+                except ImportError:
+                    raise ImportError(f"Could not import '{module_name}' or '{full_module}'")
 
-            # get the class
             component_class = getattr(module, class_name)
 
-            # only pass config if it's truthy ({} behaves as "no config")
             if config:
                 instance = component_class(config=config)
             else:
                 instance = component_class()
 
             if not isinstance(instance, CoreComponent):
-                raise TypeError(f"Loaded component {component_type} is not a {CoreComponent.__name__}")
-
+                raise TypeError(
+                    f"Loaded component {component_type!r} is not a {CoreComponent.__name__}"
+                )
             return instance
 
         except ImportError as e:
             raise ImportError(f"Failed to import component {component_type}: {e}")
         except AttributeError:
-            raise AttributeError(f"Component class {class_name} not found in module {module_name}")
+            raise AttributeError(f"Component Class {class_name} not found in module {module_name}")
+        except (TypeError, ValueError):
+            raise
         except Exception as e:
             raise RuntimeError(f"Failed to load component {component_type}: {e}")
