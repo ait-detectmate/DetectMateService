@@ -25,6 +25,13 @@ def _create_fake_module(module_name: str, class_name: str, init_records: list | 
     init_records: optional list; if provided, we append received 'config'
                   values to it so tests can assert what was passed.
     """
+    # Register all parent packages so importlib can resolve dotted names
+    parts = module_name.split(".")
+    for i in range(1, len(parts)):
+        parent_name = ".".join(parts[:i])
+        if parent_name not in sys.modules:
+            sys.modules[parent_name] = types.ModuleType(parent_name)
+
     module = types.ModuleType(module_name)
 
     class Dummy(CoreComponent):
@@ -162,14 +169,20 @@ def test_load_component_missing_class_raises_attribute_error(monkeypatch):
     monkeypatch.setattr(ComponentLoader, "DEFAULT_ROOT", "testpkg")
 
     module_name = "testpkg.detectors"
-    types.ModuleType(module_name)
-    # Intentionally do NOT add RandomDetector    sys.modules[module_name] = module
+    # Register parent package so importlib can resolve the dotted name
+    if "testpkg" not in sys.modules:
+        sys.modules["testpkg"] = types.ModuleType("testpkg")
+
+    # register the module without the expected class
+    module = types.ModuleType(module_name)
+    # Intentionally do NOT add RandomDetector
+    sys.modules[module_name] = module
 
     with pytest.raises(AttributeError) as excinfo:
         ComponentLoader.load_component("detectors.RandomDetector")
 
     msg = str(excinfo.value)
-    assert "Component class RandomDetector not found in module testpkg.detectors" in msg
+    assert "Component Class RandomDetector not found in module detectors" in msg
 
 
 def test_load_component_type_mismatch_raises_runtime_error(monkeypatch):
