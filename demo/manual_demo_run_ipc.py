@@ -1,4 +1,6 @@
 import pynng
+from detectmatelibrary.helper.from_to import From
+from detectmatelibrary.parsers.dummy_parser import DummyParser
 
 
 LOG_PATH = "/app/demo/data/audit.log"
@@ -10,30 +12,32 @@ def process_logs() -> None:
     with open(LOG_PATH, "r") as f:
         total = sum(1 for _ in f)
     print(f"Processing {total} log lines...")
-    with open(LOG_PATH, "rb") as f:
-        for i, line in enumerate(f, start=1):
-            line = line.rstrip(b"\n")
-            print(f"\n--- Processing line {i}/{total} ---")
-            try:
-                # Step 1: Reader
-                with pynng.Pair0(dial="ipc:///tmp/test_reader_engine.ipc") as reader:
-                    reader.send(line)
-                    log_response1 = reader.recv()
-                # Step 2: Parser
-                with pynng.Pair0(dial="ipc:///tmp/test_parser_engine.ipc") as parser:
-                    parser.send(log_response1)
-                    log_response2 = parser.recv()
-                # Step 3: Detector
-                with pynng.Pair0(dial="ipc:///tmp/test_nvd_engine.ipc", recv_timeout=10) as detector:
-                    detector.send(log_response2)
-                    try:
-                        log_response3 = detector.recv()
-                        print(f"Anomaly detected: {log_response3}")
-                    except pynng.Timeout:
-                        # No anomaly, just continue
-                        pass
-            except Exception as e:
-                print(f"Error on line {i}: {e}")
+    parser = DummyParser()
+    gen = From.log(parser, LOG_PATH, do_process=False)
+    i = 1
+    while True:
+        try:
+            # Step 1: Reader
+            line = next(gen)
+        except StopIteration:
+            break
+        print(f"\n--- Processing line {i}/{total} ---")
+        try:
+            # Step 2: Parser
+            with pynng.Pair0(dial="ipc:///tmp/test_parser_engine.ipc") as parser:
+                parser.send(line.serialize)
+                log_response2 = parser.recv()
+            # Step 3: Detector
+            with pynng.Pair0(dial="ipc:///tmp/test_nvd_engine.ipc", recv_timeout=10) as detector:
+                detector.send(log_response2)
+                try:
+                    log_response3 = detector.recv()
+                    print(f"Anomaly detected: {log_response3}")
+                except pynng.Timeout:
+                    # No anomaly, just continue
+                    pass
+        except Exception as e:
+            print(f"Error on line {i}: {e}")
 
 
 if __name__ == "__main__":

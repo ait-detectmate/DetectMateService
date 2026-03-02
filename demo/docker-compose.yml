@@ -1,31 +1,12 @@
-services:
-  reader:
-    build:
-      context: ..
-      dockerfile: demo/Dockerfile
-    container_name: detectmate_reader
-    command: >
-      detectmate
-      --settings demo/config/reader_settings.yaml
-      --config demo/config/reader_config.yaml
-    volumes:
-      - ../demo/config:/app/demo/config
-      - ../logs:/app/logs
-    environment:
-      - PYTHONUNBUFFERED=1
-    healthcheck:
-      test: [ "CMD", "python3", "-m", "service.client", "--url", "http://127.0.0.1:8000", "status" ]
-      interval: 60s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-    networks:
-      - detectmate_net
+x-default-args: &default-args
+  DETECTMATELIBRARY_BRANCH: main
 
+services:
   parser:
     build:
       context: ..
       dockerfile: demo/Dockerfile
+      args: *default-args
     container_name: detectmate_parser
     command: >
       detectmate
@@ -35,9 +16,6 @@ services:
       - ../demo/config:/app/demo/config
       - ../logs:/app/logs
       - ../demo/data:/app/demo/data  # template file is here
-    depends_on:
-      reader:
-        condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -53,6 +31,7 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
+      args: *default-args
     container_name: detectmate_detector
     command: >
       detectmate
@@ -79,6 +58,7 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile
+      args: *default-args
     container_name: detectmate_demo
     command: python demo/manual_demo_run_tcp.py
     volumes:
@@ -86,8 +66,6 @@ services:
       - ../demo/data:/app/demo/data
       - ../logs:/app/logs
     depends_on:
-      reader:
-        condition: service_healthy
       parser:
         condition: service_healthy
       detector:
