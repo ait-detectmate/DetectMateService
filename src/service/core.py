@@ -16,6 +16,7 @@ from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
+from service.features.component_resolver import ComponentResolver
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
 from prometheus_client import REGISTRY, Counter, Enum, Histogram
 
@@ -75,18 +76,36 @@ class Service(Engine, ABC):
         self.web_server = None
         self.web_server = WebServer(self)
 
+        self.log: logging.Logger = self._build_logger()
         # set component_type
         if hasattr(self, 'component_type'):  # prioritize class attribute over settings
             pass  # already set by the child class
-        elif (hasattr(settings, 'component_type') and
-                settings.component_type != "core" and
+        elif (hasattr(settings, "component_type") and
+                settings.component_type not in ("core",) and
                 not settings.component_type.startswith("core")):
-            self.component_type = settings.component_type  # this is a library component, use its type
-        else:
-            self.component_type = "core"  # default to core
 
-        # Now build the logger (which uses component_type)
-        self.log: logging.Logger = self._build_logger()
+            resolved_type, resolved_config = ComponentResolver.resolve(
+                settings.component_type
+            )
+            old_component_type = settings.component_type
+            settings.component_type = resolved_type
+
+            # Keep self.component_type in sync with the resolved full path
+            if not hasattr(self.__class__, 'component_type'):
+                self.component_type = resolved_type
+
+            # Now build the logger (which uses component_type)
+            self.log = self._build_logger()
+
+            # Log what resolver did
+            if resolved_type != old_component_type:
+                self.log.info(
+                    "Resolved '%s'  →  component: %s  |  config: %s",
+                    old_component_type, resolved_type, resolved_config,
+                )
+
+            if not settings.component_config_class:
+                settings.component_config_class = resolved_config
 
         # Initialize config manager before loading the library component
         # so we can pass the loaded configs to the component
@@ -121,7 +140,7 @@ class Service(Engine, ABC):
                 config_to_use = loaded_config_dict or component_config or {}
                 self.library_component = ComponentLoader.load_component(
                     settings.component_type,
-                    config_to_use
+                    config_to_use, logger=self.log
                 )
                 self.log.info(f"Successfully loaded component: {self.library_component}")
             except Exception as e:
@@ -141,7 +160,8 @@ class Service(Engine, ABC):
         if hasattr(self.settings, 'component_config_class') and self.settings.component_config_class:
             try:
                 self.log.debug(f"Loading config class: {self.settings.component_config_class}")
-                config_class = ConfigClassLoader.load_config_class(self.settings.component_config_class)
+                config_class = ConfigClassLoader.load_config_class(
+                    self.settings.component_config_class, logger=self.log)
                 self.log.debug(f"Successfully loaded config class: {config_class}")
                 return config_class
             except Exception as e:
@@ -323,8 +343,10 @@ class Service(Engine, ABC):
     # helpers
 
     def _build_logger(self) -> logging.Logger:
+        component_type = getattr(self, 'component_type', 'service')
+        component_id = getattr(self, 'component_id', 'unknown')
         Path(self.settings.log_dir).mkdir(parents=True, exist_ok=True)
-        name = f"{self.component_type}.{self.component_id}"
+        name = f"{component_type}.{component_id}"
         logger = logging.getLogger(name)
         logger.setLevel(getattr(logging, self.settings.log_level.upper(), logging.INFO))
         logger.propagate = False  # don't bubble to root logger -> avoid duplicate lines
@@ -343,7 +365,7 @@ class Service(Engine, ABC):
             logger.addHandler(sh)
         if self.settings.log_to_file:
             fh = logging.FileHandler(
-                Path(self.settings.log_dir) / f"{self.component_type}_{self.component_id}.log",
+                Path(self.settings.log_dir) / f"{component_type}_{component_id}.log",
                 encoding="utf-8",
                 delay=True,  # don't open until first write
             )
