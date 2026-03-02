@@ -2,16 +2,17 @@ detectors:
     NewValueDetector:
         method_type: new_value_detector
         auto_config: False
-        params:
-            log_variables:
-                - id: test
-                  event: 1
-                  template: adsdas
-                  variables:
-                      - pos: 0
-                        name: var1
-                        params:
-                            threshold: 0.5
-                  header_variables:
-                      - pos: level
-                        params: {}
+        params: {}
+        events:
+            1:
+                test:
+                    params: {}
+                    template: adsdas
+                    variables:
+                        - pos: 0
+                          name: var1
+                          params:
+                              threshold: 0.5
+                    header_variables:
+                        - pos: level
+                          params: {}
