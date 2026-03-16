@@ -56,6 +56,10 @@ data_processed_bytes_total = get_counter("data_processed_bytes_total",
                                          "Total bytes processed by the engine", [
                                              "component_type", "component_id"])
 
+data_processed_lines_total = get_counter("data_processed_lines_total",
+                                         "Total lines processed by the engine", [
+                                             "component_type", "component_id"])
+
 
 class Service(Engine, ABC):
     """Abstract base for every DetectMate service/component.
@@ -182,6 +186,12 @@ class Service(Engine, ABC):
                 component_type=self.component_type,
                 component_id=self.component_id
             ).inc(len(raw_message))
+
+            lines = raw_message.count(b'\n') or 1  # at least 1 if message exists
+            data_processed_lines_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc(lines)
 
         # Track processing time
         with processing_duration_seconds.labels(
