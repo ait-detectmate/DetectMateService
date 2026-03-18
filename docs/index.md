@@ -25,6 +25,8 @@ Check out the [Installation](installation.md) guide to set up the service, and t
 For a list of imports from the DetectMateLinbrary in the Service and their usage [Library Imports](library-imports.md).
 For library developers implementing custom components, see the [Library Interface Contract](interfaces.md).
 
+Please have a look to the [Getting Started Tutorial](getting_started.md) to see how it works.
+
 ## Contribution
 
 We're happily taking patches and other contributions. Please see the following links for how to get started:

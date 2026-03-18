@@ -6,4 +6,4 @@ detectors:
    global:  # define global instance for new_value_detector similar to "events"
      global_instance:  # define instance name
        header_variables:  # another level to have the same structure as "events"
-         - pos: Status
+         - pos: URL
