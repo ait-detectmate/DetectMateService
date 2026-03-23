@@ -2,7 +2,7 @@
 
 DetectMate enables the creation of log analysis pipelines to analyze log data streams and detect violations or anomalies. It can be run from the console or embedded in Python programs as a library. Designed to operate analyses with limited resources and the lowest possible permissions, DetectMate is suitable for use on production servers. In practice, log analysis involves distinct steps that are central to its operation.
 
-Logfile analysis consists of two main steps: first, parsing loglines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed. 
+Logfile analysis consists of two main steps: first, parsing log lines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed. 
 
 The following diagram illustrates a typical log analysis pipeline:
 
@@ -16,7 +16,7 @@ In this tutorial, we will set up a log data analysis pipeline that reads Nginx a
 
 ## Preparation
 
-We will setup the aminer on a fresh installation of Ubuntu Noble:
+We will setup the DetectMate on a fresh installation of Ubuntu Noble:
 
 ```
 alice@ubuntu2404:~$ lsb_release -a
@@ -164,7 +164,6 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 ```
 
 !!! note
-
     Since we did not add our user to the docker group, we have to use sudo for docker compose!
 
 With Docker compose working, we will now download the DetectmateService repository using `git`:
@@ -345,8 +344,7 @@ volumes:
     driver: local
 ```
 
-Now that the access.logs are available in the container, we have to point fluentd to read that file. We need to
-edit the file `container/fluentin/fluent.conf` and replace `some.log` with `access.log`:
+Now that the access.logs are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
 ```
 <source>
@@ -378,22 +376,22 @@ edit the file `container/fluentin/fluent.conf` and replace `some.log` with `acce
 </match>
 ```
 
-The Nginx access.log will be mounted into the `fluentin` container and fluentd is using the correct file. We can finally look into the detectmate config and
+The Nginx access.log will be mounted into the `fluentin` container and fluentd is using the correct file. We can finally look into the DetectMate config and
 generate anomalies.
 
 ## DetectMate Config
 
-The log pipeline uses the two DetectMate services, parser and detector. The parser splits the logline into meaningful tokens, and the detector identifies anomalies using them. We need to configure the parser and detector. The detector needs to know which tokens it receives from the parser so it can look for anomalies.
+The log pipeline uses two DetectMate services, parser and detector. The parser splits the log line into meaningful tokens, which the detector then uses to identify anomalies. We need to configure the parser and detector. Since detector needs to know which tokens it receives from the parser so it can look for anomalies, the two configurations are closely related.
 
 ### Parser
 
-The Nginx logline we previously created has a very specific format:
+The Nginx log line we previously created has a very specific format:
 
 ```
 ::1 - - [18/Mar/2026:11:43:30 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/8.5.0"
 ```
 
-The format can be described like that:
+This format can be described like that:
 
 ```
 <IP> - - [<Time>] "<Method> <URL> <Protocol>" <Status> <Bytes> "<Referer>" "<UserAgent>"
@@ -416,11 +414,11 @@ parsers:
       path_templates: /config/templates.txt  # empty file because there are no templates necessary for apache access logs
 ```
 
-We don't need to modify that configuration, since it is compatible with the nginx access.log format and can now continue with the configuration of the detector.
+We don't need to modify that configuration, since it is compatible with the nginx access.log format and we can now continue with the configuration of the detector.
 
 ### Detector
 
-The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values. As soon as the detector switches from training mode to detection mode, all values not in the trained model are anomalies. DetectMate ships with a `new_value_detector` that can do exactly that. The config looks as follows:
+The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values during training. As soon as the detector switches from training mode to detection mode, all values not found in the trained model are flagged as anomalies. DetectMate ships with a `new_value_detector` that can do exactly that. The config `container/config/detector_config.yaml` looks as follows:
 
 ```
 detectors:
@@ -434,9 +432,9 @@ detectors:
          - pos: URL
 ```
 
-As we can see, in this config, the `URL` token from the parsed data is monitored, and the first two log lines are used for training. Anything after the two log lines will be evaluated for detection and compared with the values seen in these two log lines.
+Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the first two log lines are used for training (`data_use_training: 2`). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.
 
-Now let's start the pipeline using `docker compose up -d` and send 2 valid loglines with two different status values:
+Now let's start the pipeline using `docker compose up -d` and send two valid log lines with two different status values:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
@@ -459,7 +457,7 @@ prometheus                      prom/prometheus:latest        "/bin/prometheus -
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-Wait a couple of minutes until parser and detector are up and running. You can control that by executing `docker compose logs parser` or `docker compose logs detector`.
+Wait a couple of minutes until parser and detector containers are up and running. You can check by executing `docker compose logs parser` or `docker compose logs detector`.
 The output of the component should show `Uvicorn running on` or any HTTP-requests for the /metrics endpoint:
 
 ```
@@ -497,7 +495,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `cat container/fluentlogs/output.%Y%m%d` find the filename `buffer.<id>.log` and have a look:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
@@ -508,11 +506,11 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.log
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.logcon 
 2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
 Great! We detected our first anomaly.
 
-This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two DetectMate services, using a parser for the Nginx access log format, and how this is then used to generate an anomaly. 
+This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two DetectMate services, using a parser for the Nginx access log format, and how this is then used to flag an anomaly. 
