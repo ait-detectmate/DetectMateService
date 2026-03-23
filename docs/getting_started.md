@@ -506,7 +506,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.logcon 
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.log
 2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
