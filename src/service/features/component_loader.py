@@ -3,7 +3,6 @@ from typing import Any, Dict
 import logging
 
 from detectmatelibrary.common.core import CoreComponent
-from logging import Logger
 
 
 class ComponentLoader:
@@ -14,7 +13,7 @@ class ComponentLoader:
     @classmethod
     def load_component(cls,
                        component_type: str, config: Dict[str, Any] | None = None,
-                       logger: Logger | None = None) -> CoreComponent:
+                       logger: logging.Logger | None = None) -> CoreComponent:
         """Load a component from a fully-qualified dotted path.
 
         Expects ComponentResolver.resolve() to have already been called —
