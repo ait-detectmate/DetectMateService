@@ -105,6 +105,7 @@ def receiver_manager():
         try:
             sock.close()
         except pynng.NNGException:
+            # Ignore socket-close errors during test teardown; sockets may already be closed.
             pass
 
 
