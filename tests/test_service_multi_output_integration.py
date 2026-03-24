@@ -3,6 +3,7 @@ import socket
 import threading
 import time
 from typing import List
+import logging
 
 import httpx
 import pynng
@@ -96,8 +97,8 @@ def service_factory():
         try:
             url = f"{BASE_HTTP_URL}:{svc.settings.http_port}/admin/shutdown"
             httpx.post(url, timeout=0.5)
-        except (httpx.HTTPError, Exception):
-            pass
+        except (httpx.HTTPError, Exception) as exc:
+            logging.debug("Ignoring error during service HTTP shutdown for %s: %s", url, exc)
     time.sleep(SHUTDOWN_DELAY)
 
 
