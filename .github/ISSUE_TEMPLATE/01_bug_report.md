@@ -7,9 +7,9 @@ about: If something isn't working 🔧
 Describe your issue here.
 
 ### Your environment
-* Version of ruby
+* Version of detectmate
+* Version of python
 * Docker or manual installation?
-* Which browser and its version
 
 ### Steps to reproduce
 Tell us how to reproduce this issue. 
