@@ -1,0 +1,18 @@
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    auto_config: false
+    params: {}
+    events:
+      '1':
+        test:
+          params: {}
+          variables:
+          - pos: 0
+            name: var1
+            params:
+              threshold: 0.7
+          header_variables:
+          - pos: level
+            params: {}
+parsers: null

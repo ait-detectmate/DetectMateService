@@ -2,16 +2,13 @@ import threading
 import pynng
 import logging
 from abc import ABC
-from typing import Optional, List
+from typing import Optional, List, Protocol
 from prometheus_client import Counter
 from service.settings import ServiceSettings
 from service.features.engine_socket import (
     EngineSocketFactory,
     NngPairSocketFactory,
 )
-
-# TODO: replace these imports with the actual library implementations
-from library.processor import BaseProcessor, ProcessorException
 
 data_read_bytes_total = Counter(
     "data_read_bytes_total",
@@ -36,32 +33,44 @@ class EngineException(Exception):
     """Custom exception for engine-related errors."""
 
 
-class DefaultProcessor(BaseProcessor):
-    """A default processor that does nothing.
+class Processor(Protocol):
+    """Protocol defining the interface for message processors.
 
-    This is necessary to satisfy the abstract BaseProcessor requirement.
+    Any object with a process() method can be used as a processor. This
+    is typically a Service instance.
     """
 
-    def __call__(self, raw: bytes) -> bytes | None:
-        return raw
+    def process(self, raw_message: bytes) -> bytes | None:
+        """Process a raw message and return the result or None."""
+        ...
 
 
 class Engine(ABC):
     """Engine drives a background thread that reads raw messages over PAIR0,
-    calls 'self.process()', and sends outputs to multiple destinations.
+    calls processor.process(), and sends outputs to multiple destinations.
 
     The socket implementation is provided by an EngineSocketFactory.
     Default: NngPairSocketFactory (pynng.Pair0).
+
+    The processor must be an object with a process(bytes) -> bytes | None method.
+    Typically this is a Service instance that delegates to library components.
     """
 
     def __init__(
             self,
             settings: Optional[ServiceSettings] = None,
-            processor: BaseProcessor = DefaultProcessor(),
+            processor: Optional[Processor] = None,
             socket_factory: Optional[EngineSocketFactory] = None,
             logger: Optional[logging.Logger] = None
     ):
         self.settings: ServiceSettings = settings if settings is not None else ServiceSettings()
+
+        if processor is None:
+            raise ValueError(
+                "Engine requires a processor with a process() method. "
+                "Typically you should pass 'self' from the Service class."
+            )
+
         self.processor = processor
         self._stop_event = threading.Event()
         self.log = logger or logging.getLogger(__name__)
@@ -174,15 +183,12 @@ class Engine(ABC):
 
             # process phase
             try:
-                self.log.debug("Engine: Calling processor...")
-                out = self.processor(raw)
+                self.log.debug("Engine: Calling processor.process()...")
+                out = self.processor.process(raw)
                 if out is not None:
                     # TRACK written bytes
                     data_written_bytes_total.labels(**labels).inc(len(out))
                 self.log.debug(f"Engine: Processor returned: {out!r}")
-            except ProcessorException as e:
-                self.log.error("Processor error: %s", e)
-                continue
             except Exception as e:
                 self.log.exception("Engine error during process: %s", e)
                 continue

@@ -152,7 +152,7 @@ import numpy as np
 class RandomDetectorConfig(CoreDetectorConfig):
     method_type: str = "random_detector"
 
-    log_variables: LogVariables | AllLogVariables | dict[str, Any] = {}
+    events: EventsConfig | dict[str, Any] = {}
 
 
 class RandomDetector(CoreDetector):
@@ -180,13 +180,19 @@ class RandomDetector(CoreDetector):
         overall_score = 0.0
         alerts = {}
 
-        relevant_log_fields = self.config.log_variables[input_["EventID"]].get_all()  # type: ignore
+        event_config = self.config.events[input_["EventID"]]
+        if event_config is None:
+            return False
+
+        relevant_log_fields = event_config.get_all()
         for log_variable in relevant_log_fields.values():
             score = 0.0
             random = np.random.rand()
             if random > log_variable.params["threshold"]:
                 score = 1.0
-                alerts.update({log_variable.name: str(score)})  # type: ignore
+                # Variable has .name, Header has .pos (str)
+                var_name = log_variable.name if isinstance(log_variable, Variable) else log_variable.pos
+                alerts.update({var_name: str(score)})
             overall_score += score
 
         if overall_score > 0:
@@ -219,19 +225,19 @@ detectors:
     RandomDetector:
         method_type: random_detector
         auto_config: False
-        params:
-            log_variables:
-                - id: test
-                  event: 1
-                  template: dummy_template
-                  variables:
-                    - pos: 0
-                      name: var1
-                      params:
-                        threshold: 0.
-                  header_variables:
-                    - pos: level
-                      params: {}
+        params: {}
+        events:
+            1:
+                test:
+                    params: {}
+                    variables:
+                        - pos: 0
+                          name: var1
+                          params:
+                              threshold: 0.
+                    header_variables:
+                        - pos: level
+                          params: {}
 ```
 
 This hierarchical format allows the library to correctly route parameters based on category and class name.

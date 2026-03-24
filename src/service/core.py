@@ -8,15 +8,17 @@ import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 
+from pydantic import BaseModel
+
 from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
-from library.processor import BaseProcessor
+from service.features.component_resolver import ComponentResolver
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
-from prometheus_client import REGISTRY, Counter, Enum
+from prometheus_client import REGISTRY, Counter, Enum, Histogram
 
 
 engine_running = Enum(
@@ -30,6 +32,13 @@ engine_starts_total = Counter(
     "engine_starts_total",
     "Number of times the engine was started",
     ["component_type", "component_id"]
+)
+
+processing_duration_seconds = Histogram(
+    "processing_duration_seconds",
+    "Time spent processing messages in seconds",
+    ["component_type", "component_id"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 )
 
 
@@ -47,35 +56,17 @@ data_processed_bytes_total = get_counter("data_processed_bytes_total",
                                          "Total bytes processed by the engine", [
                                              "component_type", "component_id"])
 
-
-class ServiceProcessorAdapter(BaseProcessor):
-    """Adapter class to use a Service's process method as a BaseProcessor."""
-
-    def __init__(self, service: Service) -> None:
-        self.service = service
-
-    def __call__(self, raw_message: bytes) -> bytes | None:
-        return self.service.process(raw_message)
-
-
-class LibraryComponentProcessor(BaseProcessor):
-    """Adapter to use DetectMate library components as BaseProcessor."""
-
-    def __init__(self, component: CoreComponent) -> None:
-        self.component = component
-
-    def __call__(self, raw_message: bytes) -> bytes | None | Any:
-        """Process message using the library component."""
-        try:
-            result = self.component.process(raw_message)
-            return result
-        except Exception as e:
-            logging.getLogger(__name__).error(f"Component processing error: {e}")
-            return None
+data_processed_lines_total = get_counter("data_processed_lines_total",
+                                         "Total lines processed by the engine", [
+                                             "component_type", "component_id"])
 
 
 class Service(Engine, ABC):
-    """Abstract base for every DetectMate service/component."""
+    """Abstract base for every DetectMate service/component.
+
+    Service acts as the processor - it implements the process() method
+    that Engine calls directly.
+    """
 
     def __init__(
             self,
@@ -89,18 +80,36 @@ class Service(Engine, ABC):
         self.web_server = None
         self.web_server = WebServer(self)
 
+        self.log: logging.Logger = self._build_logger()
         # set component_type
         if hasattr(self, 'component_type'):  # prioritize class attribute over settings
             pass  # already set by the child class
-        elif (hasattr(settings, 'component_type') and
-                settings.component_type != "core" and
+        elif (hasattr(settings, "component_type") and
+                settings.component_type not in ("core",) and
                 not settings.component_type.startswith("core")):
-            self.component_type = settings.component_type  # this is a library component, use its type
-        else:
-            self.component_type = "core"  # default to core
 
-        # Now build the logger (which uses component_type)
-        self.log: logging.Logger = self._build_logger()
+            resolved_type, resolved_config = ComponentResolver.resolve(
+                settings.component_type
+            )
+            old_component_type = settings.component_type
+            settings.component_type = resolved_type
+
+            # Keep self.component_type in sync with the resolved full path
+            if not hasattr(self.__class__, 'component_type'):
+                self.component_type = resolved_type
+
+            # Now build the logger (which uses component_type)
+            self.log = self._build_logger()
+
+            # Log what resolver did
+            if resolved_type != old_component_type:
+                self.log.info(
+                    "Resolved '%s'  →  component: %s  |  config: %s",
+                    old_component_type, resolved_type, resolved_config,
+                )
+
+            if not settings.component_config_class:
+                settings.component_config_class = resolved_config
 
         # Initialize config manager before loading the library component
         # so we can pass the loaded configs to the component
@@ -135,18 +144,15 @@ class Service(Engine, ABC):
                 config_to_use = loaded_config_dict or component_config or {}
                 self.library_component = ComponentLoader.load_component(
                     settings.component_type,
-                    config_to_use
+                    config_to_use, logger=self.log
                 )
                 self.log.info(f"Successfully loaded component: {self.library_component}")
             except Exception as e:
                 self.log.error(f"Failed to load component {settings.component_type}: {e}")
                 raise
 
-        # Create processor instance
-        self.processor = self.create_processor()
-
-        # then init Engine with the processor (opens PAIR socket)
-        Engine.__init__(self, settings=settings, processor=self.processor, logger=self.log)
+        # Service IS the processor - Engine will call self.process() directly
+        Engine.__init__(self, settings=settings, processor=self, logger=self.log)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
@@ -158,7 +164,8 @@ class Service(Engine, ABC):
         if hasattr(self.settings, 'component_config_class') and self.settings.component_config_class:
             try:
                 self.log.debug(f"Loading config class: {self.settings.component_config_class}")
-                config_class = ConfigClassLoader.load_config_class(self.settings.component_config_class)
+                config_class = ConfigClassLoader.load_config_class(
+                    self.settings.component_config_class, logger=self.log)
                 self.log.debug(f"Successfully loaded config class: {config_class}")
                 return config_class
             except Exception as e:
@@ -167,30 +174,36 @@ class Service(Engine, ABC):
         return cast(Type[CoreConfig], CoreConfig)  # help mypy
 
     def process(self, raw_message: bytes) -> bytes | None | Any:
-        """Process the raw message using the library component or default
-        implementation."""
+        """Process the raw message.
 
+        This is the main processing method that Engine calls directly.
+
+        Tracks metrics and delegates to library component if available,
+        otherwise returns raw message unchanged.
+        """
         if raw_message:
             data_processed_bytes_total.labels(
                 component_type=self.component_type,
                 component_id=self.component_id
             ).inc(len(raw_message))
 
-        if self.library_component:
-            # use the library component's process method
-            return self.library_component.process(raw_message)
-        else:
-            # default implementation for core service
-            return raw_message
+            lines = raw_message.count(b'\n') or 1  # at least 1 if message exists
+            data_processed_lines_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc(lines)
 
-    def create_processor(self) -> BaseProcessor:
-        """Create processor based on available components."""
-        if self.library_component:
-            return LibraryComponentProcessor(self.library_component)
-        else:
-            # fall back to service's own process method
-            # TODO: do we need this?
-            return ServiceProcessorAdapter(self)
+        # Track processing time
+        with processing_duration_seconds.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).time():
+            if self.library_component:
+                # Delegate to the library component's process method
+                return self.library_component.process(raw_message)
+            else:
+                # Default passthrough behavior for core services without components
+                return raw_message
 
     # public API
     def setup_io(self) -> None:
@@ -284,28 +297,46 @@ class Service(Engine, ABC):
         return json.dumps(status_info, indent=2)
 
     def reconfigure(self, config_data: Dict[str, Any], persist: bool = False) -> str:
-        """Reconfigure service configurations dynamically."""
+        """Reconfigure service configurations dynamically.
+
+        Args:
+            config_data: Configuration dictionary to apply
+            persist: If True, save the configuration to disk using to_dict()
+                    to preserve only user-specified values without defaults
+
+        Returns:
+            Status message indicating success or failure
+        """
         if not self.config_manager:
             return "reconfigure: no config manager configured"
 
         if not config_data:
             return "reconfigure: no-op (empty config data)"
+
         try:
+            # update in memory
             self.config_manager.update(config_data)
-            #  problem: update() validates against the Schema,
-            # model_validate()constructs a pydantic model instance of for example
-            # (NewValueDetectorConfig), but save() expects a dict to serialize to YAML
-            # pydantic automatically fills in default values, including
-            # inherited from CoreDetectorConfig like parser, start_id)
-            # class CoreDetectorConfig(CoreConfig):
-            # comp_type: str = "detectors"
-            # method_type: str = "core_detector"
-            # parser: str = "<PLACEHOLDER>"
-            # on save these get written in the config.yaml file
-            # -> then this file is missing "detectors" and other important fields and cannot be used
 
             if persist:
-                self.config_manager.save()
+                # Get the validated config
+                validated_config = self.config_manager.get()
+                if validated_config is None:
+                    config_dict = {}
+                # Convert to dict using to_dict() to strip defaults and maintain YAML structure
+                elif validated_config and hasattr(validated_config, 'to_dict'):
+                    config_dict = validated_config.to_dict()
+                    self.log.debug(f"Converted config to dict for persistence: {config_dict}")
+                elif isinstance(validated_config, dict):
+                    config_dict = validated_config
+                elif isinstance(validated_config, BaseModel):
+                    config_dict = validated_config.model_dump()
+                else:
+                    config_dict = {}
+
+                # Save to disk
+                self.config_manager.save(config_dict)
+                self.log.info("Persisted configuration to disk")
+
             self.log.info("Reconfigured with: %s", config_data)
             return "reconfigure: ok"
 
@@ -322,8 +353,10 @@ class Service(Engine, ABC):
     # helpers
 
     def _build_logger(self) -> logging.Logger:
+        component_type = getattr(self, 'component_type', 'service')
+        component_id = getattr(self, 'component_id', 'unknown')
         Path(self.settings.log_dir).mkdir(parents=True, exist_ok=True)
-        name = f"{self.component_type}.{self.component_id}"
+        name = f"{component_type}.{component_id}"
         logger = logging.getLogger(name)
         logger.setLevel(getattr(logging, self.settings.log_level.upper(), logging.INFO))
         logger.propagate = False  # don't bubble to root logger -> avoid duplicate lines
@@ -342,7 +375,7 @@ class Service(Engine, ABC):
             logger.addHandler(sh)
         if self.settings.log_to_file:
             fh = logging.FileHandler(
-                Path(self.settings.log_dir) / f"{self.component_type}_{self.component_id}.log",
+                Path(self.settings.log_dir) / f"{component_type}_{component_id}.log",
                 encoding="utf-8",
                 delay=True,  # don't open until first write
             )

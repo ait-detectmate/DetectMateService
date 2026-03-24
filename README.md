@@ -94,6 +94,11 @@ Start the engine:
 uv run detectmate-client start --url <http_host:http_port>
 ```
 
+Request prometheus metrics:
+```bash
+uv run detectmate-client metrics --url <http_host:http_port>
+```
+
 Shutdown entire service:
 
 ```bash

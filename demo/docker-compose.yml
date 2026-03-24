@@ -5,7 +5,7 @@ services:
       dockerfile: demo/Dockerfile
     container_name: detectmate_reader
     command: >
-      detectmate start
+      detectmate
       --settings demo/config/reader_settings.yaml
       --config demo/config/reader_config.yaml
     volumes:
@@ -13,6 +13,12 @@ services:
       - ../logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: [ "CMD", "python3", "-m", "service.client", "--url", "http://127.0.0.1:8000", "status" ]
+      interval: 60s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - detectmate_net
 
@@ -22,7 +28,7 @@ services:
       dockerfile: demo/Dockerfile
     container_name: detectmate_parser
     command: >
-      detectmate start
+      detectmate
       --settings demo/config/parser_settings.yaml
       --config demo/config/parser_config.yaml
     volumes:
@@ -30,9 +36,16 @@ services:
       - ../logs:/app/logs
       - ../demo/data:/app/demo/data  # template file is here
     depends_on:
-      - reader
+      reader:
+        condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: [ "CMD", "python3", "-m", "service.client", "--url", "http://127.0.0.1:8010", "status" ]
+      interval: 60s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - detectmate_net
 
@@ -42,16 +55,23 @@ services:
       dockerfile: demo/Dockerfile
     container_name: detectmate_detector
     command: >
-      detectmate start
+      detectmate
       --settings demo/config/detector_settings.yaml
       --config demo/config/detector_config.yaml
     volumes:
       - ../demo/config:/app/demo/config
       - ../logs:/app/logs
     depends_on:
-      - parser
+      parser:
+        condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: [ "CMD", "python3", "-m", "service.client", "--url", "http://127.0.0.1:8020", "status" ]
+      interval: 60s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - detectmate_net
 
@@ -66,9 +86,12 @@ services:
       - ../demo/data:/app/demo/data
       - ../logs:/app/logs
     depends_on:
-      - reader
-      - parser
-      - detector
+      reader:
+        condition: service_healthy
+      parser:
+        condition: service_healthy
+      detector:
+        condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
     networks:

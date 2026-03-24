@@ -1,7 +1,10 @@
 import importlib
+import logging
 from typing import Type, cast
 
 from detectmatelibrary.common.core import CoreConfig
+
+log = logging.getLogger(__name__)
 
 
 class ConfigClassLoader:
@@ -11,7 +14,9 @@ class ConfigClassLoader:
     BASE_PACKAGE = "detectmatelibrary"
 
     @classmethod
-    def load_config_class(cls, config_class_path: str) -> Type[CoreConfig]:
+    def load_config_class(cls,
+                          config_class_path: str,
+                          logger: logging.Logger | None = None) -> Type[CoreConfig]:
         """Load a config class from a path string.
 
         Args:
@@ -27,6 +32,8 @@ class ConfigClassLoader:
             TypeError: If class is not a subclass of CoreConfig
             RuntimeError: For other failures (e.g. invalid format)
         """
+        log = logger or logging.getLogger(__name__)
+        log.debug("Loading config class: %r", config_class_path)
         try:
             # handle "module.ClassName" formats
             if '.' not in config_class_path:
@@ -36,23 +43,32 @@ class ConfigClassLoader:
                 )
 
             module_name, class_name = config_class_path.rsplit('.', 1)
+            log.debug("Parsed: module=%r  class=%r", module_name, class_name)
 
-            # first try as DetectMate-relative
-            try:
-                full_module_path = f"{cls.BASE_PACKAGE}.{module_name}"
-                module = importlib.import_module(full_module_path)
-            except ImportError:
-                # if that fails, treat it as an absolute module path
-                module = importlib.import_module(module_name)
+            # Avoid double-prefixing if already fully qualified
+            if module_name.startswith(f"{cls.BASE_PACKAGE}.") or module_name == cls.BASE_PACKAGE:
+                log.debug("Path is already fully qualified, importing directly")
+                try:
+                    module = importlib.import_module(module_name)
+                except ImportError as e:
+                    raise ImportError(f"Failed to import config class {config_class_path}: {e}") from e
+            else:
+                prefixed = f"{cls.BASE_PACKAGE}.{module_name}"
+                try:
+                    module = importlib.import_module(prefixed)
+                    log.debug("Imported via library-relative path: %r", prefixed)
+                except ImportError:
+                    log.debug("Library-relative import failed, falling back to absolute: %r", module_name)
+                    module = importlib.import_module(module_name)  # absolute fallback
+                    log.debug("Imported via absolute path: %r", module_name)
 
             # get the class
             config_class = getattr(module, class_name)
-            config_class = cast(Type[CoreConfig], config_class)  # help mypy
 
             if not issubclass(config_class, CoreConfig):
                 raise TypeError(f"Config class {class_name} must inherit from CoreConfig")
 
-            return config_class
+            return cast(Type[CoreConfig], config_class)
 
         except ImportError as e:
             raise ImportError(f"Failed to import config class {config_class_path}: {e}") from e
