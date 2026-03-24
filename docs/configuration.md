@@ -79,14 +79,19 @@ detectors:                 # Category Level
     auto_config: false
     method_type: new_value_detector
     params:                # Implementation Specific Level
-      log_variables:
-        - id: test
-          template: dummy_template
-          variables:
-            - name: var1
-              pos: 0
-              params:
-                threshold: 0.0
+    events:
+        1:
+            test:
+                params: {}
+                variables:
+                    - pos: 0
+                      name: var1
+                      params:
+                          threshold: 0.5
+                header_variables:
+                    - pos: level
+                      params: {}
+
 ```
 
 You can read more about Components in the [Using a Library Component](library.md) section.
