@@ -3,10 +3,8 @@ component_type: NewValueDetector
 log_level: "DEBUG"
 log_dir: "/logs"
 
-http_host: 0.0.0.0
-
 # Manager Interface (Command Channel)
-manager_addr: "ipc:///run/detector.cmd.ipc"
+http_host: 0.0.0.0
 
 # Engine Interface (Data Channel)
 engine_addr: "ipc:///run/detector.ipc"
