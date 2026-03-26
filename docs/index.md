@@ -25,6 +25,10 @@ Check out the [Installation](installation.md) guide to set up the service, and t
 For a list of imports from the DetectMateLinbrary in the Service and their usage [Library Imports](library-imports.md).
 For library developers implementing custom components, see the [Library Interface Contract](interfaces.md).
 
+## Docker
+
+To set up a full log data analysis pipeline, Docker Compose can be used. A complete reference for configuring such a pipeline can be found in the [Docker Compose reference](docker-compose.md).
+
 ## Contribution
 
 We're happily taking patches and other contributions. Please see the following links for how to get started:
