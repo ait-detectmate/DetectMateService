@@ -3,7 +3,7 @@
 services:
     fluentin:
       #image: dm-fluentd:latest
-      build: 
+      build:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
@@ -41,7 +41,7 @@ services:
 
     fluentout:
       # image: dm-fluentd:latest
-      build: 
+      build:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
