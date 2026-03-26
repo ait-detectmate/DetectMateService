@@ -136,3 +136,7 @@ This service exposes **port 9090**
 ## Kafka
 
 The [Apache Kafka](https://kafka.apache.org/) service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active(commented out).
+
+
+!!! note
+    In container/fluentout/fluent.conf is an example configuration for fluentd to send alerts to kafka
