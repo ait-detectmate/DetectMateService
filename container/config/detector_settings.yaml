@@ -1,5 +1,5 @@
 component_name: NewValueDetector01
-component_type: NewValueDetector
+component_type: NewValueDetector  # this is the component class name, the service will automatically search for the matching component config schema
 log_level: "DEBUG"
 log_dir: "/logs"
 
