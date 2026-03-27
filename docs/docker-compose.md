@@ -89,7 +89,7 @@ This services depends on the `fluentout` service, because `fluentout` creates th
 
 The `fluentout`service receives data from the `detector`, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles `output.%Y%m%d`.
 
-While writing to a logfile is just an example in this setup, you can refer to the [Fluentd documentation](https://docs.fluentd.org/) for guidance on writing alerts to other targets.
+While writing to a log file is just an example in this setup, you can refer to the [Fluentd documentation](https://docs.fluentd.org/) for guidance on writing alerts to other targets.
 
 ### Building the image
 
