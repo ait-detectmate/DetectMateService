@@ -1,0 +1,11 @@
+parsers:
+  MatcherParser:
+    method_type: matcher_parser
+    auto_config: false
+    log_format: '<IP> - - [<Time>] "<Method> <URL> <Protocol>" <Status> <Bytes> "<Referer>" "<UserAgent>"'
+    time_format: null
+    params:
+      remove_spaces: false
+      remove_punctuation: false
+      lowercase: false
+      path_templates: /config/templates.txt  # empty file because there are no templates necessary for apache access logs

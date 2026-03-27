@@ -1,0 +1,10 @@
+FROM fluent/fluentd:latest
+
+USER root
+
+RUN apt update -y && apt install -y make build-essential
+
+RUN fluent-gem install fluent-plugin-parser-protobuf
+RUN fluent-gem install fluent-plugin-detectmate
+RUN fluent-gem install fluent-plugin-nng
+RUN fluent-gem install fluent-plugin-kafka
