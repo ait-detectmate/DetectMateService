@@ -4,7 +4,7 @@ DetectMate Service ships a comprehensive Docker Compose configuration that inclu
 
 ![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
 
-Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. Using the default setup, fluentd reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file.
+Log file ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. Using the default setup, fluentd reads lines from a file and sends them to the DetectMate parser. The parser processes and forwards this data to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file.
 
 The following sections will explain the [docker-compose.yml](https://github.com/ait-detectmate/DetectMateService/blob/main/docker-compose.yml) service by service.
 
