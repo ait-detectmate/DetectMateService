@@ -101,7 +101,7 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 - `container/fluentin:/fluentd/etc` provides the fluentd configuration. The file [container/fluentin/fluent.conf](https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf) can be used to reconfigure fluentd to write to other targets.
 
-- `container/fluentlogs:/fluentd/log` exposes the directory containing written logfiles. `fluentout` writs all alerts to the files `output.%Y%m%d` by default.
+- `container/fluentlogs:/fluentd/log` exposes the directory containing written log files. By default, `fluentout` writes all alerts to files named `output.%Y%m%d`.
 
 - `container/run:/run` is mounted to hold the socket files for inter process communication. `fluentout` and `detector` are talking in this configuration using [Nano Message Next Generation](https://nng.nanomsg.org/) via unix domain sockets for maximum performance. 
 
