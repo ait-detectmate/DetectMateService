@@ -79,7 +79,7 @@ All DetectMate container(`parser` and `detector`) need the following volumes mou
 
 ### Ports
 
-The detector service exposes port **8002** (internal the service runs on port 8000). The management api server runs on this port. This service exposes metrics for the `prometheus` service and allows to start, stop and reconfigure the service.
+The detector service exposes port **8002** (internally the service runs on port 8000). The management API server runs on this port. This service exposes metrics for the `prometheus` service and allows to start, stop and reconfigure the service.
 
 ### Depends
 
