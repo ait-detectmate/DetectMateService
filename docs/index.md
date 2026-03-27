@@ -29,7 +29,7 @@ Please have a look to the [Getting Started Tutorial](getting_started.md) to see 
 
 ## Docker
 
-To set up a full log data analysis pipeline, Docker Compose can be used. A complete reference for configuring such a pipeline can be found in the [Docker Compose reference](docker-compose.md).
+Docker Compose can be used to set up a full log data analysis pipeline. A complete configuration reference can be found in the [Docker Compose reference](docker-compose.md).
 
 ## Contribution
 
