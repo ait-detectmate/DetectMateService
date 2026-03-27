@@ -139,4 +139,4 @@ The [Apache Kafka](https://kafka.apache.org/) service is a message queue that ca
 
 
 !!! note
-    In container/fluentout/fluent.conf is an example configuration for fluentd to send alerts to kafka
+    In container/fluentout/fluent.conf contains an example Fluentd configuration for sending alerts to Kafka.
