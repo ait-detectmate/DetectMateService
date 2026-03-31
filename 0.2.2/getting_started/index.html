@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.2.2/getting_started/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Getting Started - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Getting Started";
+        var mkdocs_page_input_path = "getting_started.md";
+        var mkdocs_page_url = "/DetectMateService/0.2.2/getting_started/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="getting-started">Getting Started</h1>
+<p>DetectMate enables the creation of log analysis pipelines to analyze log data streams and detect violations or anomalies. It can be run from the console or embedded in Python programs as a library. Designed to operate analyses with limited resources and the lowest possible permissions, DetectMate is suitable for use on production servers. In practice, log analysis involves distinct steps that are central to its operation.</p>
+<p>Logfile analysis consists of two main steps: first, parsing log lines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed. </p>
+<p>The following diagram illustrates a typical log analysis pipeline:</p>
+<p><img alt="Illustration of a logpipeline" src="../images/Detectmate.drawio.png" title="logpipeline" /></p>
+<p>Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectmateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.</p>
+<h2 id="the-objective">The Objective</h2>
+<p>In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.</p>
+<h2 id="preparation">Preparation</h2>
+<p>We will setup the DetectMate on a fresh installation of Ubuntu Noble:</p>
+<pre><code>alice@ubuntu2404:~$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 24.04.4 LTS
+Release:    24.04
+Codename:   noble
+</code></pre>
+<p>In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:</p>
+<pre><code>alice@ubuntu2404:~$ sudo apt update &amp;&amp; sudo apt install nginx -y
+Hit:1 http://at.archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://at.archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:3 http://at.archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+9 packages can be upgraded. Run 'apt list --upgradable' to see them.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  nginx-common
+Suggested packages:
+  fcgiwrap nginx-doc ssl-cert
+The following NEW packages will be installed:
+  nginx nginx-common
+0 upgraded, 2 newly installed, 0 to remove and 9 not upgraded.
+Need to get 565 kB of archives.
+After this operation, 1,596 kB of additional disk space will be used.
+Get:1 http://at.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx-common all 1.24.0-2ubuntu7.6 [43.5 kB]
+Get:2 http://at.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx amd64 1.24.0-2ubuntu7.6 [521 kB]
+Fetched 565 kB in 0s (2,816 kB/s)
+Preconfiguring packages ...
+Selecting previously unselected package nginx-common.
+(Reading database ... 87543 files and directories currently installed.)
+Preparing to unpack .../nginx-common_1.24.0-2ubuntu7.6_all.deb ...
+Unpacking nginx-common (1.24.0-2ubuntu7.6) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../nginx_1.24.0-2ubuntu7.6_amd64.deb ...
+Unpacking nginx (1.24.0-2ubuntu7.6) ...
+Setting up nginx-common (1.24.0-2ubuntu7.6) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr/lib/systemd/system/nginx.service.
+Setting up nginx (1.24.0-2ubuntu7.6) ...
+ * Upgrading binary nginx                                                                                                                                                                                                        [ OK ]
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for ufw (0.36.2-6) ...
+Scanning processes...
+Scanning linux images...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+
+alice@ubuntu2404:~$
+</code></pre>
+<p>We can try to send HTTP-requests to our local Nginx:</p>
+<pre><code>alice@ubuntu2404:~$ curl http://localhost
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Welcome to nginx!&lt;/title&gt;
+&lt;style&gt;
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;
+&lt;p&gt;If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.&lt;/p&gt;
+
+&lt;p&gt;For online documentation and support please refer to
+&lt;a href=&quot;http://nginx.org/&quot;&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;
+Commercial support is available at
+&lt;a href=&quot;http://nginx.com/&quot;&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Thank you for using nginx.&lt;/em&gt;&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+alice@ubuntu2404:~$
+</code></pre>
+<p>Now we should have at least one line in /var/log/nginx/access.log:</p>
+<pre><code>alice@ubuntu2404:~$ sudo cat /var/log/nginx/access.log
+::1 - - [18/Mar/2026:11:43:30 +0000] &quot;GET / HTTP/1.1&quot; 200 615 &quot;-&quot; &quot;curl/8.5.0&quot;
+</code></pre>
+<p>Since we have a working webserver, we can now move on to deploy the logdata anomaly pipeline.</p>
+<h2 id="deploying-the-pipeline">Deploying the Pipeline</h2>
+<p>We need Docker and Docker Compose for the deployment. A comprehensive tutorial about how to install Docker can be found at https://docs.docker.com/engine/install/ubuntu/</p>
+<p>In this section, we will focus solely on the installation commands.</p>
+<p>First run the following command to uninstall all conflicting packages:</p>
+<pre><code>sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+</code></pre>
+<p>Now set up Docker's apt repository:</p>
+<pre><code># Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources &lt;&lt;EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;)
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
+</code></pre>
+<p>Install docker and docker compose:</p>
+<pre><code>sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since we did not add our user to the docker group, we have to use sudo for docker compose!</p>
+</div>
+<p>With Docker compose working, we will now download the DetectmateService repository using <code>git</code>:</p>
+<pre><code>alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
+Cloning into 'DetectMateService'...
+remote: Enumerating objects: 2303, done.
+remote: Counting objects: 100% (372/372), done.
+remote: Compressing objects: 100% (227/227), done.
+remote: Total 2303 (delta 171), reused 171 (delta 131), pack-reused 1931 (from 3)
+Receiving objects: 100% (2303/2303), 3.97 MiB | 9.12 MiB/s, done.
+Resolving deltas: 100% (1229/1229), done.
+alice@ubuntu2404:~$ cd DetectMateService/
+</code></pre>
+<p>Let's start the default pipeline, just to test it:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
+[+] up 6/6
+ ✔ Container detectmateservice-fluentout-1 Started                                                                                                                                                                                 
+ ✔ Container prometheus                    Started                                                                                                                                                                                 s
+ ✔ Container grafana                       Started                                                                                                                                                                                 s
+ ✔ Container detectmateservice-detector-1  Started                                                                                                                                                                                 s
+ ✔ Container detectmateservice-parser-1    Started                                                                                                                                                                                  
+ ✔ Container detectmateservice-fluentin-1  Started                                                                                                                                                                                  
+alice@ubuntu2404:~/DetectMateService$
+</code></pre>
+<p>To check the status of the containers, we can use <code>docker compose ps</code>:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
+NAME                            IMAGE                         COMMAND                  SERVICE      CREATED         STATUS         PORTS
+detectmateservice-detector-1    detectmateservice-detector    &quot;uv run detectmate -…&quot;   detector     4 minutes ago   Up 3 minutes   0.0.0.0:8002-&gt;8000/tcp, [::]:8002-&gt;8000/tcp
+detectmateservice-fluentin-1    detectmateservice-fluentin    &quot;tini -- /bin/entryp…&quot;   fluentin     4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
+detectmateservice-fluentout-1   detectmateservice-fluentout   &quot;tini -- /bin/entryp…&quot;   fluentout    4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
+detectmateservice-parser-1      detectmateservice-parser      &quot;uv run detectmate -…&quot;   parser       4 minutes ago   Up 3 minutes   0.0.0.0:8001-&gt;8000/tcp, [::]:8001-&gt;8000/tcp
+grafana                         grafana/grafana:latest        &quot;/run.sh&quot;                grafana      4 minutes ago   Up 3 minutes   0.0.0.0:3000-&gt;3000/tcp, [::]:3000-&gt;3000/tcp
+prometheus                      prom/prometheus:latest        &quot;/bin/prometheus --c…&quot;   prometheus   4 minutes ago   Up 3 minutes   9090/tcp
+</code></pre>
+<p>For now, we will shutdown all containers:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
+[+] down 9/9
+ ✔ Container grafana                        Removed                                                                                                                                                                              
+ ✔ Container detectmateservice-fluentin-1   Removed                                                                                                                                                                               
+ ✔ Container prometheus                     Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-parser-1     Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-detector-1   Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-fluentout-1  Removed                                                                                                                                                                              
+ ✔ Volume detectmateservice_grafana_data    Removed                                                                                                                                                                               
+ ✔ Network detectmateservice_default        Removed                                                                                                                                                                               
+ ✔ Volume detectmateservice_prometheus_data Removed
+</code></pre>
+<p>We have finally all requirements installed and have a boilerplate template for docker compose that starts an initial pipeline. In the next sections we will reconfigure that 
+pipeline so that we can read the access.log and generate anomalies.</p>
+<h2 id="mount-the-accesslog">Mount the access.log</h2>
+<p>The preconfigured pipeline reads logs from <code>container/fluentlogs/some.log</code>. In order to be able to read the nginx access.log file, we need to mount /var/log/nginx into the fluentin container
+and modify the fluentd config so that it reads access.log instead.</p>
+<p>Initially we edit the docker-compose.yml and change only the line 11 to use <code>/var/log/nginx</code>:</p>
+<pre><code># version: &quot;3&quot;
+
+services:
+    fluentin:
+      #image: dm-fluentd:latest
+      build:
+        context: .
+        dockerfile: container/Dockerfile_fluentd
+      volumes:
+        - '$PWD/container/fluentin:/fluentd/etc'
+        - '/var/log/nginx:/fluentd/log'
+        - '$PWD/container/run:/run'
+      depends_on:
+        - parser
+
+    parser:
+      # image: detectmate:dev-0.1.6
+      build: .
+      volumes:
+        - '$PWD/container/config:/config'
+        - '$PWD/container/logs:/logs'
+        - '$PWD/container/run:/run'
+      command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
+      ports:
+        - &quot;8001:8000&quot;
+      depends_on:
+        - detector
+
+    detector:
+      # image: detectmate:dev-0.1.6
+      build: .
+      volumes:
+        - '$PWD/container/config:/config'
+        - '$PWD/container/logs:/logs'
+        - '$PWD/container/run:/run'
+      command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
+      ports:
+        - &quot;8002:8000&quot;
+      depends_on:
+        - fluentout
+
+    fluentout:
+      # image: dm-fluentd:latest
+      build:
+        context: .
+        dockerfile: container/Dockerfile_fluentd
+      volumes:
+        - '$PWD/container/fluentout:/fluentd/etc'
+        - '$PWD/container/fluentlogs:/fluentd/log'
+        - '$PWD/container/run:/run'
+
+    prometheus:
+      image: prom/prometheus:latest
+      container_name: prometheus
+      restart: unless-stopped
+      volumes:
+        - ./container/prometheus.yml:/etc/prometheus/prometheus.yml
+        - prometheus_data:/prometheus
+      command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--web.enable-lifecycle'
+      expose:
+        - 9090
+
+    grafana:
+      image: grafana/grafana:latest
+      container_name: grafana
+      ports:
+        - &quot;3000:3000&quot;
+      environment:
+        - GF_SECURITY_ADMIN_PASSWORD=admin
+      depends_on:
+        - prometheus
+      volumes:
+        - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+        - grafana_data:/var/lib/grafana
+
+          #    kafka:
+          #      image: apache/kafka-native
+          #      ports:
+          #        - &quot;9092:9092&quot;
+          #      environment:
+          #        KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+          #        KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9093,HOST://kafka:9092
+          #        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+          #
+          #        # Settings required for KRaft mode
+          #        KAFKA_NODE_ID: 1
+          #        KAFKA_PROCESS_ROLES: broker,controller
+          #        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          #        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+          #
+          #        # Listener to use for broker-to-broker communication
+          #        KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+          #
+          #        # Required for a single node cluster
+          #        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+</code></pre>
+<p>Now that the access.logs are available in the container, we have to point fluentd to read that file. We need to edit the file <code>container/fluentin/fluent.conf</code> and replace <code>path /fluentd/log/some.log</code> with <code>path /fluentd/log/access.log</code>:</p>
+<pre><code>&lt;source&gt;
+  @type tail
+  @id input_tail
+  &lt;parse&gt;
+    @type none
+  &lt;/parse&gt;
+  path /fluentd/log/access.log
+  path_key logSource
+
+  tag nng.*
+&lt;/source&gt;
+
+&lt;match nng.**&gt;
+  @type nng
+  uri ipc:///run/parser.engine.ipc
+  &lt;inject&gt;
+    hostname_key hostname
+    # overwrite hostname:
+    # hostname somehost
+  &lt;/inject&gt;
+  &lt;buffer&gt;
+    flush_mode immediate
+  &lt;/buffer&gt;
+  &lt;format&gt;
+    @type detectmate
+  &lt;/format&gt;
+&lt;/match&gt;
+</code></pre>
+<p>The Nginx access.log will be mounted into the <code>fluentin</code> container and fluentd is using the correct file. We can finally look into the DetectMate config and
+generate anomalies.</p>
+<h2 id="detectmate-config">DetectMate Config</h2>
+<p>The log pipeline uses two DetectMate services, parser and detector. The parser splits the log line into meaningful tokens, which the detector then uses to identify anomalies. We need to configure the parser and detector. Since detector needs to know which tokens it receives from the parser so it can look for anomalies, the two configurations are closely related.</p>
+<h3 id="parser">Parser</h3>
+<p>The Nginx log line we previously created has a very specific format:</p>
+<pre><code>::1 - - [18/Mar/2026:11:43:30 +0000] &quot;GET / HTTP/1.1&quot; 200 615 &quot;-&quot; &quot;curl/8.5.0&quot;
+</code></pre>
+<p>This format can be described like that:</p>
+<pre><code>&lt;IP&gt; - - [&lt;Time&gt;] &quot;&lt;Method&gt; &lt;URL&gt; &lt;Protocol&gt;&quot; &lt;Status&gt; &lt;Bytes&gt; &quot;&lt;Referer&gt;&quot; &quot;&lt;UserAgent&gt;&quot;
+</code></pre>
+<p>DetectMate includes a matcher_parser that can split such a log line. The configuration for
+the parser is in <code>container/config/parser_config.yaml</code>:</p>
+<pre><code>parsers:
+  MatcherParser:
+    method_type: matcher_parser
+    auto_config: false
+    log_format: '&lt;IP&gt; - - [&lt;Time&gt;] &quot;&lt;Method&gt; &lt;URL&gt; &lt;Protocol&gt;&quot; &lt;Status&gt; &lt;Bytes&gt; &quot;&lt;Referer&gt;&quot; &quot;&lt;UserAgent&gt;&quot;'
+    time_format: null
+    params:
+      remove_spaces: false
+      remove_punctuation: false
+      lowercase: false
+      path_templates: /config/templates.txt  # empty file because there are no templates necessary for apache access logs
+</code></pre>
+<p>We don't need to modify that configuration, since it is compatible with the nginx access.log format and we can now continue with the configuration of the detector.</p>
+<h3 id="detector">Detector</h3>
+<p>The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values during training. As soon as the detector switches from training mode to detection mode, all values not found in the trained model are flagged as anomalies. DetectMate ships with a <code>new_value_detector</code> that can do exactly that. The config <code>container/config/detector_config.yaml</code> looks as follows:</p>
+<pre><code>detectors:
+  NewValueDetector:
+   method_type: new_value_detector
+   data_use_training: 2
+   auto_config: false
+   global:  # define global instance for new_value_detector similar to &quot;events&quot;
+     global_instance:  # define instance name
+       header_variables:  # another level to have the same structure as &quot;events&quot;
+         - pos: URL
+</code></pre>
+<p>Here, the <code>URL</code> token from the parsed data is monitored (<code>- pos: URL</code>), and the first two log lines are used for training (<code>data_use_training: 2</code>). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.</p>
+<p>Now let's start the pipeline using <code>docker compose up -d</code> and send two valid log lines with two different status values:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
+[+] up 7/7
+ ✔ Network detectmateservice_default       Created                                                                                                                                                                      
+ ✔ Container prometheus                    Started                                                                                                                                                                        
+ ✔ Container detectmateservice-fluentout-1 Started                                                                                                                                                                          
+ ✔ Container detectmateservice-detector-1  Started                                                                                                                                                                            
+ ✔ Container grafana                       Started                                                                                                                                                                              
+ ✔ Container detectmateservice-parser-1    Started                                                                                                                                                                                  
+ ✔ Container detectmateservice-fluentin-1  Started                                                              
+alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
+NAME                            IMAGE                         COMMAND                  SERVICE      CREATED         STATUS         PORTS
+detectmateservice-detector-1    detectmateservice-detector    &quot;uv run detectmate -…&quot;   detector     7 seconds ago   Up 5 seconds   0.0.0.0:8002-&gt;8000/tcp, [::]:8002-&gt;8000/tcp
+detectmateservice-fluentin-1    detectmateservice-fluentin    &quot;tini -- /bin/entryp…&quot;   fluentin     7 seconds ago   Up 4 seconds   5140/tcp, 24224/tcp
+detectmateservice-fluentout-1   detectmateservice-fluentout   &quot;tini -- /bin/entryp…&quot;   fluentout    8 seconds ago   Up 6 seconds   5140/tcp, 24224/tcp
+detectmateservice-parser-1      detectmateservice-parser      &quot;uv run detectmate -…&quot;   parser       7 seconds ago   Up 5 seconds   0.0.0.0:8001-&gt;8000/tcp, [::]:8001-&gt;8000/tcp
+grafana                         grafana/grafana:latest        &quot;/run.sh&quot;                grafana      7 seconds ago   Up 5 seconds   0.0.0.0:3000-&gt;3000/tcp, [::]:3000-&gt;3000/tcp
+prometheus                      prom/prometheus:latest        &quot;/bin/prometheus --c…&quot;   prometheus   8 seconds ago   Up 6 seconds   9090/tcp
+alice@ubuntu2404:~/DetectMateService$
+</code></pre>
+<p>Wait a couple of minutes until parser and detector containers are up and running. You can check by executing <code>docker compose logs parser</code> or <code>docker compose logs detector</code>.
+The output of the component should show <code>Uvicorn running on</code> or any HTTP-requests for the /metrics endpoint:</p>
+<pre><code>parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
+parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP Admin active at 0.0.0.0:8000
+parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: Auto-starting engine...
+parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: engine started
+parser-1  | INFO:     Started server process [61]
+parser-1  | INFO:     Waiting for application startup.
+parser-1  | INFO:     Application startup complete.
+parser-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+parser-1  | INFO:     172.18.0.2:43378 - &quot;GET /metrics HTTP/1.1&quot; 200 OK
+parser-1  | INFO:     172.18.0.2:39840 - &quot;GET /metrics HTTP/1.1&quot; 200 OK
+</code></pre>
+<p>Now generate two access.log lines:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/hello
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.24.0 (Ubuntu)&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.24.0 (Ubuntu)&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+alice@ubuntu2404:~/DetectMateService$
+</code></pre>
+<p>We now trained with the two values <code>hello</code> and <code>world</code>. This means, as soon as we query any other url than <code>/hello</code> or <code>/world</code> we should receive an anomaly. Anomalies get logged in <code>container/fluentlogs/output.%Y%m%d</code>. With <code>cat container/fluentlogs/output.%Y%m%d</code> find the filename <code>buffer.&lt;id&gt;.log</code> and have a look:</p>
+<pre><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.24.0 (Ubuntu)&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.log
+2026-03-18T15:39:43+00:00   nng.input   {&quot;__version__&quot;:&quot;1.0.0&quot;,&quot;detectorID&quot;:&quot;NewValueDetector&quot;,&quot;detectorType&quot;:&quot;new_value_detector&quot;,&quot;alertID&quot;:&quot;10&quot;,&quot;detectionTimestamp&quot;:1773848383,&quot;logIDs&quot;:[&quot;e5d922c8-19e1-47d1-842b-7bbabecb384d&quot;],&quot;score&quot;:1.0,&quot;extractedTimestamps&quot;:[1773848383],&quot;description&quot;:&quot;NewValueDetector detects values not encountered in training as anomalies.&quot;,&quot;receivedTimestamp&quot;:1773848383,&quot;alertsObtain&quot;:{&quot;Global - URL&quot;:&quot;Unknown value: '/foobar'&quot;}}
+alice@ubuntu2404:~/DetectMateService$
+</code></pre>
+<p>Great! We detected our first anomaly.</p>
+<p>This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two DetectMate services, using a parser for the Nginx access log format, and how this is then used to flag an anomaly. </p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
