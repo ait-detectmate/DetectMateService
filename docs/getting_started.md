@@ -434,7 +434,7 @@ detectors:
 
 Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the first two log lines are used for training (`data_use_training: 2`). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.
 
-Now let's start the pipeline using `docker compose up -d` and send two valid log lines with two different status values:
+Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
@@ -457,7 +457,7 @@ prometheus                      prom/prometheus:latest        "/bin/prometheus -
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-Wait a couple of minutes until parser and detector containers are up and running. You can check by executing `docker compose logs parser` or `docker compose logs detector`.
+Wait a couple of minutes until parser and detector containers are up and running. You can check by executing `sudo docker compose logs parser` or `sudo docker compose logs detector`.
 The output of the component should show `Uvicorn running on` or any HTTP-requests for the /metrics endpoint:
 
 ```
