@@ -2,7 +2,7 @@ FROM fluent/fluentd:latest
 
 USER root
 
-RUN apt update -y && apt install -y make build-essential
+RUN apt update -y && apt install -y make build-essential libnng-dev
 
 RUN fluent-gem install fluent-plugin-parser-protobuf
 RUN fluent-gem install fluent-plugin-detectmate

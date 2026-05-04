@@ -495,7 +495,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `cat container/fluentlogs/output.%Y%m%d` find the filename `buffer.<id>.log` and have a look:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in the file `container/fluentlogs/output.%Y%m%d.log`. Execute the command `cat container/fluentlogs/output.20260504.log`(the datepart of the file might be different!) to see the anomaly:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
