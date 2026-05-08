@@ -226,14 +226,14 @@ alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
 ```
 
 We have finally all requirements installed and have a boilerplate template for docker compose that starts an initial pipeline. In the next sections we will reconfigure that 
-pipeline so that we can read the access.log and generate anomalies.
+pipeline so that we can read the `access.log` and generate anomalies.
 
 ## Mount the access.log
 
-The preconfigured pipeline reads logs from `container/fluentlogs/some.log`. In order to be able to read the nginx access.log file, we need to mount /var/log/nginx into the fluentin container
+The preconfigured pipeline reads logs from `container/fluentlogs/some.log`. In order to be able to read the nginx access.log file, we need to mount `/var/log/nginx` into the fluentin container
 and modify the fluentd config so that it reads access.log instead.
 
-Initially we edit the docker-compose.yml and change only the line 11 to use `/var/log/nginx`:
+Initially we edit the `docker-compose.yml` and change only the line 11 to use `/var/log/nginx`:
 
 ```
 # version: "3"
@@ -344,7 +344,7 @@ volumes:
     driver: local
 ```
 
-Now that the access.logs are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
+Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
 ```
 <source>
@@ -381,7 +381,7 @@ generate anomalies.
 
 ## DetectMate Config
 
-The log pipeline uses two DetectMate services, parser and detector. The parser splits the log line into meaningful tokens, which the detector then uses to identify anomalies. We need to configure the parser and detector. Since detector needs to know which tokens it receives from the parser so it can look for anomalies, the two configurations are closely related.
+The log pipeline uses two DetectMate services, parser and detector. The parser splits the log line into meaningful tokens, which the detector then uses to identify anomalies. We need to configure the parser and detector. Since the detector needs to know which tokens it receives from the parser so it can look for anomalies, the two configurations are closely related.
 
 ### Parser
 
@@ -457,8 +457,8 @@ prometheus                      prom/prometheus:latest        "/bin/prometheus -
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-Wait a couple of minutes until parser and detector containers are up and running. You can check by executing `sudo docker compose logs parser` or `sudo docker compose logs detector`.
-The output of the component should show `Uvicorn running on` or any HTTP-requests for the /metrics endpoint:
+**Wait a couple of minutes until parser and detector containers are up and running.** You can check by executing `sudo docker compose logs parser` or `sudo docker compose logs detector`.
+When the containers are ready, the output of the component will show `Uvicorn running on` or any HTTP-requests for the `/metrics` endpoint:
 
 ```
 parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
@@ -473,7 +473,7 @@ parser-1  | INFO:     172.18.0.2:43378 - "GET /metrics HTTP/1.1" 200 OK
 parser-1  | INFO:     172.18.0.2:39840 - "GET /metrics HTTP/1.1" 200 OK
 ```
 
-Now generate two access.log lines:
+Now generate two `access.log` lines:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/hello
@@ -495,7 +495,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in the file `container/fluentlogs/output.%Y%m%d.log`. Execute the command `cat container/fluentlogs/output.20260504.log`(the datepart of the file might be different!) to see the anomaly:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `buffer.<id>.log` and have a look:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
