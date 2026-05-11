@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.3.0/docker-compose/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Docker Compose Reference - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Docker Compose Reference";
+        var mkdocs_page_input_path = "docker-compose.md";
+        var mkdocs_page_url = "/DetectMateService/0.3.0/docker-compose/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Docker Compose Reference</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="docker-compose-reference">Docker Compose Reference</h1>
+<p>DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of the docker-compose.yaml. The following image illustrates the log data pipeline deployed by Docker Compose:</p>
+<p><img alt="Illustration of a logpipeline" src="../images/Detectmate.drawio.png" title="logpipeline" /></p>
+<p>Log file ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. Using the default setup, fluentd reads lines from a file and sends them to the DetectMate parser. The parser processes and forwards this data to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file.</p>
+<p>The following sections will explain the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/docker-compose.yml">docker-compose.yml</a> service by service.</p>
+<h2 id="fluentin">Fluentin</h2>
+<p>The first component in this configuration is the service <code>fluentin</code>, which is a fluentd container. It reads data from a file, formats it to the proper detectmate protobuf format, and then forwards it via a nanomsg queue socket to the parser service. </p>
+<p>While reading from a file is just an example in this setup, you can refer to the <a href="https://docs.fluentd.org/">Fluentd documentation</a> for guidance on reading from other sources.</p>
+<h3 id="building-the-image">Building the image</h3>
+<p>Docker Compose builds the <code>fluentin</code> image using the configuration in the file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/Dockerfile_fluentd">container/Dockerfile_fluentd</a>. This Dockerfile uses the official Fluentd image for the base and adds the necessary Fluentd plugins.</p>
+<h3 id="volumes">Volumes</h3>
+<p><code>fluentin</code> mounts the following volumes using bind-mount. </p>
+<ul>
+<li>
+<p><code>container/fluentin:/fluentd/etc</code> provides the fluentd configuration. The file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentin/fluent.conf">container/fluentin/fluent.conf</a> can be used to reconfigure fluentd to read from other log sources.</p>
+</li>
+<li>
+<p><code>container/fluentlogs:/fluentd/log</code> exposes the directory containing logfiles to read. <code>fluentin</code> reads all logs from the file <code>some.log</code> by default.</p>
+</li>
+<li>
+<p><code>container/run:/run</code> is mounted to hold the socket files for inter process communication. In this configuration, <code>fluentin</code> and <code>parser</code> are communicating via unix domain sockets using <a href="https://nng.nanomsg.org/">NNG (Nano Message Next Generation)</a> for maximum performance. </p>
+</li>
+</ul>
+<h3 id="depends">Depends</h3>
+<p>This services depends on the <code>parser</code> service, because <code>parser</code> creates the socket file to establish communication.</p>
+<h2 id="parser">Parser</h2>
+<p>The second component of the logdata analysis pipeline is the service <code>parser</code>. This DetectMate service listens for logs received from the <code>fluentin</code> service on a <a href="https://nng.nanomsg.org/">Nano Message socket</a>. It expects the data in the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">LogSchema format used by DetectMate</a> and sends the parsed data using the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">ParserSchema</a> to another Nano Message socket provided by a DetectMate detector service.</p>
+<h3 id="building-the-image_1">Building the image</h3>
+<p>Docker compose builds the <code>detectmate</code> image using the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> in the root of the DetectMate repository. This image is the same for <code>parser</code> and <code>detector</code>.</p>
+<h3 id="volumes_1">Volumes</h3>
+<p>All DetectMate container(<code>parser</code> and <code>detector</code>) need the following volumes mounted:</p>
+<ul>
+<li>
+<p><code>container/config:/config</code> provides the DetectMate configuration. Each DetectMate Service needs one settings-file for the general service configuration and one config file for the specific DetectMate component. For parser these files are <code>parser_settings.yaml</code> for service settings and <code>parser_config.yaml</code> that holds the component-specific parameters.</p>
+</li>
+<li>
+<p><code>container/logs:/logs</code> exposes all log files that are generated by DetectMate services. Mostly needed for debugging.</p>
+</li>
+<li>
+<p><code>container/run:/run</code> is mounted to hold the socket files for inter process communication. <code>fluentin</code> and <code>parser</code> communicate via the file <code>ipc:///run/parser.engine.ipc</code>. <code>parser</code> and <code>detector</code> communicate via the file <code>ipc:///run/detector.ipc</code>.</p>
+</li>
+</ul>
+<h3 id="ports">Ports</h3>
+<p>The parser service exposes port <strong>8001</strong> (internally the service runs on port 8000). The management API server runs on this port. This service exposes metrics for the <code>prometheus</code> service and allows to start, stop and reconfigure the service.</p>
+<h3 id="depends_1">Depends</h3>
+<p>This services depends on the <code>detector</code> service, because <code>detector</code> creates the socket file to establish communication. </p>
+<h2 id="detector">Detector</h2>
+<p>The detector service listens for parsed logs received from the <code>parser</code> service on a <a href="https://nng.nanomsg.org/">Nano Message socket</a>. It expects the data in the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">ParserSchema format used by DetectMate</a> and sends anomalies using the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">DetectorSchema</a> to another Nano Message socket provided by the <code>fluentout</code> service.</p>
+<h3 id="building-the-image_2">Building the image</h3>
+<p>Docker compose builds the <code>detectmate</code> image using the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> in the root of the DetectMate repository. This image is the same for <code>parser</code> and <code>detector</code>.</p>
+<h3 id="volumes_2">Volumes</h3>
+<p>All DetectMate container(<code>parser</code> and <code>detector</code>) need the following volumes mounted:</p>
+<ul>
+<li>
+<p><code>container/config:/config</code> provides the DetectMate configuration. Each DetectMate Service needs one <strong>settings</strong> file for the general service configuration and one <strong>config</strong> file for the DetectMate component-specific parameters. For <code>detector</code> these files are <code>detector_settings.yaml</code> and <code>detector_config.yaml</code> respectively.</p>
+</li>
+<li>
+<p><code>container/logs:/logs</code> exposes all log files that are generated by DetectMate services. Mostly needed for debugging.</p>
+</li>
+<li>
+<p><code>container/run:/run</code> is mounted to hold the socket files for inter process communication. <code>parser</code> and <code>detector</code> communicate via the file <code>ipc:///run/detector.ipc</code> and <code>detector</code> and <code>fluentout</code> use the socket <code>ipc:///run/output.ipc</code>.</p>
+</li>
+</ul>
+<h3 id="ports_1">Ports</h3>
+<p>The detector service exposes port <strong>8002</strong> (internally the service runs on port 8000). The management API server runs on this port. This service exposes metrics for the <code>prometheus</code> service and allows to start, stop and reconfigure the service.</p>
+<h3 id="depends_2">Depends</h3>
+<p>This services depends on the <code>fluentout</code> service, because <code>fluentout</code> creates the socket file to establish communication. </p>
+<h2 id="fluentout">Fluentout</h2>
+<p>The <code>fluentout</code>service receives data from the <code>detector</code>, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles <code>output.%Y%m%d</code>.</p>
+<p>While writing to a log file is just an example in this setup, you can refer to the <a href="https://docs.fluentd.org/">Fluentd documentation</a> for guidance on writing alerts to other targets.</p>
+<h3 id="building-the-image_3">Building the image</h3>
+<p>Docker Compose builds the <code>fluentout</code> image using the configuration in the file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/Dockerfile_fluentd">container/Dockerfile_fluentd</a>. This Dockerfile uses the official Fluentd image for the base and adds the necessary Fluentd plugins.</p>
+<h3 id="volumes_3">Volumes</h3>
+<p><code>fluentout</code> mounts the following volumes using bind-mount. </p>
+<ul>
+<li>
+<p><code>container/fluentin:/fluentd/etc</code> provides the fluentd configuration. The file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf">container/fluentin/fluent.conf</a> can be used to reconfigure fluentd to write to other targets.</p>
+</li>
+<li>
+<p><code>container/fluentlogs:/fluentd/log</code> exposes the directory containing written log files. By default, <code>fluentout</code> writes all alerts to files named <code>output.%Y%m%d</code>.</p>
+</li>
+<li>
+<p><code>container/run:/run</code> is mounted to hold the socket files for inter process communication. <code>fluentout</code> and <code>detector</code> are talking in this configuration using <a href="https://nng.nanomsg.org/">Nano Message Next Generation</a> via unix domain sockets for maximum performance. </p>
+</li>
+</ul>
+<h2 id="prometheus">Prometheus</h2>
+<p><a href="https://prometheus.io/">Prometheus</a> is the monitoring server that collects performance metrics from the management api that runs on the <code>parser</code> and <code>detector</code> on <strong>port 8000</strong>. </p>
+<h3 id="volumes_4">Volumes</h3>
+<p><code>prometheus</code> mounts the following volumes:</p>
+<ul>
+<li>
+<p><code>container/prometheus.yml:/etc/prometheus/prometheus.yml</code> is the single prometheus configuration file, that tells prometheus to collect the metrics data from <code>parser</code>and <code>detector</code> at <strong>port 8000</strong>*.</p>
+</li>
+<li>
+<p><code>prometheus_data:/prometheus</code> holds the prometheus database.</p>
+</li>
+</ul>
+<h3 id="ports_2">Ports</h3>
+<p>This service exposes <strong>port 9090</strong></p>
+<h2 id="grafana">Grafana</h2>
+<p><a href="https://grafana.com/">Grafana</a> allows to visualize the metrics data that is stored in the <code>prometheus</code> service. Per default the username and password are <strong>admin/admin</strong>.</p>
+<h3 id="volumes_5">Volumes</h3>
+<p><code>grafana</code> mounts the following volumes:</p>
+<ul>
+<li><code>container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml</code>is the config file that preconfigures grafana to use prometheus as a datasource.</li>
+<li><code>grafana_data:/var/lib/grafana</code> is the database of grafana</li>
+</ul>
+<h2 id="kafka">Kafka</h2>
+<p>The <a href="https://kafka.apache.org/">Apache Kafka</a> service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active(commented out).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In container/fluentout/fluent.conf contains an example Fluentd configuration for sending alerts to Kafka.</p>
+</div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
