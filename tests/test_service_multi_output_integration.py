@@ -44,7 +44,8 @@ def create_settings(ipc_paths, out_addrs=None, port=8001, **kwargs):
 def http_port() -> int:
     """Find and return a free port."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))
+        # Bind only to localhost to avoid exposing the temporary socket on all interfaces.
+        s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]
 
 
@@ -55,11 +56,12 @@ def port_generator():
 
     def _get_port():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
+            # Bind only to localhost to obtain an available ephemeral port safely.
+            s.bind(('127.0.0.1', 0))
             port = s.getsockname()[1]
             # Ensure we don't pick the same one twice in rapid succession
             while port in used_ports:
-                s.bind(('', 0))
+                s.bind(('127.0.0.1', 0))
                 port = s.getsockname()[1]
             used_ports.add(port)
             return port

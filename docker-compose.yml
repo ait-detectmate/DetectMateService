@@ -1,0 +1,106 @@
+# version: "3"
+
+services:
+    fluentin:
+      #image: dm-fluentd:latest
+      build:
+        context: .
+        dockerfile: container/Dockerfile_fluentd
+      volumes:
+        - '$PWD/container/fluentin:/fluentd/etc'
+        - '$PWD/container/fluentlogs:/fluentd/log'
+        - '$PWD/container/run:/run'
+      depends_on:
+        - parser
+
+    parser:
+      # image: detectmate:dev-0.1.6
+      build: .
+      volumes:
+        - '$PWD/container/config:/config'
+        - '$PWD/container/logs:/logs'
+        - '$PWD/container/run:/run'
+      command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
+      ports:
+        - "8001:8000"
+      depends_on:
+        - detector
+
+    detector:
+      # image: detectmate:dev-0.1.6
+      build: .
+      volumes:
+        - '$PWD/container/config:/config'
+        - '$PWD/container/logs:/logs'
+        - '$PWD/container/run:/run'
+      command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
+      ports:
+        - "8002:8000"
+      depends_on:
+        - fluentout
+
+    fluentout:
+      # image: dm-fluentd:latest
+      build:
+        context: .
+        dockerfile: container/Dockerfile_fluentd
+      volumes:
+        - '$PWD/container/fluentout:/fluentd/etc'
+        - '$PWD/container/fluentlogs:/fluentd/log'
+        - '$PWD/container/run:/run'
+
+    prometheus:
+      image: prom/prometheus:latest
+      container_name: prometheus
+      restart: unless-stopped
+      volumes:
+        - ./container/prometheus.yml:/etc/prometheus/prometheus.yml
+        - prometheus_data:/prometheus
+      command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--web.enable-lifecycle'
+      expose:
+        - 9090
+
+    grafana:
+      image: grafana/grafana:latest
+      container_name: grafana
+      ports:
+        - "3000:3000"
+      environment:
+        - GF_SECURITY_ADMIN_PASSWORD=admin
+      depends_on:
+        - prometheus
+      volumes:
+        - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+        - grafana_data:/var/lib/grafana
+
+          #    kafka:
+          #      image: apache/kafka-native
+          #      ports:
+          #        - "9092:9092"
+          #      environment:
+          #        KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+          #        KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9093,HOST://kafka:9092
+          #        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+          #
+          #        # Settings required for KRaft mode
+          #        KAFKA_NODE_ID: 1
+          #        KAFKA_PROCESS_ROLES: broker,controller
+          #        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          #        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+          #
+          #        # Listener to use for broker-to-broker communication
+          #        KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+          #
+          #        # Required for a single node cluster
+          #        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

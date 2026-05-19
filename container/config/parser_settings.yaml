@@ -1,0 +1,17 @@
+component_name: accesslogparser
+component_type: MatcherParser
+log_level: "DEBUG"
+log_dir: "/logs"
+
+# Manager Interface (Command Channel)
+http_host: 0.0.0.0
+
+# Engine Interface (Data Channel)
+engine_addr: "ipc:///run/parser.engine.ipc"
+engine_autostart: true
+
+# Output Destinations (where processed data is sent)
+out_addr:
+  - "ipc:///run/detector.ipc"
+
+out_dial_timeout: 1000
