@@ -77,7 +77,7 @@ services:
       volumes:
         - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
         - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-        - ./container/grafana/dashboards:/etc/grafana/provisioning/dashboards
+        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
         - grafana_data:/var/lib/grafana
 
           #    kafka:
