@@ -226,6 +226,7 @@ class Engine(ABC):
                     data_written_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.debug("Engine: Reply sent on engine socket")
                 except pynng.NNGException as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(out))
                     self.log.error("Engine error sending reply on engine socket: %s", e)
                     continue
 
@@ -256,6 +257,7 @@ class Engine(ABC):
                 data_dropped_bytes_total.labels(**labels).inc(len(data))
                 self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
             except pynng.NNGException as e:
+                data_dropped_bytes_total.labels(**labels).inc(len(data))
                 self.log.error(f"Engine error sending to output socket {i}: {e}")
                 continue
         return any_sent
