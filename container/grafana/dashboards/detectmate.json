@@ -431,15 +431,53 @@
                             }
                         ]
                     },
-                    "unit": "s"
+                    "unit": "ms"
                 },
                 "overrides": [
                     {
                         "matcher": {
                             "id": "byRegexp",
-                            "options": ""
+                            "options": "^p50.*"
                         },
-                        "properties": []
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": "^p95.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": "^p99.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -467,7 +505,7 @@
             "targets": [
                 {
                     "editorMode": "builder",
-                    "expr": "histogram_quantile(0.5, sum by(le, component_type) (rate(processing_duration_seconds_bucket[1m])))",
+                    "expr": "histogram_quantile(0.5, sum by(le, component_type) (rate(processing_duration_seconds_bucket[1m]))) * 1000",
                     "legendFormat": "p50 {{component_type}}",
                     "range": true,
                     "refId": "A"
@@ -478,7 +516,7 @@
                         "uid": "PBFA97CFB590B2093"
                     },
                     "editorMode": "builder",
-                    "expr": "histogram_quantile(0.95, sum by(le, component_type) (rate(processing_duration_seconds_bucket[$__rate_interval])))",
+                    "expr": "histogram_quantile(0.95, sum by(le, component_type) (rate(processing_duration_seconds_bucket[$__rate_interval]))) * 1000",
                     "instant": false,
                     "legendFormat": "p95 {{component_type}}",
                     "range": true,
@@ -490,7 +528,7 @@
                         "uid": "PBFA97CFB590B2093"
                     },
                     "editorMode": "builder",
-                    "expr": "histogram_quantile(0.99, sum by(le, component_type) (rate(processing_duration_seconds_bucket[$__rate_interval])))",
+                    "expr": "histogram_quantile(0.99, sum by(le, component_type) (rate(processing_duration_seconds_bucket[$__rate_interval]))) * 1000",
                     "instant": false,
                     "legendFormat": "p99 {{component_type}}",
                     "range": true,
@@ -498,6 +536,176 @@
                 }
             ],
             "title": "Processing latency",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "Current mean processing time per component, averaged over the last minute.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "orange",
+                                "value": 100
+                            },
+                            {
+                                "color": "red",
+                                "value": 500
+                            }
+                        ]
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 24
+            },
+            "id": 8,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showPercentChange": false,
+                "text": {
+                    "valueSize": 50
+                },
+                "textMode": "value_and_name",
+                "wideLayout": true
+            },
+            "pluginVersion": "12.4.2",
+            "targets": [
+                {
+                    "editorMode": "builder",
+                    "expr": "rate(processing_duration_seconds_sum[1m]) / rate(processing_duration_seconds_count[1m]) * 1000",
+                    "instant": true,
+                    "legendFormat": "{{component_type}}",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "Avg processing time (now)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "Mean processing time per component over time. Unlike percentiles, the mean is sensitive to all messages including outliers, making it useful for spotting gradual degradation.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 32
+            },
+            "id": 9,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "12.4.2",
+            "targets": [
+                {
+                    "editorMode": "builder",
+                    "expr": "rate(processing_duration_seconds_sum[1m]) / rate(processing_duration_seconds_count[1m]) * 1000",
+                    "legendFormat": "{{component_type}}",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Mean processing time (ms)",
             "type": "timeseries"
         },
         {
@@ -567,7 +775,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 32
+                "y": 40
             },
             "id": 1,
             "options": {
@@ -623,6 +831,248 @@
             ],
             "title": "Throughput (bytes/s)",
             "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "Lines received at the input socket per second, per component. Counts every line regardless of whether it was successfully processed. A drop to zero means no data is reaching the component.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "lines/s"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": ".*MatcherParser.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "MatcherParser"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": ".*NewValueDetector.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "NewValueDetector"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 48
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "12.4.2",
+            "targets": [
+                {
+                    "editorMode": "builder",
+                    "expr": "rate(data_read_lines_total[1m])",
+                    "legendFormat": "{{component_type}}",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Input rate (lines/s)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "Lines successfully written to output interfaces per second, per component. Counted once per message regardless of how many downstream interfaces exist. Compare with input rate to spot message loss.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "lines/s"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": ".*MatcherParser.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "MatcherParser"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byRegexp",
+                            "options": ".*NewValueDetector.*"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "NewValueDetector"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 48
+            },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "12.4.2",
+            "targets": [
+                {
+                    "editorMode": "builder",
+                    "expr": "rate(data_written_lines_total[1m])",
+                    "legendFormat": "{{component_type}}",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Output rate (lines/s)",
+            "type": "timeseries"
         }
     ],
     "preload": false,
@@ -639,6 +1089,6 @@
     "timezone": "browser",
     "title": "DetectMateService Overview",
     "uid": "adfp6vw",
-    "version": 2,
+    "version": 3,
     "weekStart": ""
 }
