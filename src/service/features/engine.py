@@ -40,6 +40,12 @@ data_dropped_bytes_total = Counter(
     ["component_type", "component_id"]
 )
 
+data_dropped_lines_total = Counter(
+    "data_dropped_lines_total",
+    "Total lines dropped due to disconnected or slow downstream peers",
+    ["component_type", "component_id"]
+)
+
 
 class EngineException(Exception):
     """Custom exception for engine-related errors."""
@@ -227,6 +233,7 @@ class Engine(ABC):
                     self.log.debug("Engine: Reply sent on engine socket")
                 except pynng.NNGException as e:
                     data_dropped_bytes_total.labels(**labels).inc(len(out))
+                    data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.error("Engine error sending reply on engine socket: %s", e)
                     continue
 
@@ -253,11 +260,12 @@ class Engine(ABC):
                 any_sent = True
                 self.log.debug(f"Engine: Send completed to output socket {i}")
             except pynng.TryAgain:
-                # TRACK dropped bytes
                 data_dropped_bytes_total.labels(**labels).inc(len(data))
+                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                 self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
             except pynng.NNGException as e:
                 data_dropped_bytes_total.labels(**labels).inc(len(data))
+                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                 self.log.error(f"Engine error sending to output socket {i}: {e}")
                 continue
         return any_sent
