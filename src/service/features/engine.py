@@ -46,6 +46,12 @@ data_dropped_lines_total = Counter(
     ["component_type", "component_id"]
 )
 
+processing_errors_total = Counter(
+    "processing_errors_total",
+    "Total number of exceptions raised during process()",
+    ["component_type", "component_id"]
+)
+
 
 class EngineException(Exception):
     """Custom exception for engine-related errors."""
@@ -206,6 +212,7 @@ class Engine(ABC):
                 out = self.processor.process(raw)
                 self.log.debug(f"Engine: Processor returned: {out!r}")
             except Exception as e:
+                processing_errors_total.labels(**labels).inc()
                 self.log.exception("Engine error during process: %s", e)
                 continue
 
