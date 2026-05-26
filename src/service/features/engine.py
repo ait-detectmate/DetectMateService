@@ -16,15 +16,39 @@ data_read_bytes_total = Counter(
     ["component_type", "component_id"]
 )
 
+data_read_lines_total = Counter(
+    "data_read_lines_total",
+    "Total lines read from input interfaces",
+    ["component_type", "component_id"]
+)
+
 data_written_bytes_total = Counter(
     "data_written_bytes_total",
     "Total bytes written to output interfaces",
     ["component_type", "component_id"]
 )
 
+data_written_lines_total = Counter(
+    "data_written_lines_total",
+    "Total lines written to output interfaces",
+    ["component_type", "component_id"]
+)
+
 data_dropped_bytes_total = Counter(
     "data_dropped_bytes_total",
     "Total bytes dropped due to disconnected or slow downstream peers",
+    ["component_type", "component_id"]
+)
+
+data_dropped_lines_total = Counter(
+    "data_dropped_lines_total",
+    "Total lines dropped due to disconnected or slow downstream peers",
+    ["component_type", "component_id"]
+)
+
+processing_errors_total = Counter(
+    "processing_errors_total",
+    "Total number of exceptions raised during process()",
     ["component_type", "component_id"]
 )
 
@@ -165,8 +189,9 @@ class Engine(ABC):
                     self.log.debug("Engine: Received empty message, skipping")
                     continue
 
-                # TRACK read bytes
+                # TRACK read bytes and lines
                 data_read_bytes_total.labels(**labels).inc(len(raw))
+                data_read_lines_total.labels(**labels).inc(raw.count(b'\n') or 1)
 
                 self.log.debug(f"Engine: Received {len(raw)} bytes from socket")
             except pynng.Timeout:
@@ -185,11 +210,9 @@ class Engine(ABC):
             try:
                 self.log.debug("Engine: Calling processor.process()...")
                 out = self.processor.process(raw)
-                if out is not None:
-                    # TRACK written bytes
-                    data_written_bytes_total.labels(**labels).inc(len(out))
                 self.log.debug(f"Engine: Processor returned: {out!r}")
             except Exception as e:
+                processing_errors_total.labels(**labels).inc()
                 self.log.exception("Engine error during process: %s", e)
                 continue
 
@@ -200,7 +223,9 @@ class Engine(ABC):
             # send phase
             if self._out_sockets:
                 # Multi-destination mode: send to all configured outputs
-                self._send_to_outputs(out)
+                if self._send_to_outputs(out):
+                    data_written_bytes_total.labels(**labels).inc(len(out))
+                    data_written_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
             else:
                 # Backwards-compatible mode: no outputs configured, reply on PAIR socket
                 try:
@@ -209,39 +234,48 @@ class Engine(ABC):
                         "sending reply back via engine socket"
                     )
                     self._pair_sock.send(out)
-                    # TRACK written bytes (Fallback mode)
+                    # TRACK written bytes and lines (Fallback mode)
                     data_written_bytes_total.labels(**labels).inc(len(out))
+                    data_written_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.debug("Engine: Reply sent on engine socket")
                 except pynng.NNGException as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(out))
+                    data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.error("Engine error sending reply on engine socket: %s", e)
                     continue
 
-    def _send_to_outputs(self, data: bytes) -> None:
-        """Send processed data to all configured output destinations."""
+    def _send_to_outputs(self, data: bytes) -> bool:
+        """Send processed data to all configured output destinations.
+
+        Returns True if at least one send succeeded.
+        """
         labels = {
             "component_type": getattr(self, "component_type", "core"),
             "component_id": self.settings.component_id
         }
         if not self._out_sockets:
             self.log.debug("Engine: No output sockets configured, skipping send")
-            return
+            return False
 
+        any_sent = False
         for i, sock in enumerate(self._out_sockets):
             try:
                 self.log.debug(f"Engine: Sending {len(data)} bytes to output socket {i}")
                 # Non-blocking send is preferred to avoid stalling the engine loop
                 # Pair0 with block=False will raise TryAgain if the peer is disconnected
                 sock.send(data, block=False)
-                # TRACK written bytes
-                data_written_bytes_total.labels(**labels).inc(len(data))
+                any_sent = True
                 self.log.debug(f"Engine: Send completed to output socket {i}")
             except pynng.TryAgain:
-                # TRACK dropped bytes
                 data_dropped_bytes_total.labels(**labels).inc(len(data))
+                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                 self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
             except pynng.NNGException as e:
+                data_dropped_bytes_total.labels(**labels).inc(len(data))
+                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                 self.log.error(f"Engine error sending to output socket {i}: {e}")
                 continue
+        return any_sent
 
     def stop(self) -> None | str:
         """Stop the engine loop and clean up resources.
