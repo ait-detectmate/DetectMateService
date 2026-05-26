@@ -8,7 +8,7 @@ services:
         dockerfile: container/Dockerfile_fluentd
       volumes:
         - '$PWD/container/fluentin:/fluentd/etc'
-        - '$PWD/container/fluentlogs:/fluentd/log'
+        - '/var/log/nginx:/fluentd/log'
         - '$PWD/container/run:/run'
       depends_on:
         - parser
@@ -76,6 +76,8 @@ services:
         - prometheus
       volumes:
         - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+        - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
         - grafana_data:/var/lib/grafana
 
           #    kafka:

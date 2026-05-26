@@ -495,7 +495,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `buffer.<id>.log` and have a look:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `output.<date>.log` and have a look:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
@@ -506,11 +506,14 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/buffer.q64d4e42c345866e56bc160786171b408.log
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/output.20260318.log
 2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
 Great! We detected our first anomaly.
+
+The Grafana UI is accessible at http://localhost:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics".
+Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Processing rate and Engine state.
 
 This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two DetectMate services, using a parser for the Nginx access log format, and how this is then used to flag an anomaly. 

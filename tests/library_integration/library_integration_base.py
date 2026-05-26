@@ -11,7 +11,7 @@ def start_service(module_path, settings, config, settings_file, config_file):
         yaml.dump(settings, f)
     with open(config_file, "w") as f:
         yaml.dump(config, f)
-    url = f"http://{settings["http_host"]}:{settings["http_port"]}"
+    url = f"http://{settings['http_host']}:{settings['http_port']}"
     proc = Popen([sys.executable, "-m", "service.cli", "--settings",
                  str(settings_file), "--config", str(config_file)], cwd=module_path)
 
