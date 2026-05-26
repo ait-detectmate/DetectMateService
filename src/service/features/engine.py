@@ -110,7 +110,9 @@ class Engine(ABC):
         self._engine_socket_factory: EngineSocketFactory = (
             socket_factory if socket_factory is not None else NngPairSocketFactory()
         )
-        self._pair_sock = self._engine_socket_factory.create(addr, self.log)
+        self._pair_sock = self._engine_socket_factory.create(
+            addr, self.log, tls_config=self.settings.tls_input
+        )
         self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
 
         # set up output sockets for multiple destinations
@@ -149,6 +151,22 @@ class Engine(ABC):
                 # Set buffer sizes to 0 to minimize buffering and drop messages if peer not ready
                 sock.send_buffer_size = 0
                 sock.recv_buffer_size = 0
+
+                if addr_str.startswith("tls+tcp://"):
+                    tls_out = self.settings.tls_output
+                    # model_validator should catch this actuallyat startup
+                    if tls_out is None:
+                        sock.close()
+                        raise ValueError(
+                            f"Output address {addr_str} uses tls+tcp:// but tls_output "
+                            "is not configured. Add a tls_output block with ca_file."
+                        )
+                    cfg = pynng.TLSConfig(
+                        pynng.TLSConfig.MODE_CLIENT,
+                        ca_files=str(tls_out.ca_file),
+                        server_name=tls_out.server_name,
+                    )
+                    sock.tls_config = cfg
 
                 # Non-blocking dial: returns immediately, connects in background
                 sock.dial(addr_str, block=False)
