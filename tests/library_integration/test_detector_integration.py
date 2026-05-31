@@ -163,7 +163,8 @@ class TestDetectorServiceViaEngine:
     def test_consecutive_messages_with_mixed_results(
         self, running_detector_service: dict, test_parser_messages: list
     ) -> None:
-        """Test consecutive messages tracking both detections and non-detections."""
+        """Test consecutive messages tracking both detections and non-
+        detections."""
         engine_addr = running_detector_service["engine_addr"]
         detection_count = 0
         no_detection_count = 0
