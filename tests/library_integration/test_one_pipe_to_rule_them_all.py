@@ -21,6 +21,9 @@ from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
 pytest_plugins = ["library_integration_base_fixtures"]
 
 
+# TODO: these tests are not working any more! readers are deprecated!
+
+
 @pytest.fixture(scope="function")
 def running_pipeline_services(tmp_path: Path, test_log_file: Path) -> Generator[dict, None, None]:
     """Start all three services (Reader, Parser, Detector) with test
@@ -56,8 +59,8 @@ def running_pipeline_services(tmp_path: Path, test_log_file: Path) -> Generator[
 
     # Parser settings
     parser_settings = {
-        "component_type": "parsers.dummy_parser.DummyParser",
-        "component_config_class": "parsers.dummy_parser.DummyParserConfig",
+        "component_type": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParser",
+        "component_config_class": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": "8020",
@@ -72,8 +75,8 @@ def running_pipeline_services(tmp_path: Path, test_log_file: Path) -> Generator[
 
     # Detector settings
     detector_settings = {
-        "component_type": "detectors.dummy_detector.DummyDetector",
-        "component_config_class": "detectors.dummy_detector.DummyDetectorConfig",
+        "component_type": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetector",
+        "component_config_class": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": "8030",
