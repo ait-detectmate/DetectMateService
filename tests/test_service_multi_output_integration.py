@@ -312,7 +312,8 @@ class TestServiceMultiOutputStressTests:
         num_messages = 100
         for i in range(num_messages):
             sender.send(f"msg {i}".encode())
+            time.sleep(0.005)
 
         for receiver in receivers:
-            for i in range(num_messages):
-                assert receiver.recv() == f"msg {i}".encode()
+            received = [receiver.recv() for _ in range(num_messages)]
+            assert received == [f"msg {i}".encode() for i in range(num_messages)]
