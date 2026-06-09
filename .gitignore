@@ -200,5 +200,3 @@ logs/
 container/run/
 container/logs/
 container/fluentlogs/
-
-uv.lock
