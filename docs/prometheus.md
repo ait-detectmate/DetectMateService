@@ -100,5 +100,7 @@ The Docker Compose stack includes a Grafana instance pre-configured with Prometh
 
 To explore DetectMate metrics, open "Drilldown" and select "Metrics". Filter by the `detectmate` job or search for any of the metric names listed above.
 
+A **DetectMateService Overview** dashboard is provisioned automatically from `container/grafana/dashboards/detectmate.json` 
+
 !!! note
     If you connect your own Grafana to a standalone Prometheus, add a Prometheus datasource pointing to `http://<prometheus-host>:9090`.
