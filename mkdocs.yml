@@ -12,6 +12,7 @@ nav:
     - Usage:
       - Quick Start: usage.md
       - Using a Library Component: library.md
+      - Monitoring with Prometheus: prometheus.md
     - Contribution: contribution.md
     - Development:
       - Overview: development.md
