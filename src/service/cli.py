@@ -44,7 +44,9 @@ def main() -> None:
     if args.settings and args.settings.exists():
         settings = ServiceSettings.from_yaml(args.settings)
     else:
-        settings = ServiceSettings()
+        logger.error("Settings path must be defined.")
+        parser.print_help()
+        sys.exit(1)
 
     if args.config:
         settings.config_file = args.config
