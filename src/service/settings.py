@@ -61,6 +61,7 @@ class ServiceSettings(BaseSettings):
     engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
     engine_autostart: bool = True
     engine_recv_timeout: int = 100  # milliseconds
+    engine_retry_count: int = 10
 
     # Output addresses (strongly typed URLs)
     out_addr: List[NngAddr] = Field(default_factory=list)
