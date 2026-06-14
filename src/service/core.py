@@ -154,7 +154,7 @@ class Service(Engine, ABC):
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
         if not hasattr(self, "component_type"):
-            self.component_type = None
+            self.component_type = "core"
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
