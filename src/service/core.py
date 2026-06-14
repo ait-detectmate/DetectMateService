@@ -153,6 +153,8 @@ class Service(Engine, ABC):
 
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
+        if not hasattr(self, "component_type"):
+            self.component_type = None
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
@@ -225,16 +227,18 @@ class Service(Engine, ABC):
         else:
             self.log.info("Engine idle. Awaiting /admin/start")
 
-        # 3. Wait for the global shutdown event
-        self._service_exit_event.wait()
-
-        # 4. Final teardown
-        if self.web_server:
-            self.web_server.stop()
-        if getattr(self, "_running", False):
-            self.stop()  # This calls the Service.stop which calls Engine.stop
-        else:
-            self.log.debug("Engine already stopped")
+        try:
+            # 3. Wait for the global shutdown event
+            while not self._service_exit_event.wait(timeout=1):
+                pass
+        except KeyboardInterrupt:
+            # 4. Final teardown
+            if self.web_server:
+                self.web_server.stop()
+            if getattr(self, "_running", False):
+                self.stop()  # This calls the Service.stop which calls Engine.stop
+            else:
+                self.log.debug("Engine already stopped")
 
     def start(self) -> str:
         """Expose engine start as a command."""
