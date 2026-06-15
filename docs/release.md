@@ -6,6 +6,13 @@ This document describes the steps to publish a new release of `DetectMateService
 
 Dependency updates via Dependabot do not require a full release. If only Dependabot PRs are pending and no feature work needs to go out, merge them into `main` and then merge `main` back into `development` to keep both branches in sync.
 
+To merge `main` into `development` using the GitHub UI:
+
+1. Go to the repository on GitHub and click **Pull requests**, then **New pull request**.
+2. Set the **base** branch to `development` and the **compare** branch to `main`.
+3. Click **Create pull request**, add a short title (e.g. `Merge main into development`), and submit.
+4. Once CI passes, merge the PR.
+
 ## Prerequisites
 
 Before starting a release, make sure all work intended for this version has been merged into the `development` branch and that CI is passing.
