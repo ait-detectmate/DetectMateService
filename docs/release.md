@@ -24,9 +24,9 @@ Open a pull request to merge the `development` branch into `main`. Once CI passe
 
 `DetectMateService` follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`):
 
-- **Patch** (`0.3.x`): backwards-compatible bug fixes and small improvements.
-- **Minor** (`0.x.0`): new backwards-compatible functionality. Reset the patch number to `0`.
-- **Major** (`x.0.0`): incompatible API changes. Reset both minor and patch numbers to `0`.
+- **Patch** (`0.3.x`): bug fixes, updates/correction to documentation and dependabot updates.
+- **Minor** (`0.x.0`): new features and backwards-compatible functionality. No breaking changes. Reset the patch number to `0`.
+- **Major** (`x.0.0`): breaking changes. Reset both minor and patch numbers to `0`.
 
 ### 4. Bump the version number
 
