@@ -2,6 +2,10 @@
 
 This document describes the steps to publish a new release of `DetectMateService`.
 
+## Keeping dependencies up to date
+
+Dependency updates via Dependabot do not require a full release. If only Dependabot PRs are pending and no feature work needs to go out, merge them into `main` and then merge `main` back into `development` to keep both branches in sync.
+
 ## Prerequisites
 
 Before starting a release, make sure all work intended for this version has been merged into the `development` branch and that CI is passing.
