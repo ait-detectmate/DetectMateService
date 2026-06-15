@@ -77,4 +77,6 @@ git checkout -b development
 git push -u origin development
 ```
 
+OR use the github UI to create a new development branch branching from the now-updated `main`
+
 The `development` branch is now ready for the next iteration of work.
