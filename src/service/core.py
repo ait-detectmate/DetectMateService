@@ -5,11 +5,10 @@ from abc import ABC
 from pathlib import Path
 import threading
 import json
+import signal
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
-
 from pydantic import BaseModel
-
 from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
@@ -215,6 +214,8 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
+        signal.signal(signal.SIGINT, lambda s, f: self._service_exit_event.set())
+        signal.signal(signal.SIGTERM, lambda s, f: self._service_exit_event.set())
         # 1. Start Web Server (Admin API)
         if self.web_server:
             self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
@@ -228,18 +229,16 @@ class Service(Engine, ABC):
         else:
             self.log.info("Engine idle. Awaiting /admin/start")
 
-        try:
-            # 3. Wait for the global shutdown event
-            while not self._service_exit_event.wait(timeout=1):
-                pass
-        except KeyboardInterrupt:
-            # 4. Final teardown
-            if self.web_server:
-                self.web_server.stop()
-            if getattr(self, "_running", False):
-                self.stop()  # This calls the Service.stop which calls Engine.stop
-            else:
-                self.log.debug("Engine already stopped")
+        # 3. Wait for the global shutdown event
+        self._service_exit_event.wait()
+
+        # 4. Final teardown
+        if self.web_server:
+            self.web_server.stop()
+        if getattr(self, "_running", False):
+            self.stop()  # This calls the Service.stop which calls Engine.stop
+        else:
+            self.log.debug("Engine already stopped")
 
     def start(self) -> str:
         """Expose engine start as a command."""
