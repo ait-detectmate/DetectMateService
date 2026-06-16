@@ -1,12 +1,14 @@
 import argparse
 import logging
 import sys
+import os
 from pathlib import Path
-
 from .settings import ServiceSettings
 from .core import Service
 
 logger = logging.getLogger(__name__)
+DEFAULT_SETTINGS_FILES = ["./settings", "/etc/detectmate/settings"]
+DEFAULT_SETTINGS_EXTENSIONS = [".yml", ".yaml", ".YML", ".YAML"]
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -41,12 +43,27 @@ def main() -> None:
     args = parser.parse_args()
 
     # Load settings
-    if args.settings and args.settings.exists():
-        settings = ServiceSettings.from_yaml(args.settings)
-    else:
-        logger.error("Settings path must be defined.")
-        parser.print_help()
-        sys.exit(1)
+    if not args.settings:
+        for file in DEFAULT_SETTINGS_FILES:
+            for ext in DEFAULT_SETTINGS_EXTENSIONS:
+                settings_file = file + ext
+                if os.path.exists(settings_file):
+                    logger.info(f"No --settings provided, using discovered config: {settings_file}")
+                    args.settings = Path(settings_file)
+                    break
+            if args.settings:
+                break
+        if not args.settings:
+            logger.error(
+                f"No --settings provided and none of the default settings paths {DEFAULT_SETTINGS_FILES} "
+                f"with the extensions {DEFAULT_SETTINGS_EXTENSIONS} exists. Settings path must be defined "
+                f"using the --settings argument.")
+            parser.print_help()
+            exit(1)
+    if not args.settings.exists():
+        logger.error(f"Settings path {args.settings} does not exist.")
+        exit(1)
+    settings = ServiceSettings.from_yaml(args.settings)
 
     if args.config:
         settings.config_file = args.config

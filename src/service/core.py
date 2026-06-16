@@ -95,7 +95,7 @@ class Service(Engine, ABC):
             settings.component_type = resolved_type
 
             # Keep self.component_type in sync with the resolved full path
-            if not hasattr(self.__class__, 'component_type'):
+            if not hasattr(self, 'component_type'):
                 self.component_type = resolved_type
 
             # Now build the logger (which uses component_type)
@@ -153,6 +153,9 @@ class Service(Engine, ABC):
 
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
+        if not hasattr(self, 'component_type'):
+            self.log.error("self.component_type not defined. There could be an error in the settings file.")
+            exit(1)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
