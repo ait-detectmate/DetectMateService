@@ -34,8 +34,7 @@ def create_settings(ipc_paths, out_addrs=None, port=8001, **kwargs):
         "http_host": "127.0.0.1",
         "http_port": port,
         "out_addr": out_addrs or [],
-        "engine_autostart": True,
-        "engine_retry_count": 10
+        "engine_autostart": True
     }
     defaults.update(kwargs)
     return ServiceSettings(**defaults)
