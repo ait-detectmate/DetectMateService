@@ -1,6 +1,5 @@
 from __future__ import annotations
 import logging
-import signal
 import sys
 from abc import ABC
 from pathlib import Path
@@ -75,7 +74,7 @@ class Service(Engine, ABC):
         # Prepare attributes & logger first
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
-        self._service_exit_event: threading.Event = threading.Event()
+        self.service_exit_event: threading.Event = threading.Event()
         self.web_server = None
         self.web_server = WebServer(self)
 
@@ -214,8 +213,6 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
-        signal.signal(signal.SIGINT, lambda s, f: self._service_exit_event.set())
-        signal.signal(signal.SIGTERM, lambda s, f: self._service_exit_event.set())
         # 1. Start Web Server (Admin API)
         if self.web_server:
             self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
@@ -230,7 +227,7 @@ class Service(Engine, ABC):
             self.log.info("Engine idle. Awaiting /admin/start")
 
         # 3. Wait for the global shutdown event
-        self._service_exit_event.wait()
+        self.service_exit_event.wait()
 
         # 4. Final teardown
         if self.web_server:
@@ -351,7 +348,7 @@ class Service(Engine, ABC):
     def shutdown(self) -> str:
         """Stops everything and exits the process."""
         self.log.info("Process shutdown initiated.")
-        self._service_exit_event.set()
+        self.service_exit_event.set()
         return "Service is shutting down..."
 
     # helpers
@@ -435,6 +432,6 @@ class Service(Engine, ABC):
             _exc_val: BaseException | None,
             _exc_tb: TracebackType | None
     ) -> Literal[False]:
-        if not self._service_exit_event.is_set():  # only stop if not already stopped
+        if not self.service_exit_event.is_set():  # only stop if not already stopped
             self.shutdown()  # shut down gracefully  # close REP socket & thread
         return False  # propagate exceptions

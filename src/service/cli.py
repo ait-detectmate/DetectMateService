@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 import os
+import signal
 from pathlib import Path
 from .settings import ServiceSettings
 from .core import Service
@@ -71,6 +72,8 @@ def main() -> None:
     # Initialize and run
     # Note: Service now inherits from Service, not CLIService
     service = Service(settings=settings)
+    signal.signal(signal.SIGINT, lambda s, f: service.service_exit_event.set())
+    signal.signal(signal.SIGTERM, lambda s, f: service.service_exit_event.set())
 
     try:
         with service:
