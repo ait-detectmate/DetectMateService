@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import signal
 import sys
 from abc import ABC
 from pathlib import Path
@@ -213,6 +214,8 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
+        signal.signal(signal.SIGINT, lambda s, f: self._service_exit_event.set())
+        signal.signal(signal.SIGTERM, lambda s, f: self._service_exit_event.set())
         # 1. Start Web Server (Admin API)
         if self.web_server:
             self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
