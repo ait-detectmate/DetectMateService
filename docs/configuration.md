@@ -110,3 +110,65 @@ The service provides a REST API for runtime management and monitoring.
 | `POST` | `/admin/stop` | Stops the data processing engine thread. |
 | `POST` | `/admin/reconfigure` | Updates component parameters dynamically. |
 | `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |
+
+### Persistency Endpoints
+
+These endpoints are available when the loaded library component has persistency configured (via the `persist` block in its component config).
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/admin/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
+| `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
+| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. |
+
+Both `POST` endpoints return `404` if no library component is loaded or if `persist` is not configured in the component config.
+
+#### `/admin/persistency/status` response
+
+```json
+{
+  "path": "/state/NewValueDetector",
+  "save_interval_seconds": 300,
+  "events_until_save": null,
+  "auto_load": false,
+  "events_seen_count": 12,
+  "events_with_data_count": 8,
+  "events_since_save": 47,
+  "last_saved_at": "2026-06-16T10:30:00+00:00"
+}
+```
+
+| Field | Description |
+| :--- | :--- |
+| `path` | Storage path (local or remote fsspec URL) where state files are written. |
+| `save_interval_seconds` | Background timer interval between automatic saves. |
+| `events_until_save` | If set, a save is also triggered after this many ingested events. `null` means disabled. |
+| `auto_load` | Whether the component loaded its previous state automatically on startup. |
+| `events_seen_count` | Total number of distinct event types observed since the last load. |
+| `events_with_data_count` | Number of event types that have extracted variable data stored. |
+| `events_since_save` | Events ingested since the last successful save. |
+| `last_saved_at` | UTC timestamp of the last successful save, or `null` if no save has occurred yet. |
+
+### Persistency component configuration
+
+Persistency for detector components is enabled through the `persist` block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.
+
+```yaml
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    persist:
+      path: ./state          # Directory to store state files (supports fsspec URLs)
+      interval_seconds: 300  # Save every 5 minutes (default)
+      events_until_save: 1000  # Also save after every 1000 ingested events (optional)
+      auto_load: true        # Restore previous state on startup (default: false)
+      storage_options: {}    # Extra options passed to fsspec (e.g. S3 credentials)
+```
+
+| Field | Default | Description |
+| :--- | :--- | :--- |
+| `path` | `./state` | Where to write state files. Accepts any fsspec-compatible URL (`s3://`, `gs://`, local path, etc.). The component name is appended automatically. |
+| `interval_seconds` | `300` | Seconds between background saves. |
+| `events_until_save` | `null` | If set, trigger an additional save after this many events. Combines with the timer. |
+| `auto_load` | `false` | If `true`, the component restores its previous state from `path` when it starts. |
+| `storage_options` | `{}` | Passed directly to fsspec (e.g. AWS credentials, GCS project, etc.). |

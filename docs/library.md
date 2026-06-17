@@ -87,3 +87,38 @@ detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml --per
 ```
 
 **Note:** The `--persist` flag will overwrite the original parameter file specified in your service configuration with the new values.
+
+### 5. Enable state persistency
+
+Detectors accumulate learned state (observed values, variable distributions, etc.) during training. You can configure the service to automatically save this state to disk and restore it across restarts.
+
+Add a `persist` block to your component config:
+
+```yaml
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    persist:
+      path: ./state      # Where to store state files
+      interval_seconds: 300  # Auto-save every 5 minutes
+      auto_load: true    # Restore previous state on startup
+```
+
+The state is written under `{path}/{ComponentName}/` as a `metadata.json` index plus per-event data files (`.msgpack` for tracker backends, `.parquet` for dataframe backends).
+
+#### Controlling persistency at runtime
+
+Once persistency is configured, three admin endpoints become available:
+
+```bash
+# Check current state: events seen, events since last save, last save timestamp
+curl http://127.0.0.1:8000/admin/persistency/status
+
+# Force an immediate save (e.g. before a planned maintenance window)
+curl -X POST http://127.0.0.1:8000/admin/persistency/save
+
+# Restore state from disk (e.g. after rolling back to a previous snapshot)
+curl -X POST http://127.0.0.1:8000/admin/persistency/load
+```
+
+> **Warning:** `/admin/persistency/load` replaces the current in-memory state immediately. If the engine is actively processing data, consider stopping it first with `/admin/stop`, loading, then restarting with `/admin/start`.
