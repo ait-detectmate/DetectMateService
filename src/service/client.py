@@ -8,6 +8,8 @@ import requests
 
 class DetectMateClient:
     def __init__(self, base_url: str):
+        if not base_url.startswith(("http://", "https://")):
+            base_url = f"http://{base_url}"
         self.base_url = base_url.rstrip('/')
         self.timeout: int = 10
 
@@ -69,6 +71,32 @@ class DetectMateClient:
         except yaml.YAMLError as e:
             print(f"Error parsing YAML: {e}")
 
+    def persistency_status(self) -> None:
+        response = requests.get(f"{self.base_url}/admin/persistency/status", timeout=self.timeout)
+        self._handle_response(response)
+
+    def persistency_save(self) -> None:
+        print(f"Sending PERSISTENCY SAVE to {self.base_url}...")
+        response = requests.post(f"{self.base_url}/admin/persistency/save", timeout=self.timeout)
+        self._handle_response(response)
+
+    def persistency_load(self) -> None:
+        print(f"Sending PERSISTENCY LOAD to {self.base_url}...")
+        response = requests.post(f"{self.base_url}/admin/persistency/load", timeout=self.timeout)
+        self._handle_response(response)
+
+    def training_get_state(self) -> None:
+        response = requests.get(f"{self.base_url}/admin/training/state", timeout=self.timeout)
+        self._handle_response(response)
+
+    def training_set_state(self, state: str) -> None:
+        print(f"Sending TRAINING STATE '{state}' to {self.base_url}...")
+        response = requests.post(
+            f"{self.base_url}/admin/training/state", timeout=self.timeout,
+            json={"state": state}
+        )
+        self._handle_response(response)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -103,6 +131,20 @@ def main() -> None:
         help="Persist changes to the service's config file"
     )
 
+    # Persistency
+    subparsers.add_parser("persistency-status", help="Show persistency config, counters, and last save time")
+    subparsers.add_parser("persistency-save", help="Force an immediate save of learned state to storage")
+    subparsers.add_parser("persistency-load", help="Restore learned state from storage")
+
+    # Training state
+    subparsers.add_parser("training-get-state", help="Get current training/configure phase state")
+    ts = subparsers.add_parser("training-set-state", help="Override training or configure phase")
+    ts.add_argument(
+        "state",
+        choices=["keep_training", "stop_training", "keep_configuring", "stop_configuring"],
+        help="State to set"
+    )
+
     args = parser.parse_args()
     client = DetectMateClient(args.url)
 
@@ -116,6 +158,16 @@ def main() -> None:
         client.metrics()
     elif args.command == "reconfigure":
         client.reconfigure(args.file, args.persist)
+    elif args.command == "persistency-status":
+        client.persistency_status()
+    elif args.command == "persistency-save":
+        client.persistency_save()
+    elif args.command == "persistency-load":
+        client.persistency_load()
+    elif args.command == "training-get-state":
+        client.training_get_state()
+    elif args.command == "training-set-state":
+        client.training_set_state(args.state)
     else:
         parser.print_help()
 
