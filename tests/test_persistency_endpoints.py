@@ -119,13 +119,8 @@ class TestPersistencyStatus:
         assert body["last_saved_at"] is None
 
     def test_status_includes_last_saved_at(self, client, mock_saver):
-        mock_saver._fs.exists.return_value = True
-        mock_saver._fs.open.return_value.__enter__.return_value = MagicMock(
-            read=lambda: json.dumps({"saved_at": "2026-06-16T12:00:00+00:00"})
-        )
-
-        # simulate json.load by patching open to return a file-like with .read
         import io
+        mock_saver._fs.exists.return_value = True
         mock_saver._fs.open.return_value.__enter__.return_value = io.StringIO(
             json.dumps({"saved_at": "2026-06-16T12:00:00+00:00"})
         )
