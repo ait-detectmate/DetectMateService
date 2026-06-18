@@ -121,7 +121,7 @@ These endpoints are available when the loaded library component has persistency 
 | `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
 | `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. |
 
-Both `POST` endpoints return `404` if no library component is loaded or if `persist` is not configured in the component config.
+Both `POST` endpoints return `404` if no library component is loaded or if `persist` is not configured in the component config. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
 #### `/admin/persistency/status` response
 
@@ -148,6 +148,55 @@ Both `POST` endpoints return `404` if no library component is loaded or if `pers
 | `events_with_data_count` | Number of event types that have extracted variable data stored. |
 | `events_since_save` | Events ingested since the last successful save. |
 | `last_saved_at` | UTC timestamp of the last successful save, or `null` if no save has occurred yet. |
+
+### Training State Endpoints
+
+These endpoints control whether the library component is actively training or configuring its model. They are available whenever a library component is loaded.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/admin/training/state` | Returns the fit logic state from the last processed event. |
+| `POST` | `/admin/training/state` | Overrides the training or configuration phase. |
+
+Both endpoints return `404` if no library component is loaded. See [usage.md](usage.md#controlling-training-state) for `detectmate-client` equivalents.
+
+#### Background: training vs. configuration
+
+Each incoming event is evaluated by the component's fit logic, which decides what to do with it. There are two independent phases:
+
+- **Configure**: the component learns the structure of the data (e.g. which event types and variables exist). Runs for a fixed number of events set via `data_use_configure` in the component config.
+- **Train**: the component fits its model on the observed data. Runs for a fixed number of events set via `data_use_training`.
+
+Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.
+
+#### `POST /admin/training/state` payload
+
+```json
+{"state": "<value>"}
+```
+
+| Value | Effect |
+| :--- | :--- |
+| `keep_training` | Force training **on** indefinitely, ignoring the event count limit. |
+| `stop_training` | Force training **off** immediately, ignoring the event count limit. |
+| `keep_configuring` | Force the configure phase **on** indefinitely. |
+| `stop_configuring` | Force the configure phase **off** immediately. |
+
+Any other value is rejected with `422 Unprocessable Entity`.
+
+#### `GET /admin/training/state` response
+
+```json
+{"state": "Training."}
+```
+
+The `state` field reflects what the component did with the most recently processed event:
+
+| Value | Meaning |
+| :--- | :--- |
+| `"Training."` | Last event was used for model training. |
+| `"Configuring"` | Last event was used for the configure phase. |
+| `"Default"` | Neither,  the component is in inference-only mode. |
 
 ### Persistency component configuration
 
