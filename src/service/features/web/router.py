@@ -2,7 +2,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
@@ -53,15 +53,27 @@ async def admin_shutdown(service: Any = Depends(get_service)) -> Dict[str, Any]:
     return {"message": service.shutdown()}
 
 
+class TrainingStatePayload(BaseModel):
+    state: Literal[
+        "keep_training", "stop_training", "keep_configuring", "stop_configuring"
+    ]
+
+
+def _get_component(service: Any) -> Any:
+    """Return the library component, or raise HTTPException 404."""
+    component = getattr(service, "library_component", None)
+    if component is None:
+        raise HTTPException(status_code=404, detail="No library component loaded")
+    return component
+
+
 def _get_saver(service: Any) -> Any:
     """Return the PersistencySaver from the service's library component.
 
     Raises HTTPException 404 if the component is missing or persistency
     is not configured.
     """
-    component = getattr(service, "library_component", None)
-    if component is None:
-        raise HTTPException(status_code=404, detail="No library component loaded")
+    component = _get_component(service)
     saver = getattr(component, "saver", None)
     if saver is None:
         raise HTTPException(status_code=404, detail="Persistency not configured for this component")
@@ -114,3 +126,21 @@ async def admin_persistency_status(service: Any = Depends(get_service)) -> Dict[
         "events_since_save": ep._events_since_save,
         "last_saved_at": last_saved_at,
     }
+
+
+@router.post("/training/state")  # type: ignore[misc]
+async def admin_training_set_state(
+    payload: TrainingStatePayload, service: Any = Depends(get_service)
+) -> Dict[str, Any]:
+    """Override the fit logic training/configuration state on the library
+    component."""
+    component = _get_component(service)
+    component.update_state(payload.state)
+    return {"message": f"state updated to: {payload.state}"}
+
+
+@router.get("/training/state")  # type: ignore[misc]
+async def admin_training_get_state(service: Any = Depends(get_service)) -> Dict[str, Any]:
+    """Return the fit logic state from the last processed message."""
+    component = _get_component(service)
+    return {"state": component.get_state()}
