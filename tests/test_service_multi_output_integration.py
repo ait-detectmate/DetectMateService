@@ -34,7 +34,7 @@ def create_settings(ipc_paths, out_addrs=None, port=8001, **kwargs):
         "http_host": "127.0.0.1",
         "http_port": port,
         "out_addr": out_addrs or [],
-        "engine_autostart": True,
+        "engine_autostart": True
     }
     defaults.update(kwargs)
     return ServiceSettings(**defaults)
@@ -312,8 +312,7 @@ class TestServiceMultiOutputStressTests:
         num_messages = 100
         for i in range(num_messages):
             sender.send(f"msg {i}".encode())
-            time.sleep(0.005)
 
         for receiver in receivers:
-            received = [receiver.recv() for _ in range(num_messages)]
-            assert received == [f"msg {i}".encode() for i in range(num_messages)]
+            for i in range(num_messages):
+                assert receiver.recv() == f"msg {i}".encode()
