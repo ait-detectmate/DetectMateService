@@ -86,6 +86,11 @@ async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[st
 @router.post("/persistency/load")  # type: ignore[misc]
 async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Restore state from storage, replacing current in-memory state."""
+    if getattr(service, "_running", False):
+        raise HTTPException(
+            status_code=409,
+            detail="Stop the engine before loading state (/admin/stop)",
+        )
     saver = _get_saver(service)
     try:
         saver.load()

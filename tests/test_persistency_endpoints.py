@@ -35,6 +35,7 @@ def mock_saver():
 @pytest.fixture
 def service_with_saver(mock_saver):
     svc = MagicMock()
+    svc._running = False
     svc.library_component = MagicMock()
     svc.library_component.saver = mock_saver
     return svc
@@ -92,8 +93,19 @@ class TestPersistencyLoad:
         assert resp.status_code == 404
         assert "metadata.json missing" in resp.json()["detail"]
 
+    def test_load_rejected_when_engine_running(self, app):
+        svc = MagicMock()
+        svc._running = True
+        app.dependency_overrides[get_service] = lambda: svc
+        c = TestClient(app)
+        resp = c.post("/admin/persistency/load")
+        assert resp.status_code == 409
+        assert "/admin/stop" in resp.json()["detail"]
+        app.dependency_overrides.clear()
+
     def test_load_no_library_component(self, app):
         svc = MagicMock()
+        svc._running = False
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
