@@ -1,4 +1,3 @@
-import json
 import pytest
 from unittest.mock import MagicMock
 from fastapi import FastAPI
@@ -6,6 +5,17 @@ from fastapi.testclient import TestClient
 
 from service.features.web.router import router, get_service
 from detectmatelibrary.utils.persistency import PersistencyLoadError
+
+_STATUS_RESPONSE = {
+    "path": "/state/detector",
+    "save_interval_seconds": 300,
+    "events_until_save": None,
+    "auto_load": False,
+    "events_seen_count": 3,
+    "events_with_data_count": 2,
+    "events_since_save": 42,
+    "last_saved_at": None,
+}
 
 
 @pytest.fixture
@@ -18,17 +28,7 @@ def app():
 @pytest.fixture
 def mock_saver():
     saver = MagicMock()
-    saver._config.path = "/state/detector"
-    saver._config.save_interval_seconds = 300
-    saver._config.events_until_save = None
-    saver._config.auto_load = False
-    saver._root = "/state/detector"
-    saver._fs = MagicMock()
-    saver._fs.exists.return_value = False
-    saver._persistency = MagicMock()
-    saver._persistency.get_events_seen.return_value = {1, 2, 3}
-    saver._persistency.get_events_data.return_value = {1: MagicMock(), 2: MagicMock()}
-    saver._persistency._events_since_save = 42
+    saver.get_status.return_value = _STATUS_RESPONSE
     return saver
 
 
@@ -105,37 +105,11 @@ class TestPersistencyLoad:
 # ---------- /admin/persistency/status ----------
 
 class TestPersistencyStatus:
-    def test_status_ok(self, client):
+    def test_status_ok(self, client, mock_saver):
         resp = client.get("/admin/persistency/status")
         assert resp.status_code == 200
-        body = resp.json()
-        assert body["path"] == "/state/detector"
-        assert body["save_interval_seconds"] == 300
-        assert body["events_until_save"] is None
-        assert body["auto_load"] is False
-        assert body["events_seen_count"] == 3
-        assert body["events_with_data_count"] == 2
-        assert body["events_since_save"] == 42
-        assert body["last_saved_at"] is None
-
-    def test_status_includes_last_saved_at(self, client, mock_saver):
-        import io
-        mock_saver._fs.exists.return_value = True
-        mock_saver._fs.open.return_value.__enter__.return_value = io.StringIO(
-            json.dumps({"saved_at": "2026-06-16T12:00:00+00:00"})
-        )
-
-        resp = client.get("/admin/persistency/status")
-        assert resp.status_code == 200
-        assert resp.json()["last_saved_at"] == "2026-06-16T12:00:00+00:00"
-
-    def test_status_metadata_read_error_is_tolerated(self, client, mock_saver):
-        mock_saver._fs.exists.return_value = True
-        mock_saver._fs.open.side_effect = OSError("disk error")
-        resp = client.get("/admin/persistency/status")
-        # should still return 200 with last_saved_at=None
-        assert resp.status_code == 200
-        assert resp.json()["last_saved_at"] is None
+        assert resp.json() == _STATUS_RESPONSE
+        mock_saver.get_status.assert_called_once()
 
     def test_status_no_library_component(self, app):
         svc = MagicMock()

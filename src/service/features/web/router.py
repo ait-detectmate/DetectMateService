@@ -1,13 +1,8 @@
-import json
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, Literal, cast
 from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
-
-_log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin")
 
@@ -101,31 +96,7 @@ async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[st
 
 @router.get("/persistency/status")  # type: ignore[misc]
 async def admin_persistency_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
-    """Return current persistency state: config, in-memory counters, and last
-    save timestamp (read from metadata.json if present)."""
-    saver = _get_saver(service)
-    ep = saver._persistency
-
-    last_saved_at: Optional[str] = None
-    try:
-        meta_path = f"{saver._root}/metadata.json"
-        if saver._fs.exists(meta_path):
-            with saver._fs.open(meta_path, "r") as f:
-                meta = json.load(f)
-            last_saved_at = meta.get("saved_at")
-    except Exception as e:
-        _log.warning("persistency/status: could not read metadata.json — %s", e)
-
-    return {
-        "path": saver._config.path,
-        "save_interval_seconds": saver._config.save_interval_seconds,
-        "events_until_save": saver._config.events_until_save,
-        "auto_load": saver._config.auto_load,
-        "events_seen_count": len(ep.get_events_seen()),
-        "events_with_data_count": len(ep.get_events_data()),
-        "events_since_save": ep._events_since_save,
-        "last_saved_at": last_saved_at,
-    }
+    return cast(Dict[str, Any], _get_saver(service).get_status())
 
 
 @router.post("/training/state")  # type: ignore[misc]
