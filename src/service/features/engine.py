@@ -1,6 +1,7 @@
 import threading
 import pynng
 import logging
+import time
 from abc import ABC
 from typing import Optional, List, Protocol
 from prometheus_client import Counter
@@ -149,12 +150,12 @@ class Engine(ABC):
                 sock.dial_timeout = self.settings.out_dial_timeout
 
                 # Set buffer sizes to 0 to minimize buffering and drop messages if peer not ready
-                sock.send_buffer_size = 0
-                sock.recv_buffer_size = 0
+                sock.send_buffer_size = self.settings.engine_buffer_size
+                sock.recv_buffer_size = self.settings.engine_buffer_size
 
                 if addr_str.startswith("tls+tcp://"):
                     tls_out = self.settings.tls_output
-                    # model_validator should catch this actuallyat startup
+                    # model_validator should catch this actually at startup
                     if tls_out is None:
                         sock.close()
                         raise ValueError(
@@ -277,22 +278,27 @@ class Engine(ABC):
 
         any_sent = False
         for i, sock in enumerate(self._out_sockets):
-            try:
-                self.log.debug(f"Engine: Sending {len(data)} bytes to output socket {i}")
-                # Non-blocking send is preferred to avoid stalling the engine loop
-                # Pair0 with block=False will raise TryAgain if the peer is disconnected
-                sock.send(data, block=False)
-                any_sent = True
-                self.log.debug(f"Engine: Send completed to output socket {i}")
-            except pynng.TryAgain:
-                data_dropped_bytes_total.labels(**labels).inc(len(data))
-                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
-                self.log.warning(f"Engine: Output socket {i} not ready or disconnected, dropping message")
-            except pynng.NNGException as e:
-                data_dropped_bytes_total.labels(**labels).inc(len(data))
-                data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
-                self.log.error(f"Engine error sending to output socket {i}: {e}")
-                continue
+            for attempt in range(self.settings.engine_retry_count):
+                try:
+                    self.log.debug(f"Engine: Sending {len(data)} bytes to output socket {i}")
+                    # Non-blocking send is preferred to avoid stalling the engine loop
+                    # Pair0 with block=False will raise TryAgain if the peer is disconnected
+                    sock.send(data, block=False)
+                    any_sent = True
+                    self.log.debug(f"Engine: Send completed to output socket {i}")
+                    break
+                except pynng.TryAgain:
+                    time.sleep(0.01)
+                    if attempt == self.settings.engine_retry_count - 1:
+                        data_dropped_bytes_total.labels(**labels).inc(len(data))
+                        data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
+                        self.log.warning(
+                            f"Engine: Output socket {i} not ready or disconnected, dropping message")
+                except pynng.NNGException as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(data))
+                    data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
+                    self.log.error(f"Engine error sending to output socket {i}: {e}")
+                    break
         return any_sent
 
     def stop(self) -> None | str:
