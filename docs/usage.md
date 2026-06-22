@@ -114,7 +114,7 @@ detectmate-client --url <http_host:http_port> persistency-save
 detectmate-client --url <http_host:http_port> persistency-load
 ```
 
-These commands return `404` if persistency is not configured for the loaded component. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
+These commands return `404` if persistency is not configured for the loaded component. `persistency-load` returns `409` if the engine is running; stop it first with `detectmate-client stop`, then load, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
 
 ## Controlling training state
 

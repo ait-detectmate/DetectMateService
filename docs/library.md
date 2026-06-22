@@ -121,7 +121,7 @@ curl -X POST http://127.0.0.1:8000/admin/persistency/save
 curl -X POST http://127.0.0.1:8000/admin/persistency/load
 ```
 
-> **Warning:** `/admin/persistency/load` replaces the current in-memory state immediately. If the engine is actively processing data, consider stopping it first with `/admin/stop`, loading, then restarting with `/admin/start`.
+> **Warning:** `/admin/persistency/load` returns `409 Conflict` if the engine is running. Stop it first with `/admin/stop`, then load, then restart with `/admin/start`. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.
 
 You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-state-persistency).
 
