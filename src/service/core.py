@@ -216,29 +216,30 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
-        # 1. Start Web Server (Admin API)
-        if self.web_server:
-            self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
-            self.web_server.start()
+        try:
+            # 1. Start Web Server (Admin API)
+            if self.web_server:
+                self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+                self.web_server.start()
 
-        # 2. Engine Start logic
-        # __init__ is 100% finished
-        if self.settings.engine_autostart:
-            self.log.info("Auto-starting engine...")
-            self.start()
-        else:
-            self.log.info("Engine idle. Awaiting /admin/start")
+            # 2. Engine Start logic
+            # __init__ is 100% finished
+            if self.settings.engine_autostart:
+                self.log.info("Auto-starting engine...")
+                self.start()
+            else:
+                self.log.info("Engine idle. Awaiting /admin/start")
 
-        # 3. Wait for the global shutdown event
-        self.service_exit_event.wait()
-
-        # 4. Final teardown
-        if self.web_server:
-            self.web_server.stop()
-        if getattr(self, "_running", False):
-            self.stop()  # This calls the Service.stop which calls Engine.stop
-        else:
-            self.log.debug("Engine already stopped")
+            # 3. Wait for the global shutdown event
+            self.service_exit_event.wait()
+        finally:
+            # 4. Final teardown
+            if self.web_server:
+                self.web_server.stop()
+            if getattr(self, "_running", False):
+                self.stop()  # This calls the Service.stop which calls Engine.stop
+            else:
+                self.log.debug("Engine already stopped")
 
     def start(self) -> str:
         """Expose engine start as a command."""
