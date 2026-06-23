@@ -125,6 +125,23 @@ curl -X POST http://127.0.0.1:8000/admin/persistency/load
 
 You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-state-persistency).
 
+#### Exporting and importing state
+
+You can download the current learned state as a portable zip archive and restore it later. TUseful for backups, moving state between environments, or seeding a new instance.
+
+```bash
+# Download the current state to a local file
+curl http://127.0.0.1:8000/admin/persistency/export -o detector_state.zip
+
+# Restore state from a previously downloaded archive
+# (stop the engine first, import returns 409 if it is running)
+curl -X POST http://127.0.0.1:8000/admin/persistency/stop
+curl -X POST http://127.0.0.1:8000/admin/persistency/import -F "file=@detector_state.zip"
+curl -X POST http://127.0.0.1:8000/admin/start
+```
+
+The archive contains `metadata.json` plus per-event data files. Import returns `422` if the file is not a valid zip or if `metadata.json` is missing.
+
 ### 6. Control training at runtime
 
 Detectors go through two phases as they process events: a **configure** phase (learning data structure) and a **train** phase (fitting the model). Both run automatically for a fixed number of events configured via `data_use_configure` and `data_use_training`. After those limits are reached, the component switches to inference-only mode.
