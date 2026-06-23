@@ -7,3 +7,7 @@ detectors:
      global_instance:  # define instance name
        header_variables:  # another level to have the same structure as "events"
          - pos: URL
+   persist:
+     path: /state
+     interval_seconds: 300
+     auto_load: false

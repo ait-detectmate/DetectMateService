@@ -119,3 +119,41 @@ To stop the service:
 ```bash
 detectmate stop --url <http_host:http_port>
 ```
+
+## Controlling state persistency
+
+When a component has persistency configured, you can manage its saved state at runtime.
+
+```bash
+# Show persistency config, event counters, and last save timestamp
+detectmate-client --url <http_host:http_port> persistency-status
+
+# Force an immediate save of learned state to storage
+detectmate-client --url <http_host:http_port> persistency-save
+
+# Restore learned state from storage (replaces current in-memory state)
+detectmate-client --url <http_host:http_port> persistency-load
+```
+
+These commands return `404` if persistency is not configured for the loaded component. `persistency-load` returns `409` if the engine is running; stop it first with `detectmate-client stop`, then load, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
+
+## Controlling training state
+
+By default a detector trains for a fixed number of events, then switches to inference-only mode. You can override this at runtime:
+
+```bash
+# Check what the component is currently doing
+detectmate-client --url <http_host:http_port> training-get-state
+
+# Freeze the model, stop training immediately
+detectmate-client --url <http_host:http_port> training-set-state stop_training
+
+# Resume training, eep updating past the configured event limit
+detectmate-client --url <http_host:http_port> training-set-state keep_training
+
+# Force the configure phase on or off
+detectmate-client --url <http_host:http_port> training-set-state keep_configuring
+detectmate-client --url <http_host:http_port> training-set-state stop_configuring
+```
+
+Valid values for `training-set-state` are `keep_training`, `stop_training`, `keep_configuring`, and `stop_configuring`. Any other value is rejected before the request is sent.
