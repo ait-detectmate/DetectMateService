@@ -77,10 +77,8 @@ def main() -> None:
 
     try:
         with service:
-            # This blocks until _stop_event.set() or KeyboardInterrupt
+            # This blocks until _stop_event.set() happens
             service.run()
-    except KeyboardInterrupt:
-        logger.info("Shutdown signal received (Ctrl+C)...")
     finally:
         logger.info("Clean exit.")
 
