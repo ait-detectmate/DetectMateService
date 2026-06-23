@@ -89,7 +89,7 @@ def main() -> None:
         overrides["config_file"] = args.config
     settings = settings.model_copy(update=overrides)
     logger.info("config file: %s", settings.config_file)
-    
+
     service = Service(settings=settings)
     signal.signal(signal.SIGINT, lambda s, f: service.service_exit_event.set())
     signal.signal(signal.SIGTERM, lambda s, f: service.service_exit_event.set())
