@@ -78,7 +78,6 @@ def main() -> None:
         settings.config_file = args.config
     logger.info("config file: %s", settings.config_file)
     # Initialize and run
-    # Note: Service now inherits from Service, not CLIService
     service = Service(settings=settings)
     signal.signal(signal.SIGINT, lambda s, f: service.service_exit_event.set())
     signal.signal(signal.SIGTERM, lambda s, f: service.service_exit_event.set())
