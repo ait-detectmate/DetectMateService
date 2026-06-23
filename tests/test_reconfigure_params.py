@@ -70,7 +70,7 @@ def test_service(temp_config_file, free_port):
         service.component_id = "test_id"
         service.component_type = "core"
         service.log = Mock()
-        service._service_exit_event = threading.Event()
+        service.service_exit_event = threading.Event()
         service.web_server = Mock()
 
         service.config_manager = ConfigManager(

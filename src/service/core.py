@@ -7,9 +7,7 @@ import threading
 import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
-
 from pydantic import BaseModel
-
 from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
@@ -76,7 +74,7 @@ class Service(Engine, ABC):
         # Prepare attributes & logger first
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
-        self._service_exit_event: threading.Event = threading.Event()
+        self.service_exit_event: threading.Event = threading.Event()
         self.web_server = None
         self.web_server = WebServer(self)
 
@@ -94,9 +92,7 @@ class Service(Engine, ABC):
             old_component_type = settings.component_type
             settings.component_type = resolved_type
 
-            # Keep self.component_type in sync with the resolved full path
-            if not hasattr(self.__class__, 'component_type'):
-                self.component_type = resolved_type
+            self.component_type = resolved_type
 
             # Now build the logger (which uses component_type)
             self.log = self._build_logger()
@@ -150,6 +146,12 @@ class Service(Engine, ABC):
             except Exception as e:
                 self.log.error(f"Failed to load component {settings.component_type}: {e}")
                 raise
+
+        if not hasattr(self, 'component_type'):
+            raise ValueError(
+                "component_type is not defined — add a 'component_type' class attribute "
+                "to the subclass or set a non-core component_type in the settings file."
+            )
 
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
@@ -212,29 +214,30 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
-        # 1. Start Web Server (Admin API)
-        if self.web_server:
-            self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
-            self.web_server.start()
+        try:
+            # 1. Start Web Server (Admin API)
+            if self.web_server:
+                self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+                self.web_server.start()
 
-        # 2. Engine Start logic
-        # __init__ is 100% finished
-        if self.settings.engine_autostart:
-            self.log.info("Auto-starting engine...")
-            self.start()
-        else:
-            self.log.info("Engine idle. Awaiting /admin/start")
+            # 2. Engine Start logic
+            # __init__ is 100% finished
+            if self.settings.engine_autostart:
+                self.log.info("Auto-starting engine...")
+                self.start()
+            else:
+                self.log.info("Engine idle. Awaiting /admin/start")
 
-        # 3. Wait for the global shutdown event
-        self._service_exit_event.wait()
-
-        # 4. Final teardown
-        if self.web_server:
-            self.web_server.stop()
-        if getattr(self, "_running", False):
-            self.stop()  # This calls the Service.stop which calls Engine.stop
-        else:
-            self.log.debug("Engine already stopped")
+            # 3. Wait for the global shutdown event
+            self.service_exit_event.wait()
+        finally:
+            # 4. Final teardown
+            if self.web_server:
+                self.web_server.stop()
+            if getattr(self, "_running", False):
+                self.stop()  # This calls the Service.stop which calls Engine.stop
+            else:
+                self.log.debug("Engine already stopped")
 
     def start(self) -> str:
         """Expose engine start as a command."""
@@ -347,7 +350,7 @@ class Service(Engine, ABC):
     def shutdown(self) -> str:
         """Stops everything and exits the process."""
         self.log.info("Process shutdown initiated.")
-        self._service_exit_event.set()
+        self.service_exit_event.set()
         return "Service is shutting down..."
 
     # helpers
@@ -431,6 +434,6 @@ class Service(Engine, ABC):
             _exc_val: BaseException | None,
             _exc_tb: TracebackType | None
     ) -> Literal[False]:
-        if not self._service_exit_event.is_set():  # only stop if not already stopped
+        if not self.service_exit_event.is_set():  # only stop if not already stopped
             self.shutdown()  # shut down gracefully  # close REP socket & thread
         return False  # propagate exceptions

@@ -200,7 +200,6 @@ class Engine(ABC):
         }
 
         while self._running and not self._stop_event.is_set():
-
             # recv phase
             try:
                 raw = self._pair_sock.recv()
