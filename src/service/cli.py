@@ -60,10 +60,10 @@ def main() -> None:
                 f"with the extensions {DEFAULT_SETTINGS_EXTENSIONS} exists. Settings path must be defined "
                 f"using the --settings argument.")
             parser.print_help()
-            exit(1)
+            sys.exit(1)
     if not args.settings.exists():
         logger.error(f"Settings path {args.settings} does not exist.")
-        exit(1)
+        sys.exit(1)
     settings = ServiceSettings.from_yaml(args.settings)
 
     if args.config:
