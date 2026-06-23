@@ -1,6 +1,8 @@
 # Configuration
 
-DetectMateService can be configured using a YAML settings file or environment variables. Environment variables take precedence over the YAML file.
+DetectMateService can be configured using a YAML settings file, environment variables, or CLI flags. The precedence order is:
+
+**CLI flags > environment variables > YAML file**
 
 ## Service settings
 
@@ -21,7 +23,7 @@ These settings control the service infrastructure.
 | `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
 | `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
 | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
-| `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine channel is started automatically.                                                      |
+| `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
 | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
 | `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
 | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
