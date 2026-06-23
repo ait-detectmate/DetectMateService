@@ -92,9 +92,7 @@ class Service(Engine, ABC):
             old_component_type = settings.component_type
             settings.component_type = resolved_type
 
-            # Keep self.component_type in sync with the resolved full path
-            if not hasattr(self, 'component_type'):
-                self.component_type = resolved_type
+            self.component_type = resolved_type
 
             # Now build the logger (which uses component_type)
             self.log = self._build_logger()
