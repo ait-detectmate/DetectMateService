@@ -49,8 +49,16 @@ def main() -> None:
             for ext in DEFAULT_SETTINGS_EXTENSIONS:
                 settings_file = file + ext
                 if os.path.exists(settings_file):
-                    logger.info(f"No --settings provided, using discovered config: {settings_file}")
-                    args.settings = Path(settings_file)
+                    resolved = Path(settings_file).resolve()
+                    if not Path(settings_file).is_absolute():
+                        logger.warning(
+                            f"No --settings provided; found config at relative path '{settings_file}' "
+                            f"(resolved to '{resolved}' from CWD '{Path.cwd()}'). "
+                            f"Set --settings explicitly to avoid loading an unintended file."
+                        )
+                    else:
+                        logger.info(f"No --settings provided, using discovered config: {settings_file}")
+                    args.settings = resolved
                     break
             if args.settings:
                 break
