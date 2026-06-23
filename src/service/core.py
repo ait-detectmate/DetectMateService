@@ -149,11 +149,14 @@ class Service(Engine, ABC):
                 self.log.error(f"Failed to load component {settings.component_type}: {e}")
                 raise
 
+        if not hasattr(self, 'component_type'):
+            raise ValueError(
+                "component_type is not defined — add a 'component_type' class attribute "
+                "to the subclass or set a non-core component_type in the settings file."
+            )
+
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
-        if not hasattr(self, 'component_type'):
-            self.log.error("self.component_type not defined. There could be an error in the settings file.")
-            exit(1)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
 
     def get_config_schema(self) -> Type[CoreConfig]:
