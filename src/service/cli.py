@@ -4,6 +4,8 @@ import sys
 import os
 import signal
 from pathlib import Path
+from typing import Any
+
 from .settings import ServiceSettings
 from .core import Service
 
@@ -40,6 +42,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="DetectMate Service Launcher")
     parser.add_argument("--settings", type=Path, help="Path to service settings YAML")
     parser.add_argument("--config", type=Path, help="Path to component config YAML")
+    parser.add_argument(
+        "--no-autostart",
+        action="store_true",
+        help="Start the service without auto-starting the engine. "
+             "Use POST /admin/start to begin processing.",
+    )
 
     args = parser.parse_args()
 
@@ -74,10 +82,14 @@ def main() -> None:
         sys.exit(1)
     settings = ServiceSettings.from_yaml(args.settings)
 
+    overrides: dict[str, Any] = {}
+    if args.no_autostart:
+        overrides["engine_autostart"] = False
     if args.config:
-        settings.config_file = args.config
+        overrides["config_file"] = args.config
+    settings = settings.model_copy(update=overrides)
     logger.info("config file: %s", settings.config_file)
-    # Initialize and run
+    
     service = Service(settings=settings)
     signal.signal(signal.SIGINT, lambda s, f: service.service_exit_event.set())
     signal.signal(signal.SIGTERM, lambda s, f: service.service_exit_event.set())

@@ -48,8 +48,29 @@ To start the service, use the `detectmate` command. You can optionally specify a
 detectmate --settings settings.yaml --config config.yaml
 ```
 
-- `--settings`: Path to the service settings YAML file.
-- `--config`: Path to the component configuration YAML file.
+| Flag | Description |
+| :--- | :--- |
+| `--settings` | Path to the service settings YAML file. |
+| `--config` | Path to the component configuration YAML file. |
+| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /admin/start` to begin processing. |
+
+## Starting in standby mode
+
+By default the engine starts automatically when the service launches. Pass `--no-autostart` to keep the engine idle on startup:
+
+```bash
+detectmate --settings settings.yaml --no-autostart
+```
+
+The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/admin/start
+```
+
+This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.
+
+The same behaviour can also be configured persistently via the settings file or environment variable - see [`engine_autostart`](configuration.md#service-settings).
 
 ## Checking status
 

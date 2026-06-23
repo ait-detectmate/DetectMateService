@@ -18,6 +18,8 @@ nav:
       - Overview: development.md
       - Library Imports: library-imports.md
       - Interfaces: interfaces.md
+  - Maintainers:
+    - Release Process: release.md
 
 
 

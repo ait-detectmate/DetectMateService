@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dynamic = ["version"]
 
 dependencies = [
-    "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git",
+    "detectmatelibrary==0.3.1",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
@@ -16,16 +16,16 @@ dependencies = [
     "types-pyyaml>=6.0.12.20260518",
     "requests>=2.34.2",
     "prometheus-client>=0.25.0",
-    "uvicorn[standard]>=0.48.0",
-    "fastapi>=0.136.1",
+    "uvicorn[standard]>=0.49.0",
+    "fastapi>=0.137.1",
     "httpx>=0.28.1",
 ]
 
 [dependency-groups]
 dev = [
     "mike>=2.2.0",
-    "prek>=0.4.3",
-    "pytest>=8.4.1",
+    "pytest>=9.1.0",
+    "prek>=0.4.5",
     "pytest-cov>=6.2.1",
     "types-requests",
 ]
