@@ -85,7 +85,7 @@ def main() -> None:
 
     try:
         with service:
-            # This blocks until _stop_event.set() happens
+            # This blocks until service_exit_event.set() happens
             service.run()
     finally:
         logger.info("Clean exit.")
