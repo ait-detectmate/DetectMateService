@@ -2,7 +2,6 @@ import logging
 import sys
 import yaml
 import pytest
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from service.cli import main
@@ -48,7 +47,8 @@ def run_main(argv: list[str]) -> ServiceSettings:
         main()
 
     assert mock_service.called, "Service() was never instantiated — main() exited early"
-    return mock_service.call_args[0][0] if mock_service.call_args[0] else mock_service.call_args[1]["settings"]
+    args, kwargs = mock_service.call_args
+    return args[0] if args else kwargs["settings"]
 
 
 def test_no_autostart_flag_overrides_yaml(settings_yaml):
