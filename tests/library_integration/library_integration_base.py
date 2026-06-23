@@ -6,6 +6,9 @@ import sys
 from subprocess import Popen, PIPE, TimeoutExpired
 
 
+AUDIT_LOG = "tests/library_integration/audit.log"
+
+
 def start_service(module_path, settings, config, settings_file, config_file):
     with open(settings_file, "w") as f:
         yaml.dump(settings, f)

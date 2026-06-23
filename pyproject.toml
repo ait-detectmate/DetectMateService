@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dynamic = ["version"]
 
 dependencies = [
-    "detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git",
+    "detectmatelibrary==0.3.1",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",

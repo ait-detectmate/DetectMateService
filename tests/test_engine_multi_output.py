@@ -405,6 +405,7 @@ def test_late_binding_output(ipc_paths, engine_manager):
             time.sleep(1.0)  # Background connection
 
             sender.send(b"msg2")
+            assert receiver.recv() == b"PROCESSED: MSG1"  # with buffer, the message still should be received.
             assert receiver.recv() == b"PROCESSED: MSG2"
 
 

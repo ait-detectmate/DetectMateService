@@ -3,9 +3,28 @@ from pathlib import Path
 from uuid import uuid5, NAMESPACE_URL
 from typing import Any, Dict, Optional, List, Annotated, Union
 import yaml
-from pydantic import ValidationError, model_validator, UrlConstraints, field_serializer, Field
+from pydantic import BaseModel, ValidationError, model_validator, UrlConstraints, field_serializer, Field
 from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class TlsInputConfig(BaseModel):
+    """TLS configuration for the input/listener socket.
+
+    Required when engine_addr uses the tls+tcp:// scheme. Supports plain
+    TLS only
+    """
+    cert_key_file: Path
+
+
+class TlsOutputConfig(BaseModel):
+    """TLS configuration for output/dialer sockets.
+
+    Required when any address in out_addr uses the tls+tcp scheme.
+    Supports plain TLS only
+    """
+    ca_file: Path               # CA cert used to verify the server certificate
+    server_name: Optional[str] = None  # SNI override when hostname differs from cert CN
 
 
 # Output address URL types
@@ -42,11 +61,17 @@ class ServiceSettings(BaseSettings):
     engine_addr: str | None = "ipc:///tmp/detectmate.engine.ipc"
     engine_autostart: bool = True
     engine_recv_timeout: int = 100  # milliseconds
+    engine_retry_count: int = Field(default=10, ge=1)
+    engine_buffer_size: int = Field(default=100, ge=0, le=8192)
 
     # Output addresses (strongly typed URLs)
     out_addr: List[NngAddr] = Field(default_factory=list)
     # timeout for output dials. Used with blocking dial in Engine
     out_dial_timeout: int = 1000  # milliseconds
+
+    # TLS configuration — required when the corresponding address uses tls+tcp://
+    tls_input: Optional[TlsInputConfig] = None
+    tls_output: Optional[TlsOutputConfig] = None
 
     # HTTP server (FastAPI) settings
     http_host: str = "127.0.0.1"
@@ -86,6 +111,24 @@ class ServiceSettings(BaseSettings):
         #    This stays the same as long as the addresses don't change.
         base = f"{self.component_type}|{self.engine_addr or ''}"
         self.component_id = self._generate_uuid_from_string(f"detectmate/{base}")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_tls_config_present(self) -> "ServiceSettings":
+        """Fail at startup if a tls+tcp address is used without the matching
+        TLS config."""
+        if self.engine_addr and self.engine_addr.startswith("tls+tcp://"):
+            if self.tls_input is None:
+                raise ValueError(
+                    "engine_addr uses tls+tcp:// but tls_input is not configured. "
+                    "Add a tls_input block with cert_key_file."
+                )
+        if any(str(addr).startswith("tls+tcp://") for addr in self.out_addr):
+            if self.tls_output is None:
+                raise ValueError(
+                    "out_addr contains a tls+tcp:// address but tls_output is not configured. "
+                    "Add a tls_output block with ca_file."
+                )
         return self
 
     @classmethod
