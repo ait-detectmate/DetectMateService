@@ -107,6 +107,9 @@ class Service(Engine, ABC):
             if not settings.component_config_class:
                 settings.component_config_class = resolved_config
 
+        if not hasattr(self, 'component_type'):
+            self.component_type = settings.component_type
+
         # Initialize config manager before loading the library component
         # so we can pass the loaded configs to the component
         self.config_manager: Optional[ConfigManager] = None
