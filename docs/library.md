@@ -127,7 +127,7 @@ You can also use `detectmate-client` instead of curl — see [usage.md](usage.md
 
 #### Exporting and importing state
 
-You can download the current learned state as a portable zip archive and restore it later. TUseful for backups, moving state between environments, or seeding a new instance.
+You can download the current learned state as a portable zip archive and restore it later. Useful for backups, moving state between environments, or seeding a new instance.
 
 ```bash
 # Download the current state to a local file
@@ -135,7 +135,7 @@ curl http://127.0.0.1:8000/admin/persistency/export -o detector_state.zip
 
 # Restore state from a previously downloaded archive
 # (stop the engine first, import returns 409 if it is running)
-curl -X POST http://127.0.0.1:8000/admin/persistency/stop
+curl -X POST http://127.0.0.1:8000/admin/stop
 curl -X POST http://127.0.0.1:8000/admin/persistency/import -F "file=@detector_state.zip"
 curl -X POST http://127.0.0.1:8000/admin/start
 ```
