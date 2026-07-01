@@ -139,7 +139,7 @@ async def admin_persistency_import(
     if not zipfile.is_zipfile(io.BytesIO(data)):
         raise HTTPException(status_code=422, detail="Uploaded file is not a valid zip archive")
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
-        if "metadata.json" not in zf.namelist():
+        if not any(name.lstrip("/") == "metadata.json" for name in zf.namelist()):
             raise HTTPException(status_code=422, detail="Invalid state archive: metadata.json not found")
     try:
         component.import_state(data)
