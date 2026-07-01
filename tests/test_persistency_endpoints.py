@@ -1,3 +1,6 @@
+import io
+import zipfile
+
 import pytest
 from unittest.mock import MagicMock
 from fastapi import FastAPI
@@ -5,6 +8,15 @@ from fastapi.testclient import TestClient
 
 from service.features.web.router import router, get_service
 from detectmatelibrary.utils.persistency import PersistencyLoadError
+
+
+def _make_zip(entries: dict) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        for name, content in entries.items():
+            zf.writestr(name, content)
+    return buf.getvalue()
+
 
 _STATUS_RESPONSE = {
     "path": "/state/detector",
@@ -129,5 +141,98 @@ class TestPersistencyStatus:
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
         resp = c.get("/admin/persistency/status")
+        assert resp.status_code == 404
+        app.dependency_overrides.clear()
+
+
+# ---------- /admin/persistency/export ----------
+
+class TestPersistencyExport:
+    def test_export_ok(self, client, service_with_saver):
+        service_with_saver.library_component.export_state.return_value = b"fake zip bytes"
+        service_with_saver.library_component.name = "MyDetector"
+        resp = client.get("/admin/persistency/export")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/zip"
+        assert 'filename="MyDetector_state.zip"' in resp.headers["content-disposition"]
+        assert resp.content == b"fake zip bytes"
+
+    def test_export_no_persistency_configured(self, client, service_with_saver):
+        service_with_saver.library_component.export_state.return_value = None
+        resp = client.get("/admin/persistency/export")
+        assert resp.status_code == 404
+        assert "Persistency not configured" in resp.json()["detail"]
+
+    def test_export_no_library_component(self, app):
+        svc = MagicMock()
+        svc.library_component = None
+        app.dependency_overrides[get_service] = lambda: svc
+        c = TestClient(app)
+        resp = c.get("/admin/persistency/export")
+        assert resp.status_code == 404
+        app.dependency_overrides.clear()
+
+
+# ---------- /admin/persistency/import ----------
+
+class TestPersistencyImport:
+    def test_import_ok(self, client, service_with_saver):
+        data = _make_zip({"metadata.json": b"{}", "events/1.msgpack": b"x"})
+        resp = client.post("/admin/persistency/import",
+                           files={"file": ("state.zip", data, "application/zip")})
+        assert resp.status_code == 200
+        assert resp.json() == {"message": "state imported"}
+        service_with_saver.library_component.import_state.assert_called_once_with(data)
+
+    def test_import_ok_with_leading_slash_metadata(self, client, service_with_saver):
+        # Guards against archives produced by library versions with the
+        # leading-slash zip-entry bug (fsspec MemoryFileSystem path handling).
+        data = _make_zip({"/metadata.json": b"{}", "/events/1.msgpack": b"x"})
+        resp = client.post("/admin/persistency/import",
+                           files={"file": ("state.zip", data, "application/zip")})
+        assert resp.status_code == 200
+        service_with_saver.library_component.import_state.assert_called_once_with(data)
+
+    def test_import_invalid_zip(self, client):
+        resp = client.post(
+            "/admin/persistency/import", files={"file": ("state.zip", b"not a zip", "application/zip")}
+        )
+        assert resp.status_code == 422
+        assert "not a valid zip archive" in resp.json()["detail"]
+
+    def test_import_missing_metadata(self, client):
+        data = _make_zip({"events/1.msgpack": b"x"})
+        resp = client.post("/admin/persistency/import",
+                           files={"file": ("state.zip", data, "application/zip")})
+        assert resp.status_code == 422
+        assert "metadata.json not found" in resp.json()["detail"]
+
+    def test_import_load_error(self, client, service_with_saver):
+        service_with_saver.library_component.import_state.side_effect = PersistencyLoadError("bad state")
+        data = _make_zip({"metadata.json": b"{}"})
+        resp = client.post("/admin/persistency/import",
+                           files={"file": ("state.zip", data, "application/zip")})
+        assert resp.status_code == 422
+        assert "bad state" in resp.json()["detail"]
+
+    def test_import_rejected_when_engine_running(self, app):
+        svc = MagicMock()
+        svc._running = True
+        app.dependency_overrides[get_service] = lambda: svc
+        c = TestClient(app)
+        data = _make_zip({"metadata.json": b"{}"})
+        resp = c.post("/admin/persistency/import", files={"file": ("state.zip", data, "application/zip")})
+        assert resp.status_code == 409
+        assert "/admin/stop" in resp.json()["detail"]
+        app.dependency_overrides.clear()
+
+    def test_import_no_library_component(self, app):
+        svc = MagicMock()
+        svc._running = False
+        svc.library_component = None
+        app.dependency_overrides[get_service] = lambda: svc
+        c = TestClient(app)
+        data = _make_zip({"metadata.json": b"{}"})
+        resp = c.post("/admin/persistency/import", files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 404
         app.dependency_overrides.clear()

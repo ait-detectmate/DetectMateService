@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+import io
+import zipfile
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from typing import Any, Dict, Literal, cast
 from pydantic import BaseModel
 
@@ -102,6 +106,46 @@ async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[st
 @router.get("/persistency/status")  # type: ignore[misc]
 async def admin_persistency_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
     return cast(Dict[str, Any], _get_saver(service).get_status())
+
+
+@router.get("/persistency/export")  # type: ignore[misc]
+async def admin_persistency_export(service: Any = Depends(get_service)) -> StreamingResponse:
+    """Stream the current learned state as a zip archive."""
+    component = _get_component(service)
+    data = component.export_state()
+    if data is None:
+        raise HTTPException(status_code=404, detail="Persistency not configured for this component")
+    name = getattr(component, "name", "state")
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{name}_state.zip"'},
+    )
+
+
+@router.post("/persistency/import")  # type: ignore[misc]
+async def admin_persistency_import(
+    service: Any = Depends(get_service),
+    file: UploadFile = File(...),
+) -> Dict[str, Any]:
+    """Restore learned state from an uploaded zip archive."""
+    if getattr(service, "_running", False):
+        raise HTTPException(
+            status_code=409,
+            detail="Stop the engine before importing state (/admin/stop)",
+        )
+    component = _get_component(service)
+    data = await file.read()
+    if not zipfile.is_zipfile(io.BytesIO(data)):
+        raise HTTPException(status_code=422, detail="Uploaded file is not a valid zip archive")
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        if not any(name.lstrip("/") == "metadata.json" for name in zf.namelist()):
+            raise HTTPException(status_code=422, detail="Invalid state archive: metadata.json not found")
+    try:
+        component.import_state(data)
+    except PersistencyLoadError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {"message": "state imported"}
 
 
 @router.post("/training/state")  # type: ignore[misc]

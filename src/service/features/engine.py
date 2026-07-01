@@ -115,6 +115,10 @@ class Engine(ABC):
             addr, self.log, tls_config=self.settings.tls_input
         )
         self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
+        # Tracks whether stop() has closed _pair_sock/_out_sockets, so start()
+        # knows whether they need recreating — distinct from _thread.is_alive(),
+        # which is also False before the very first start() call.
+        self._sockets_closed = False
 
         # set up output sockets for multiple destinations
         self._out_sockets: List[pynng.Socket] = []
@@ -184,6 +188,18 @@ class Engine(ABC):
             self._stop_event.clear()
             # RECREATE THE THREAD if it's dead or doesn't exist
             if not self._thread.is_alive():
+                if self._sockets_closed:
+                    # stop() closed _pair_sock and _out_sockets — recreate them
+                    # here, otherwise the loop spins forever calling recv() on
+                    # a dead socket.
+                    addr = str(self.settings.engine_addr)
+                    self._pair_sock = self._engine_socket_factory.create(
+                        addr, self.log, tls_config=self.settings.tls_input
+                    )
+                    self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
+                    self._out_sockets = []
+                    self._setup_output_sockets()
+                    self._sockets_closed = False
                 self._thread = threading.Thread(
                     target=self._run_loop,
                     name="EngineLoop",
@@ -334,6 +350,8 @@ class Engine(ABC):
                 self.log.debug(f"Closed output socket {i}")
             except pynng.NNGException as e:
                 self.log.error(f"Failed to close output socket {i}: {e}")
+
+        self._sockets_closed = True
 
         if self.log:
             self.log.debug("Engine stopped successfully")

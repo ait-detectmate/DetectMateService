@@ -135,7 +135,17 @@ detectmate-client --url <http_host:http_port> persistency-save
 detectmate-client --url <http_host:http_port> persistency-load
 ```
 
-These commands return `404` if persistency is not configured for the loaded component. `persistency-load` returns `409` if the engine is running; stop it first with `detectmate-client stop`, then load, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
+These commands return `404` if persistency is not configured for the loaded component. `persistency-load` and `persistency-import` return `409` if the engine is running — stop it first, then load/import, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
+
+```bash
+# Download the current learned state to a file
+detectmate-client --url <http_host:http_port> persistency-export detector_state.zip
+
+# Restore state from a previously exported archive
+detectmate-client --url <http_host:http_port> stop
+detectmate-client --url <http_host:http_port> persistency-import detector_state.zip
+detectmate-client --url <http_host:http_port> start
+```
 
 ## Controlling training state
 

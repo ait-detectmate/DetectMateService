@@ -85,6 +85,34 @@ class DetectMateClient:
         response = requests.post(f"{self.base_url}/admin/persistency/load", timeout=self.timeout)
         self._handle_response(response)
 
+    def persistency_export(self, outfile: str) -> None:
+        print(f"Exporting state from {self.base_url} to {outfile}...")
+        try:
+            response = requests.get(f"{self.base_url}/admin/persistency/export", timeout=self.timeout)
+            response.raise_for_status()
+            with open(outfile, "wb") as f:
+                f.write(response.content)
+            print(f"State saved to {outfile}")
+        except requests.exceptions.HTTPError as e:
+            print(f"Error: {e}")
+            if response.text:
+                print(f"Details: {response.text}")
+            sys.exit(1)
+
+    def persistency_import(self, filepath: str) -> None:
+        print(f"Sending PERSISTENCY IMPORT from {filepath} to {self.base_url}...")
+        try:
+            with open(filepath, "rb") as f:
+                response = requests.post(
+                    f"{self.base_url}/admin/persistency/import",
+                    files={"file": (filepath, f, "application/zip")},
+                    timeout=self.timeout,
+                )
+            self._handle_response(response)
+        except FileNotFoundError:
+            print(f"Error: File '{filepath}' not found.")
+            sys.exit(1)
+
     def training_get_state(self) -> None:
         response = requests.get(f"{self.base_url}/admin/training/state", timeout=self.timeout)
         self._handle_response(response)
@@ -135,6 +163,10 @@ def main() -> None:
     subparsers.add_parser("persistency-status", help="Show persistency config, counters, and last save time")
     subparsers.add_parser("persistency-save", help="Force an immediate save of learned state to storage")
     subparsers.add_parser("persistency-load", help="Restore learned state from storage")
+    pe = subparsers.add_parser("persistency-export", help="Download current state as a zip archive")
+    pe.add_argument("outfile", help="Path to save the downloaded state archive")
+    pi = subparsers.add_parser("persistency-import", help="Upload and restore state from a zip archive")
+    pi.add_argument("file", help="Path to the state archive to import")
 
     # Training state
     subparsers.add_parser("training-get-state", help="Get current training/configure phase state")
@@ -164,6 +196,10 @@ def main() -> None:
         client.persistency_save()
     elif args.command == "persistency-load":
         client.persistency_load()
+    elif args.command == "persistency-export":
+        client.persistency_export(args.outfile)
+    elif args.command == "persistency-import":
+        client.persistency_import(args.file)
     elif args.command == "training-get-state":
         client.training_get_state()
     elif args.command == "training-set-state":
