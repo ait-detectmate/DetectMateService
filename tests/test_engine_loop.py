@@ -47,7 +47,7 @@ def service_thread():
     yield start
 
     for service, thread in threads:
-        service._service_exit_event.set()
+        service.service_exit_event.set()
         thread.join(timeout=2.0)
 
 

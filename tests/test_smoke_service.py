@@ -115,3 +115,17 @@ def test_service_id_stability():
     )
 
     assert settings1.component_id != settings3.component_id
+
+
+def test_core_service_instantiation(tmp_path, free_port):
+    """Service with component_type=core must not raise AttributeError on
+    init."""
+    settings = ServiceSettings(
+        component_type="core",
+        engine_addr=f"ipc://{tmp_path}/core_test.ipc",
+        http_port=free_port,
+        log_level="ERROR",
+    )
+    service = Service(settings=settings)
+    assert service.component_type == "core"
+    service.stop()
