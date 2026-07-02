@@ -288,7 +288,7 @@ wheels = [
 [[package]]
 name = "detectmatelibrary"
 version = "0.3.1"
-source = { git = "https://github.com/ait-detectmate/DetectMateLibrary.git#75771e6362c902c9bd7e8181289705a2cf3eb33d" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "detectmateperformance" },
     { name = "fsspec" },
@@ -306,6 +306,10 @@ dependencies = [
     { name = "scipy" },
     { name = "tenacity" },
     { name = "tiktoken" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7d/8e/ac9ebd2d1bae9d7ab28292e938e4caa961c3a529bd99bb85683a0d7a66d8/detectmatelibrary-0.3.1.tar.gz", hash = "sha256:11df9899ef47c800d9b3212519e38d8b97b89ca70896bd85826a212daf838b95", size = 135113, upload-time = "2026-06-12T10:47:55.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/4d/bb0f2e4c2f6d45990f04510bb2d82fbf56072c8970dcafb8bae0741bf373/detectmatelibrary-0.3.1-py3-none-any.whl", hash = "sha256:6cf54a586d9184ab93c0c5bca8dc31f4444ed7b104ecf0c220be7769bf055d32", size = 201929, upload-time = "2026-06-12T10:47:53.821Z" },
 ]
 
 [[package]]
@@ -337,6 +341,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pynng" },
+    { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "types-pyyaml" },
@@ -354,7 +359,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "detectmatelibrary", git = "https://github.com/ait-detectmate/DetectMateLibrary.git" },
+    { name = "detectmatelibrary", specifier = "==0.3.1" },
     { name = "fastapi", specifier = ">=0.136.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pathlib", specifier = ">=1.0.1" },
@@ -362,6 +367,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pydantic-settings", specifier = ">=2.14.1" },
     { name = "pynng", specifier = ">=0.8.1" },
+    { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20260518" },
@@ -1396,6 +1402,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
+]
+
+[[package]]
+name = "python-multipart"
+version = "0.0.32"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/42/55c32bb9b12693c092ad250a0e82edb5b31ddeda6eb772de5f308b3804ad/python_multipart-0.0.32.tar.gz", hash = "sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e", size = 46881, upload-time = "2026-06-04T16:18:58.647Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl", hash = "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23", size = 30042, upload-time = "2026-06-04T16:18:57.319Z" },
 ]
 
 [[package]]
