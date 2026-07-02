@@ -8,6 +8,6 @@ detectors:
        header_variables:  # another level to have the same structure as "events"
          - pos: URL
    persist:
-     path: /state
+     path: /state  # absolute path inside the container; mounted from $PWD/container/state via docker-compose.yml
      interval_seconds: 300
      auto_load: false

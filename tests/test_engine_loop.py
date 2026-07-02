@@ -99,3 +99,22 @@ def test_admin_stop(comp):
     assert response.status_code == 200
     time.sleep(0.1)
     assert comp._running is False
+
+
+def test_restart_after_stop_processes_messages(comp):
+    """Regression test: start() must recreate the pair socket stop() closed,
+    otherwise the engine loop spins forever on a dead socket instead of
+    receiving messages again."""
+    admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
+
+    assert httpx.post(f"{admin_url}/admin/stop").status_code == 200
+    time.sleep(0.1)
+    assert comp._running is False
+
+    assert httpx.post(f"{admin_url}/admin/start").status_code == 200
+    time.sleep(0.1)
+    assert comp._running is True
+
+    with pair_socket(comp.settings.engine_addr) as sock:
+        sock.send(b"hello")
+        assert sock.recv() == b"olleh"

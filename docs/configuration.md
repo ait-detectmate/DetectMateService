@@ -123,9 +123,11 @@ These endpoints are available when the loaded library component has persistency 
 | :--- | :--- | :--- |
 | `GET` | `/admin/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
 | `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
-| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first, returns `409` if it is running. |
+| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first — returns `409` if it is running. |
+| `GET` | `/admin/persistency/export` | Downloads the current learned state as a zip archive. |
+| `POST` | `/admin/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first — returns `409` if it is running. |
 
-`/admin/persistency/save` and `/admin/persistency/status` return `404` if no library component is loaded or if `persist` is not configured in the component config. `/admin/persistency/load` additionally returns `409` if the engine is running. stop it first with `/admin/stop`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
+`/admin/persistency/save`, `/admin/persistency/status`, and `/admin/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/admin/persistency/load` and `/admin/persistency/import` additionally return `409` if the engine is running — stop it first with `/admin/stop`. `/admin/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
 #### `/admin/persistency/status` response
 
