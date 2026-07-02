@@ -100,6 +100,10 @@ class Engine(ABC):
         self._stop_event = threading.Event()
         self.log = logger or logging.getLogger(__name__)
 
+        # serializes start()/stop() transitions so concurrent callers can't
+        # both pass the "not running" guard and double-start/double-close
+        self._lifecycle_lock = threading.Lock()
+
         # control flags
         self._running = False
         self._thread = threading.Thread(
@@ -183,31 +187,32 @@ class Engine(ABC):
                 # We attempt to continue with other sockets rather than crashing entirely
 
     def start(self) -> str:
-        if not self._running:
-            self._running = True
-            self._stop_event.clear()
-            # RECREATE THE THREAD if it's dead or doesn't exist
-            if not self._thread.is_alive():
-                if self._sockets_closed:
-                    # stop() closed _pair_sock and _out_sockets — recreate them
-                    # here, otherwise the loop spins forever calling recv() on
-                    # a dead socket.
-                    addr = str(self.settings.engine_addr)
-                    self._pair_sock = self._engine_socket_factory.create(
-                        addr, self.log, tls_config=self.settings.tls_input
+        with self._lifecycle_lock:
+            if not self._running:
+                self._running = True
+                self._stop_event.clear()
+                # RECREATE THE THREAD if it's dead or doesn't exist
+                if not self._thread.is_alive():
+                    if self._sockets_closed:
+                        # stop() closed _pair_sock and _out_sockets — recreate them
+                        # here, otherwise the loop spins forever calling recv() on
+                        # a dead socket.
+                        addr = str(self.settings.engine_addr)
+                        self._pair_sock = self._engine_socket_factory.create(
+                            addr, self.log, tls_config=self.settings.tls_input
+                        )
+                        self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
+                        self._out_sockets = []
+                        self._setup_output_sockets()
+                        self._sockets_closed = False
+                    self._thread = threading.Thread(
+                        target=self._run_loop,
+                        name="EngineLoop",
+                        daemon=True
                     )
-                    self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
-                    self._out_sockets = []
-                    self._setup_output_sockets()
-                    self._sockets_closed = False
-                self._thread = threading.Thread(
-                    target=self._run_loop,
-                    name="EngineLoop",
-                    daemon=True
-                )
-            self._thread.start()
-            return "engine started"
-        return "engine already running"
+                self._thread.start()
+                return "engine started"
+            return "engine already running"
 
     def _run_loop(self) -> None:
         labels = {
@@ -325,36 +330,37 @@ class Engine(ABC):
         Raises:
             EngineException: If stopping fails for any reason
         """
-        if not self._running:
-            if self.log:
-                self.log.debug("Engine is not running, skipping stop")
-            return None
-        self._running = False
-        self._stop_event.set()
+        with self._lifecycle_lock:
+            if not self._running:
+                if self.log:
+                    self.log.debug("Engine is not running, skipping stop")
+                return None
+            self._running = False
+            self._stop_event.set()
 
-        # WAIT for engine loop to exit recv()
-        self._thread.join(timeout=2.0)
+            # WAIT for engine loop to exit recv()
+            self._thread.join(timeout=2.0)
 
-        if self._thread.is_alive():
-            raise EngineException("Engine thread failed to stop cleanly")
+            if self._thread.is_alive():
+                raise EngineException("Engine thread failed to stop cleanly")
 
-        # Close input socket
-        try:
-            self._pair_sock.close()
-        except pynng.NNGException as e:
-            raise EngineException(f"Failed to close engine socket: {e}") from e
-
-        # Close all output sockets
-        for i, sock in enumerate(self._out_sockets):
+            # Close input socket
             try:
-                sock.close()
-                self.log.debug(f"Closed output socket {i}")
+                self._pair_sock.close()
             except pynng.NNGException as e:
-                self.log.error(f"Failed to close output socket {i}: {e}")
+                raise EngineException(f"Failed to close engine socket: {e}") from e
 
-        self._sockets_closed = True
+            # Close all output sockets
+            for i, sock in enumerate(self._out_sockets):
+                try:
+                    sock.close()
+                    self.log.debug(f"Closed output socket {i}")
+                except pynng.NNGException as e:
+                    self.log.error(f"Failed to close output socket {i}: {e}")
 
-        if self.log:
-            self.log.debug("Engine stopped successfully")
+            self._sockets_closed = True
 
-        return None
+            if self.log:
+                self.log.debug("Engine stopped successfully")
+
+            return None
