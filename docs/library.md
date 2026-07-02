@@ -140,6 +140,21 @@ curl -X POST http://127.0.0.1:8000/admin/persistency/import -F "file=@detector_s
 curl -X POST http://127.0.0.1:8000/admin/start
 ```
 
+You can also use `detectmate-client` instead of curl:
+
+```bash
+# Download the current state to a local file
+detectmate-client --url 127.0.0.1:8000 persistency-export detector_state.zip
+
+# Restore state from a previously downloaded archive
+# (stop the engine first, import returns 409 if it is running)
+detectmate-client --url 127.0.0.1:8000 stop
+detectmate-client --url 127.0.0.1:8000 persistency-import detector_state.zip
+detectmate-client --url 127.0.0.1:8000 start
+```
+
+See [usage.md](usage.md#controlling-state-persistency) for details.
+
 The archive contains `metadata.json` plus per-event data files. Import returns `422` if the file is not a valid zip or if `metadata.json` is missing.
 
 ### 6. Control training at runtime
