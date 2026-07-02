@@ -3,6 +3,7 @@ import pynng
 import logging
 import time
 from abc import ABC
+from enum import Enum, auto
 from typing import Optional, List, Protocol
 from prometheus_client import Counter
 from service.settings import ServiceSettings
@@ -58,6 +59,18 @@ class EngineException(Exception):
     """Custom exception for engine-related errors."""
 
 
+class EngineState(Enum):
+    """Lifecycle state of an Engine, transitioned only under _lifecycle_lock.
+
+    READY   - sockets open, no loop thread running (initial state)
+    RUNNING - loop thread active, processing messages
+    STOPPED - stop() has closed the sockets; start() must recreate them
+    """
+    READY = auto()
+    RUNNING = auto()
+    STOPPED = auto()
+
+
 class Processor(Protocol):
     """Protocol defining the interface for message processors.
 
@@ -97,18 +110,15 @@ class Engine(ABC):
             )
 
         self.processor = processor
-        self._stop_event = threading.Event()
         self.log = logger or logging.getLogger(__name__)
 
         # serializes start()/stop() transitions so concurrent callers can't
         # both pass the "not running" guard and double-start/double-close
         self._lifecycle_lock = threading.Lock()
 
-        # control flags
-        self._running = False
-        self._thread = threading.Thread(
-            target=self._run_loop, name="EngineLoop", daemon=True
-        )
+        self._state = EngineState.READY
+        # created fresh on every start(); no thread exists until then
+        self._thread: Optional[threading.Thread] = None
 
         # set up the engine socket via the factory abstraction
         addr = str(self.settings.engine_addr)
@@ -119,10 +129,6 @@ class Engine(ABC):
             addr, self.log, tls_config=self.settings.tls_input
         )
         self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
-        # Tracks whether stop() has closed _pair_sock/_out_sockets, so start()
-        # knows whether they need recreating — distinct from _thread.is_alive(),
-        # which is also False before the very first start() call.
-        self._sockets_closed = False
 
         # set up output sockets for multiple destinations
         self._out_sockets: List[pynng.Socket] = []
@@ -188,31 +194,29 @@ class Engine(ABC):
 
     def start(self) -> str:
         with self._lifecycle_lock:
-            if not self._running:
-                self._running = True
-                self._stop_event.clear()
-                # RECREATE THE THREAD if it's dead or doesn't exist
-                if not self._thread.is_alive():
-                    if self._sockets_closed:
-                        # stop() closed _pair_sock and _out_sockets — recreate them
-                        # here, otherwise the loop spins forever calling recv() on
-                        # a dead socket.
-                        addr = str(self.settings.engine_addr)
-                        self._pair_sock = self._engine_socket_factory.create(
-                            addr, self.log, tls_config=self.settings.tls_input
-                        )
-                        self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
-                        self._out_sockets = []
-                        self._setup_output_sockets()
-                        self._sockets_closed = False
-                    self._thread = threading.Thread(
-                        target=self._run_loop,
-                        name="EngineLoop",
-                        daemon=True
-                    )
-                self._thread.start()
-                return "engine started"
-            return "engine already running"
+            if self._state == EngineState.RUNNING:
+                return "engine already running"
+
+            if self._state == EngineState.STOPPED:
+                # stop() closed _pair_sock and _out_sockets — recreate them
+                # here, otherwise the loop spins forever calling recv() on
+                # a dead socket.
+                addr = str(self.settings.engine_addr)
+                self._pair_sock = self._engine_socket_factory.create(
+                    addr, self.log, tls_config=self.settings.tls_input
+                )
+                self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
+                self._out_sockets = []
+                self._setup_output_sockets()
+
+            self._state = EngineState.RUNNING
+            self._thread = threading.Thread(
+                target=self._run_loop,
+                name="EngineLoop",
+                daemon=True
+            )
+            self._thread.start()
+            return "engine started"
 
     def _run_loop(self) -> None:
         labels = {
@@ -220,7 +224,7 @@ class Engine(ABC):
             "component_id": self.settings.component_id
         }
 
-        while self._running and not self._stop_event.is_set():
+        while self._state == EngineState.RUNNING:
 
             # recv phase
             try:
@@ -238,7 +242,7 @@ class Engine(ABC):
                 continue  # Timeout occurred, check running flag and continue
             except pynng.NNGException as e:
                 # Socket likely closed during shutdown; leave loop if we're stopping.
-                if not self._running or self._stop_event.is_set():
+                if self._state != EngineState.RUNNING:
                     break
                 self.log.exception("Engine error during receive: %s", e)
                 continue
@@ -331,12 +335,15 @@ class Engine(ABC):
             EngineException: If stopping fails for any reason
         """
         with self._lifecycle_lock:
-            if not self._running:
+            if self._state != EngineState.RUNNING:
                 if self.log:
                     self.log.debug("Engine is not running, skipping stop")
                 return None
-            self._running = False
-            self._stop_event.set()
+            self._state = EngineState.STOPPED
+
+            # _state == RUNNING is only reached via start(), which always sets _thread
+            if self._thread is None:
+                raise EngineException("Engine state is RUNNING but no thread was started")
 
             # WAIT for engine loop to exit recv()
             self._thread.join(timeout=2.0)
@@ -357,8 +364,6 @@ class Engine(ABC):
                     self.log.debug(f"Closed output socket {i}")
                 except pynng.NNGException as e:
                     self.log.error(f"Failed to close output socket {i}: {e}")
-
-            self._sockets_closed = True
 
             if self.log:
                 self.log.debug("Engine stopped successfully")

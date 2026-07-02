@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from service.features.web.server import WebServer
 from service.features.config_manager import ConfigManager
 from service.settings import ServiceSettings
-from service.features.engine import Engine, EngineException
+from service.features.engine import Engine, EngineException, EngineState
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from service.features.component_resolver import ComponentResolver
@@ -231,7 +231,7 @@ class Service(Engine, ABC):
         # 4. Final teardown
         if self.web_server:
             self.web_server.stop()
-        if getattr(self, "_running", False):
+        if self._state == EngineState.RUNNING:
             self.stop()  # This calls the Service.stop which calls Engine.stop
         else:
             self.log.debug("Engine already stopped")
@@ -239,7 +239,7 @@ class Service(Engine, ABC):
     def start(self) -> str:
         """Expose engine start as a command."""
         # Check if already running to avoid redundant starts
-        if getattr(self, '_running', False):
+        if self._state == EngineState.RUNNING:
             msg = "Ignored: Engine is already running"
             self.log.debug(msg)
             return msg
@@ -261,7 +261,7 @@ class Service(Engine, ABC):
 
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
-        if not getattr(self, "_running", False):
+        if self._state != EngineState.RUNNING:
             return "engine already stopped"
 
         self.log.info("Stop command received")
@@ -283,7 +283,7 @@ class Service(Engine, ABC):
             configs = self.config_manager.get()
             print(f"DEBUG: Configs from manager: {configs}")
 
-        running = getattr(self, "_running", False)
+        running = self._state == EngineState.RUNNING
 
         # Debug logging
         self.log.debug(f"Config manager exists: {self.config_manager is not None}")

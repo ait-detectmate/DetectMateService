@@ -7,6 +7,7 @@ from typing import Any, Dict, Literal, cast
 from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
+from service.features.engine import EngineState
 
 router = APIRouter(prefix="/admin")
 
@@ -33,7 +34,7 @@ async def admin_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
 
 @router.get("/status")  # type: ignore[misc]
 async def admin_status(service: Any = Depends(get_service)) -> Any:
-    return service._create_status_report(getattr(service, "_running", False))
+    return service._create_status_report(getattr(service, "_state", None) == EngineState.RUNNING)
 
 
 @router.post("/reconfigure")  # type: ignore[misc]
@@ -90,7 +91,7 @@ async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[st
 @router.post("/persistency/load")  # type: ignore[misc]
 async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Restore state from storage, replacing current in-memory state."""
-    if getattr(service, "_running", False):
+    if getattr(service, "_state", None) == EngineState.RUNNING:
         raise HTTPException(
             status_code=409,
             detail="Stop the engine before loading state (/admin/stop)",
@@ -129,7 +130,7 @@ async def admin_persistency_import(
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     """Restore learned state from an uploaded zip archive."""
-    if getattr(service, "_running", False):
+    if getattr(service, "_state", None) == EngineState.RUNNING:
         raise HTTPException(
             status_code=409,
             detail="Stop the engine before importing state (/admin/stop)",
