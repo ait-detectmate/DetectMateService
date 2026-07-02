@@ -62,12 +62,19 @@ class EngineException(Exception):
 class EngineState(Enum):
     """Lifecycle state of an Engine, transitioned only under _lifecycle_lock.
 
-    READY   - sockets open, no loop thread running (initial state)
-    RUNNING - loop thread active, processing messages
-    STOPPED - stop() has closed the sockets; start() must recreate them
+    READY    - sockets open, no loop thread running (initial state)
+    RUNNING  - loop thread active, processing messages
+    STOPPING - stop() requested; _run_loop must exit but its death isn't
+               confirmed yet. Distinct from RUNNING so the loop notices the
+               request immediately, and distinct from STOPPED so start()
+               can't spin up a second thread while the first might still be
+               alive.
+    STOPPED  - the loop thread is confirmed dead and its sockets closed (or
+               close was attempted); start() must recreate the sockets
     """
     READY = auto()
     RUNNING = auto()
+    STOPPING = auto()
     STOPPED = auto()
 
 
@@ -194,7 +201,9 @@ class Engine(ABC):
 
     def start(self) -> str:
         with self._lifecycle_lock:
-            if self._state == EngineState.RUNNING:
+            if self._state in (EngineState.RUNNING, EngineState.STOPPING):
+                # STOPPING means a previous stop() couldn't confirm the loop
+                # thread died — refuse to start a second one on top of it.
                 return "engine already running"
 
             if self._state == EngineState.STOPPED:
@@ -335,35 +344,54 @@ class Engine(ABC):
             EngineException: If stopping fails for any reason
         """
         with self._lifecycle_lock:
-            if self._state != EngineState.RUNNING:
+            if self._state not in (EngineState.RUNNING, EngineState.STOPPING):
                 if self.log:
                     self.log.debug("Engine is not running, skipping stop")
                 return None
-            self._state = EngineState.STOPPED
 
-            # _state == RUNNING is only reached via start(), which always sets _thread
+            # Signal _run_loop to exit *before* attempting to join it — this must
+            # happen immediately, independent of whether the join below confirms
+            # the thread actually died within the timeout.
+            self._state = EngineState.STOPPING
+
             if self._thread is None:
-                raise EngineException("Engine state is RUNNING but no thread was started")
+                raise EngineException("Engine state is STOPPING but no thread was started")
 
             # WAIT for engine loop to exit recv()
             self._thread.join(timeout=2.0)
 
             if self._thread.is_alive():
+                # Leave _state as STOPPING: the loop's exit can't be confirmed, so a
+                # later start() must not spin up a second thread on top of this one.
+                # A later stop() call will retry the join.
                 raise EngineException("Engine thread failed to stop cleanly")
 
-            # Close input socket
+            # The loop is confirmed dead, so the engine is stopped regardless of
+            # whether the socket cleanup below succeeds.
+            self._state = EngineState.STOPPED
+
+            # Close every socket regardless of individual failures, then report
+            # them together instead of raising on the first one and leaking the rest.
+            close_failures: List[pynng.NNGException] = []
+
             try:
                 self._pair_sock.close()
             except pynng.NNGException as e:
-                raise EngineException(f"Failed to close engine socket: {e}") from e
+                close_failures.append(e)
 
-            # Close all output sockets
             for i, sock in enumerate(self._out_sockets):
                 try:
                     sock.close()
                     self.log.debug(f"Closed output socket {i}")
                 except pynng.NNGException as e:
                     self.log.error(f"Failed to close output socket {i}: {e}")
+                    close_failures.append(e)
+
+            if close_failures:
+                raise EngineException(
+                    f"Failed to close {len(close_failures)} socket(s) during stop: "
+                    + "; ".join(str(e) for e in close_failures)
+                ) from close_failures[0]
 
             if self.log:
                 self.log.debug("Engine stopped successfully")

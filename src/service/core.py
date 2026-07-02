@@ -237,7 +237,7 @@ class Service(Engine, ABC):
             # 4. Final teardown
             if self.web_server:
                 self.web_server.stop()
-            if self._state == EngineState.RUNNING:
+            if self._state in (EngineState.RUNNING, EngineState.STOPPING):
                 self.stop()  # This calls the Service.stop which calls Engine.stop
             else:
                 self.log.debug("Engine already stopped")
@@ -245,7 +245,7 @@ class Service(Engine, ABC):
     def start(self) -> str:
         """Expose engine start as a command."""
         # Check if already running to avoid redundant starts
-        if self._state == EngineState.RUNNING:
+        if self._state in (EngineState.RUNNING, EngineState.STOPPING):
             msg = "Ignored: Engine is already running"
             self.log.debug(msg)
             return msg
@@ -267,7 +267,7 @@ class Service(Engine, ABC):
 
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
-        if self._state != EngineState.RUNNING:
+        if self._state not in (EngineState.RUNNING, EngineState.STOPPING):
             return "engine already stopped"
 
         self.log.info("Stop command received")
