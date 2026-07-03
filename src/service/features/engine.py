@@ -262,14 +262,14 @@ class Engine(ABC):
         called.
 
         Without this, an uncaught exception in the loop would leave
-        _state stuck at RUNNING with a dead thread — start() would
+        _state stuck at RUNNING with a dead thread - start() would
         refuse to restart, and status would keep reporting healthy.
 
         _state must be checked *before* acquiring _lifecycle_lock: a
         normal stop() holds this lock while blocked in
         self._thread.join() waiting for this thread, so acquiring it
         unconditionally here would deadlock. If _state is already non-
-        RUNNING, a stop() call already owns the shutdown — nothing to
+        RUNNING, a stop() call already owns the shutdown - nothing to
         do.
 
         The acquire below is bounded (not indefinite) for the rare case
@@ -281,7 +281,7 @@ class Engine(ABC):
 
         if not self._lifecycle_lock.acquire(timeout=0.5):
             # A concurrent stop() is holding the lock and already
-            # responsible for shutting things down — let this thread finish
+            # responsible for shutting things down - let this thread finish
             # so that stop()'s join() can succeed.
             self.log.warning(
                 "Engine loop thread exiting unexpectedly, but a concurrent "
@@ -438,12 +438,12 @@ class Engine(ABC):
                     self.log.debug("Engine is not running, skipping stop")
                 return "engine already stopped"
 
-            # Signal _run_loop to exit *before* attempting to join it — this must
+            # Signal _run_loop to exit *before* attempting to join it - this must
             # happen immediately, independent of whether the join below confirms
             # the thread actually died within the timeout.
             self._state = EngineState.STOPPING
 
-            if self._thread is None:
+            if self._thread is None:  # satisfy type checker; should never happen
                 raise EngineException("Engine state is STOPPING but no thread was started")
 
             # WAIT for engine loop to exit recv()
