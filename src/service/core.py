@@ -75,7 +75,6 @@ class Service(Engine, ABC):
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
         self.service_exit_event: threading.Event = threading.Event()
-        self.web_server = None
         self.web_server = WebServer(self)
 
         self.log: logging.Logger = self._build_logger()
