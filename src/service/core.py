@@ -237,48 +237,41 @@ class Service(Engine, ABC):
             # 4. Final teardown
             if self.web_server:
                 self.web_server.stop()
-            if self._state in (EngineState.RUNNING, EngineState.STOPPING):
-                self.stop()  # This calls the Service.stop which calls Engine.stop
-            else:
-                self.log.debug("Engine already stopped")
+            # This calls the Service.stop which calls Engine.stop; stop() is
+            # a safe no-op if the engine isn't running, so no need to
+            # pre-check state here (that check belongs solely to Engine's
+            # locked transition, not to callers racing against it).
+            self.stop()
 
     def start(self) -> str:
         """Expose engine start as a command."""
-        # Check if already running to avoid redundant starts
-        if self._state in (EngineState.RUNNING, EngineState.STOPPING):
-            msg = "Ignored: Engine is already running"
-            self.log.debug(msg)
-            return msg
-
-        engine_starts_total.labels(
-            component_type=self.component_type,
-            component_id=self.component_id
-        ).inc()
-
         msg = Engine.start(self)
 
-        engine_running.labels(
-            component_type=self.component_type,
-            component_id=self.component_id
-        ).state('running')
+        if msg == "engine started":
+            engine_starts_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc()
+            engine_running.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).state('running')
 
         self.log.info(msg)
         return msg
 
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
-        if self._state not in (EngineState.RUNNING, EngineState.STOPPING):
-            return "engine already stopped"
-
         self.log.info("Stop command received")
         try:
-            Engine.stop(self)
-            engine_running.labels(
-                component_type=self.component_type,
-                component_id=self.component_id
-            ).state('stopped')
-            self.log.info("Engine stopped successfully")
-            return "engine stopped"
+            msg = Engine.stop(self)
+            if msg == "engine stopped":
+                engine_running.labels(
+                    component_type=self.component_type,
+                    component_id=self.component_id
+                ).state('stopped')
+                self.log.info("Engine stopped successfully")
+            return msg
         except EngineException as e:
             self.log.error("Failed to stop engine: %s", e)
             return f"error: failed to stop engine - {e}"

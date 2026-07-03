@@ -335,11 +335,14 @@ class Engine(ABC):
                     break
         return any_sent
 
-    def stop(self) -> None | str:
+    def stop(self) -> str:
         """Stop the engine loop and clean up resources.
 
         Returns:
-            None on success
+            "engine stopped" if this call actually stopped it, or
+            "engine already stopped" if it was a no-op. Callers should
+            branch on this (rather than re-checking state themselves
+            outside the lock) to know whether they were the one that did it.
         Raises:
             EngineException: If stopping fails for any reason
         """
@@ -347,7 +350,7 @@ class Engine(ABC):
             if self._state not in (EngineState.RUNNING, EngineState.STOPPING):
                 if self.log:
                     self.log.debug("Engine is not running, skipping stop")
-                return None
+                return "engine already stopped"
 
             # Signal _run_loop to exit *before* attempting to join it — this must
             # happen immediately, independent of whether the join below confirms
@@ -396,4 +399,4 @@ class Engine(ABC):
             if self.log:
                 self.log.debug("Engine stopped successfully")
 
-            return None
+            return "engine stopped"
