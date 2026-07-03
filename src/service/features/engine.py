@@ -246,6 +246,7 @@ class Engine(ABC):
             return "engine started"
 
     def _run_loop(self) -> None:
+        # wrapper: runs the loop and guarantees _handle_unexpected_loop_exit fires
         labels = {
             "component_type": getattr(self, "component_type", "core"),
             "component_id": self.settings.component_id

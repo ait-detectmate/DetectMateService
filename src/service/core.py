@@ -78,34 +78,33 @@ class Service(Engine, ABC):
         self.web_server = WebServer(self)
 
         self.log: logging.Logger = self._build_logger()
-        # set component_type
-        if hasattr(self, 'component_type'):  # prioritize class attribute over settings
-            pass  # already set by the child class
-        elif hasattr(settings, "component_type") and self._is_library_component_type(settings.component_type):
-
-            resolved_type, resolved_config = ComponentResolver.resolve(
-                settings.component_type
-            )
-            old_component_type = settings.component_type
-            settings.component_type = resolved_type
-
-            self.component_type = resolved_type
-
-            # Now build the logger (which uses component_type)
-            self.log = self._build_logger()
-
-            # Log what resolver did
-            if resolved_type != old_component_type:
-                self.log.info(
-                    "Resolved '%s'  →  component: %s  |  config: %s",
-                    old_component_type, resolved_type, resolved_config,
-                )
-
-            if not settings.component_config_class:
-                settings.component_config_class = resolved_config
-
+        # set component_type: class attribute (set by the child class) wins;
+        # otherwise resolve it from settings
         if not hasattr(self, 'component_type'):
-            self.component_type = settings.component_type
+            if (hasattr(settings, "component_type")
+                    and self._is_library_component_type(settings.component_type)):
+                resolved_type, resolved_config = ComponentResolver.resolve(
+                    settings.component_type
+                )
+                old_component_type = settings.component_type
+                settings.component_type = resolved_type
+
+                self.component_type = resolved_type
+
+                # Now build the logger (which uses component_type)
+                self.log = self._build_logger()
+
+                # Log what resolver did
+                if resolved_type != old_component_type:
+                    self.log.info(
+                        "Resolved '%s'  →  component: %s  |  config: %s",
+                        old_component_type, resolved_type, resolved_config,
+                    )
+
+                if not settings.component_config_class:
+                    settings.component_config_class = resolved_config
+            else:
+                self.component_type = settings.component_type
 
         # Initialize config manager before loading the library component
         # so we can pass the loaded configs to the component
@@ -113,7 +112,7 @@ class Service(Engine, ABC):
         loaded_config_dict: Dict[str, Any] = {}
 
         if hasattr(settings, 'config_file') and settings.config_file:
-            self.log.debug(f"Initializing ConfigManager with file: {settings.config_file}")
+            self.log.debug(f"Init ConfigManager with file: {settings.config_file}")
             self.config_manager = ConfigManager(
                 str(settings.config_file),
                 self.get_config_schema(),
