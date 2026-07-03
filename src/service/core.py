@@ -280,7 +280,6 @@ class Service(Engine, ABC):
         """Comprehensive status report including settings and configs."""
         if self.config_manager:
             configs = self.config_manager.get()
-            print(f"DEBUG: Configs from manager: {configs}")
 
         running = self._state == EngineState.RUNNING
 
