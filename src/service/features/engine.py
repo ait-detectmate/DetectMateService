@@ -200,14 +200,23 @@ class Engine(ABC):
                 # We attempt to continue with other sockets rather than crashing entirely
 
     def start(self) -> str:
+        """Start the engine loop.
+
+        Returns:
+            "engine started" or "engine already running"
+        Raises:
+            EngineException: If the loop thread fails to start
+        """
         with self._lifecycle_lock:
             if self._state in (EngineState.RUNNING, EngineState.STOPPING):
                 # STOPPING means a previous stop() couldn't confirm the loop
-                # thread died — refuse to start a second one on top of it.
+                # thread died.  refuse to start a second one on top of it.
                 return "engine already running"
 
+            previous_state = self._state  # READY or STOPPED, to roll back to on failure
+
             if self._state == EngineState.STOPPED:
-                # stop() closed _pair_sock and _out_sockets — recreate them
+                # stop() closed _pair_sock and _out_sockets. recreate them
                 # here, otherwise the loop spins forever calling recv() on
                 # a dead socket.
                 addr = str(self.settings.engine_addr)
@@ -219,12 +228,21 @@ class Engine(ABC):
                 self._setup_output_sockets()
 
             self._state = EngineState.RUNNING
-            self._thread = threading.Thread(
+            thread = threading.Thread(
                 target=self._run_loop,
                 name="EngineLoop",
                 daemon=True
             )
-            self._thread.start()
+            try:
+                thread.start()
+            except Exception as e:
+                # Thread creation can fail under OS resource exhaustion. Roll
+                # back so start() can retry, instead of leaving _state at
+                # RUNNING with no thread for stop() to join.
+                self._state = previous_state
+                raise EngineException(f"Failed to start engine thread: {e}") from e
+
+            self._thread = thread
             return "engine started"
 
     def _run_loop(self) -> None:

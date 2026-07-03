@@ -245,7 +245,11 @@ class Service(Engine, ABC):
 
     def start(self) -> str:
         """Expose engine start as a command."""
-        msg = Engine.start(self)
+        try:
+            msg = Engine.start(self)
+        except EngineException as e:
+            self.log.error("Failed to start engine: %s", e)
+            return f"error: failed to start engine - {e}"
 
         if msg == "engine started":
             engine_starts_total.labels(
