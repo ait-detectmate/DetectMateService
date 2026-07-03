@@ -112,13 +112,30 @@ Add `--persist` to save the new configuration to the original config file (if su
 detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
 ```
 
-## Stopping the service
+## Stopping the engine
 
-To stop the service:
+To stop just the processing engine — the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with `start`:
 
 ```bash
-detectmate stop --url <http_host:http_port>
+detectmate-client --url <http_host:http_port> stop
 ```
+
+## Stopping the process
+
+To shut down the entire service process — not just the engine — send `SIGINT` (Ctrl+C if it's running in your foreground terminal, as in the [Quick start](#quick-start-your-first-service) output above) or `SIGTERM` (what `docker stop` and systemd send), or call the shutdown endpoint directly:
+
+```bash
+curl -X POST http://<http_host:http_port>/admin/shutdown
+```
+
+Unlike `stop`, this is not restartable — the process exits. Expect these two log lines:
+
+```
+Shutdown signal received (SIGINT)...
+Clean exit.
+```
+
+(`SIGTERM` logs the same two lines with `SIGTERM` in place of `SIGINT`.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown — you don't need to call `stop` first.
 
 ## Controlling state persistency
 
