@@ -4,7 +4,7 @@ import logging
 import time
 from abc import ABC
 from enum import Enum, auto
-from typing import Optional, List, Protocol
+from typing import Any, Dict, Optional, List, Protocol
 from prometheus_client import Counter
 from service.settings import ServiceSettings
 from service.features.engine_socket import (
@@ -233,6 +233,64 @@ class Engine(ABC):
             "component_id": self.settings.component_id
         }
 
+        try:
+            self._run_loop_body(labels)
+        finally:
+            self._handle_unexpected_loop_exit()
+
+    def _handle_unexpected_loop_exit(self) -> None:
+        """Self-heal _state if the loop thread died without stop() being
+        called.
+
+        Without this, an uncaught exception in the loop would leave
+        _state stuck at RUNNING with a dead thread — start() would
+        refuse to restart, and status would keep reporting healthy.
+
+        _state must be checked *before* acquiring _lifecycle_lock: a
+        normal stop() holds this lock while blocked in
+        self._thread.join() waiting for this thread, so acquiring it
+        unconditionally here would deadlock. If _state is already non-
+        RUNNING, a stop() call already owns the shutdown — nothing to
+        do.
+
+        The acquire below is bounded (not indefinite) for the rare case
+        where a stop() call starts concurrently, wins the lock, and
+        joins us while we're still waiting on it.
+        """
+        if self._state != EngineState.RUNNING:
+            return
+
+        if not self._lifecycle_lock.acquire(timeout=0.5):
+            # A concurrent stop() is holding the lock and already
+            # responsible for shutting things down — let this thread finish
+            # so that stop()'s join() can succeed.
+            self.log.warning(
+                "Engine loop thread exiting unexpectedly, but a concurrent "
+                "stop() already holds the lifecycle lock; leaving it to finish shutdown"
+            )
+            return
+        try:
+            # Re-check: a concurrent stop() may have won the race and
+            # already be blocked joining us since the check above.
+            if self._state != EngineState.RUNNING:
+                return
+            self.log.critical(
+                "Engine loop thread exiting unexpectedly; marking engine stopped"
+            )
+            self._state = EngineState.STOPPED
+            try:
+                self._pair_sock.close()
+            except Exception as e:
+                self.log.error("Failed to close engine socket after unexpected exit: %s", e)
+            for i, sock in enumerate(self._out_sockets):
+                try:
+                    sock.close()
+                except Exception as e:
+                    self.log.error("Failed to close output socket %d after unexpected exit: %s", i, e)
+        finally:
+            self._lifecycle_lock.release()
+
+    def _run_loop_body(self, labels: Dict[str, Any]) -> None:
         while self._state == EngineState.RUNNING:
 
             # recv phase
@@ -296,6 +354,11 @@ class Engine(ABC):
                     data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.error("Engine error sending reply on engine socket: %s", e)
                     continue
+                except Exception as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(out))
+                    data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
+                    self.log.exception("Unexpected engine error sending reply on engine socket: %s", e)
+                    continue
 
     def _send_to_outputs(self, data: bytes) -> bool:
         """Send processed data to all configured output destinations.
@@ -332,6 +395,11 @@ class Engine(ABC):
                     data_dropped_bytes_total.labels(**labels).inc(len(data))
                     data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                     self.log.error(f"Engine error sending to output socket {i}: {e}")
+                    break
+                except Exception as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(data))
+                    data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
+                    self.log.exception(f"Unexpected engine error sending to output socket {i}: {e}")
                     break
         return any_sent
 
