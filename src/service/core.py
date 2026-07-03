@@ -82,9 +82,7 @@ class Service(Engine, ABC):
         # set component_type
         if hasattr(self, 'component_type'):  # prioritize class attribute over settings
             pass  # already set by the child class
-        elif (hasattr(settings, "component_type") and
-                settings.component_type not in ("core",) and
-                not settings.component_type.startswith("core")):
+        elif hasattr(settings, "component_type") and self._is_library_component_type(settings.component_type):
 
             resolved_type, resolved_config = ComponentResolver.resolve(
                 settings.component_type
@@ -133,9 +131,7 @@ class Service(Engine, ABC):
 
         # Load library component if component_type is specified and not core
         self.library_component: Optional[CoreComponent] = None
-        if (hasattr(settings, 'component_type') and
-                settings.component_type != "core" and
-                not settings.component_type.startswith("core")):
+        if hasattr(settings, 'component_type') and self._is_library_component_type(settings.component_type):
 
             try:
                 self.log.info(f"Loading library component: {settings.component_type}")
@@ -153,6 +149,12 @@ class Service(Engine, ABC):
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
+
+    @staticmethod
+    def _is_library_component_type(component_type: str) -> bool:
+        """True if component_type names a loadable library component rather
+        than plain 'core'."""
+        return component_type != "core" and not component_type.startswith("core")
 
     def get_config_schema(self) -> Type[CoreConfig]:
         """Return the configuration schema for this service.

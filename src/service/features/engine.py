@@ -326,7 +326,6 @@ class Engine(ABC):
             except pynng.Timeout:
                 continue  # Timeout occurred, check running flag and continue
             except pynng.NNGException as e:
-                # Socket likely closed during shutdown; leave loop if we're stopping.
                 if self._state != EngineState.RUNNING:
                     break
                 self.log.exception("Engine error during receive: %s", e)
