@@ -24,12 +24,18 @@ def get_service() -> Any:
 
 @router.post("/start")  # type: ignore[misc]
 async def admin_start(service: Any = Depends(get_service)) -> Dict[str, Any]:
-    return {"message": service.start()}
+    result = service.start()
+    if result.startswith("error:"):
+        raise HTTPException(status_code=500, detail=result)
+    return {"message": result}
 
 
 @router.post("/stop")  # type: ignore[misc]
 async def admin_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
-    return {"message": service.stop()}
+    result = service.stop()
+    if result.startswith("error:"):
+        raise HTTPException(status_code=500, detail=result)
+    return {"message": result}
 
 
 @router.get("/status")  # type: ignore[misc]
@@ -44,6 +50,10 @@ async def admin_reconfigure(payload: ReconfigPayload, service: Any = Depends(get
         config_data=payload.config,
         persist=payload.persist
     )
+    if result.startswith("reconfigure: error"):
+        raise HTTPException(status_code=400, detail=result)
+    if result == "reconfigure: no config manager configured":
+        raise HTTPException(status_code=409, detail=result)
     return {"message": result}
 
 
