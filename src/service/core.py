@@ -269,6 +269,8 @@ class Service(Engine, ABC):
                     component_id=self.component_id
                 ).state('stopped')
                 self.log.info("Engine stopped successfully")
+            else:
+                self.log.info(msg)
             return msg
         except EngineException as e:
             self.log.error("Failed to stop engine: %s", e)
