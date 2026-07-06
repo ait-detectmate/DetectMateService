@@ -9,7 +9,7 @@ from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
 from pydantic import BaseModel
 from service.features.web.server import WebServer
-from service.features.config_manager import ConfigManager
+from service.features.config_manager import ConfigManager, ServiceConfig
 from service.settings import ServiceSettings
 from service.features.engine import Engine, EngineException, EngineState
 from service.features.component_loader import ComponentLoader
@@ -310,6 +310,10 @@ class Service(Engine, ABC):
 
         if not config_data:
             return "reconfigure: no-op (empty config data)"
+
+        unknown_keys = set(config_data) - set(ServiceConfig.model_fields)
+        if unknown_keys:
+            return f"reconfigure: error - unknown config key(s): {', '.join(sorted(unknown_keys))}"
 
         try:
             # update in memory
