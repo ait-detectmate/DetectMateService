@@ -349,6 +349,14 @@ class Engine(ABC):
                 self.log.debug("Engine: Processor returned None, skipping send")
                 continue
 
+            if not isinstance(out, (bytes, bytearray)):
+                processing_errors_total.labels(**labels).inc()
+                self.log.error(
+                    "Engine: processor.process() returned %s, expected bytes|None; dropping message",
+                    type(out).__name__,
+                )
+                continue
+
             # send phase
             if self._out_sockets:
                 # Multi-destination mode: send to all configured outputs
