@@ -33,6 +33,11 @@ def setup_logging(level: int = logging.INFO) -> None:
     # configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
+
+    # avoid duplicate log lines
+    for h in list(root_logger.handlers):
+        root_logger.removeHandler(h)
+
     root_logger.addHandler(stdout_handler)
     root_logger.addHandler(stderr_handler)
 
