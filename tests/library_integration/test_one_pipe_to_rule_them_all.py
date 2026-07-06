@@ -7,7 +7,7 @@ Tests verify the full data flow where:
 
 The DummyDetector alternates: False, True, False
 """
-from detectmatelibrary_tests.test_parsers.dummy_parser import DummyParser
+from tests.detectmatelibrary.test_parsers.dummy_parser import DummyParser
 from library_integration_base import start_service, cleanup_service, AUDIT_LOG
 import time
 from pathlib import Path
@@ -32,8 +32,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Parser settings
     parser_settings = {
-        "component_type": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParser",
-        "component_config_class": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParserConfig",
+        "component_type": "tests.detectmatelibrary.test_parsers.dummy_parser.DummyParser",
+        "component_config_class": "tests.detectmatelibrary.test_parsers.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": "8020",
@@ -58,8 +58,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Detector settings
     detector_settings = {
-        "component_type": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetector",
-        "component_config_class": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetectorConfig",
+        "component_type": "tests.detectmatelibrary.test_detectors.dummy_detector.DummyDetector",
+        "component_config_class": "tests.detectmatelibrary.test_detectors.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": "8030",
