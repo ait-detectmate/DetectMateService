@@ -53,9 +53,6 @@ def smoke_service(tmp_path, free_port):
     if hasattr(service, '_pair_sock'):
         service._pair_sock.close()
 
-    if hasattr(service, '_rep_sock'):
-        service._rep_sock.close()
-
     # Wait for threads to finish
     if getattr(service, '_thread', None) is not None and service._thread.is_alive():
         service._thread.join(timeout=1.0)
