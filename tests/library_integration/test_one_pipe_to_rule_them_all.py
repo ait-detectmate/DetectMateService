@@ -21,11 +21,6 @@ from dummy_components.test_parsers.dummy_parser import DummyParser
 import os
 import sys
 
-# pytest's default import mode only puts this file's own directory
-# (tests/library_integration) on sys.path, not the repo root or tests/
-# add it here so that dummys can be imported from dummy_components.test_parsers etc.
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 pytest_plugins = ["library_integration_base_fixtures"]
 
 
