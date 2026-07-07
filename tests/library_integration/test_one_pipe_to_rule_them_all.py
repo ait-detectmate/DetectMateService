@@ -7,19 +7,25 @@ Tests verify the full data flow where:
 
 The DummyDetector alternates: False, True, False
 """
-from tests.dummy_components.test_parsers.dummy_parser import DummyParser
-from library_integration_base import start_service, cleanup_service, AUDIT_LOG
-import time
-from pathlib import Path
-from typing import Generator
-import pytest
-import pynng
-import json
-import sys
-import os
-from subprocess import Popen, PIPE
-from detectmatelibrary.schemas import ParserSchema, DetectorSchema
 from detectmatelibrary.helper.from_to import From
+from detectmatelibrary.schemas import ParserSchema, DetectorSchema
+from subprocess import Popen, PIPE
+import json
+import pynng
+import pytest
+from typing import Generator
+from pathlib import Path
+import time
+from library_integration_base import start_service, cleanup_service, AUDIT_LOG
+from dummy_components.test_parsers.dummy_parser import DummyParser
+import os
+import sys
+
+# pytest's default import mode only puts this file's own directory
+# (tests/library_integration) on sys.path, not the repo root or tests/
+# add it here so that dummys can be imported from dummy_components.test_parsers etc.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 pytest_plugins = ["library_integration_base_fixtures"]
 
 
