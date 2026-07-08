@@ -7,6 +7,7 @@ from typing import Any, Dict, Literal, cast
 from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
+from service.features.engine import EngineState
 
 router = APIRouter(prefix="/admin")
 
@@ -23,17 +24,23 @@ def get_service() -> Any:
 
 @router.post("/start")  # type: ignore[misc]
 async def admin_start(service: Any = Depends(get_service)) -> Dict[str, Any]:
-    return {"message": service.start()}
+    result = service.start()
+    if result.startswith("error:"):
+        raise HTTPException(status_code=500, detail=result)
+    return {"message": result}
 
 
 @router.post("/stop")  # type: ignore[misc]
 async def admin_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
-    return {"message": service.stop()}
+    result = service.stop()
+    if result.startswith("error:"):
+        raise HTTPException(status_code=500, detail=result)
+    return {"message": result}
 
 
 @router.get("/status")  # type: ignore[misc]
 async def admin_status(service: Any = Depends(get_service)) -> Any:
-    return service._create_status_report(getattr(service, "_running", False))
+    return service._create_status_report(getattr(service, "_state", None) == EngineState.RUNNING)
 
 
 @router.post("/reconfigure")  # type: ignore[misc]
@@ -43,6 +50,10 @@ async def admin_reconfigure(payload: ReconfigPayload, service: Any = Depends(get
         config_data=payload.config,
         persist=payload.persist
     )
+    if result.startswith("reconfigure: error"):
+        raise HTTPException(status_code=400, detail=result)
+    if result == "reconfigure: no config manager configured":
+        raise HTTPException(status_code=409, detail=result)
     return {"message": result}
 
 
@@ -90,7 +101,7 @@ async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[st
 @router.post("/persistency/load")  # type: ignore[misc]
 async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Restore state from storage, replacing current in-memory state."""
-    if getattr(service, "_running", False):
+    if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
             detail="Stop the engine before loading state (/admin/stop)",
@@ -129,7 +140,7 @@ async def admin_persistency_import(
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     """Restore learned state from an uploaded zip archive."""
-    if getattr(service, "_running", False):
+    if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
             detail="Stop the engine before importing state (/admin/stop)",

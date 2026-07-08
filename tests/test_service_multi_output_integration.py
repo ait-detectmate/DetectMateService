@@ -10,6 +10,7 @@ import pynng
 import pytest
 
 from service.core import Service
+from service.features.engine import EngineState
 from service.settings import ServiceSettings
 
 # --- Constants ---
@@ -214,13 +215,13 @@ class TestServiceMultiOutputIntegration:
         receiver_manager(out_addrs)
         svc = service_factory(settings)
 
-        assert svc._running
+        assert svc._state == EngineState.RUNNING
 
         # Send stop command
         httpx.post(f"{BASE_HTTP_URL}:{http_port}/admin/stop")
         time.sleep(SHUTDOWN_DELAY)
 
-        assert not svc._running
+        assert svc._state == EngineState.STOPPED
 
         # Verify output sockets are closed/non-functional
         for sock in svc._out_sockets:
@@ -236,7 +237,7 @@ class TestServiceMultiOutputIntegration:
 
         sender.send(b"test message")
         time.sleep(0.1)
-        assert svc._running
+        assert svc._state == EngineState.RUNNING
 
     def test_yaml_config_loading_with_outputs(self, tmp_path, http_port):
         """Test loading service settings from YAML with output addresses."""

@@ -33,6 +33,11 @@ def setup_logging(level: int = logging.INFO) -> None:
     # configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
+
+    # avoid duplicate log lines
+    for h in list(root_logger.handlers):
+        root_logger.removeHandler(h)
+
     root_logger.addHandler(stdout_handler)
     root_logger.addHandler(stderr_handler)
 
@@ -91,14 +96,25 @@ def main() -> None:
     logger.info("config file: %s", settings.config_file)
 
     service = Service(settings=settings)
-    signal.signal(signal.SIGINT, lambda s, f: service.service_exit_event.set())
-    signal.signal(signal.SIGTERM, lambda s, f: service.service_exit_event.set())
+
+    received_signal: list[int] = []
+
+    def _handle_shutdown_signal(signum: int, _frame: Any) -> None:
+        received_signal.append(signum)
+        service.service_exit_event.set()
+
+    previous_sigint = signal.signal(signal.SIGINT, _handle_shutdown_signal)
+    previous_sigterm = signal.signal(signal.SIGTERM, _handle_shutdown_signal)
 
     try:
         with service:
-            # This blocks until service_exit_event.set() happens
+            # This blocks until service_exit_event.set() or KeyboardInterrupt
             service.run()
     finally:
+        signal.signal(signal.SIGINT, previous_sigint)
+        signal.signal(signal.SIGTERM, previous_sigterm)
+        if received_signal:
+            logger.info("Shutdown signal received (%s)...", signal.Signals(received_signal[0]).name)
         logger.info("Clean exit.")
 
 

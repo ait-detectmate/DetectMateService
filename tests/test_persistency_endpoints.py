@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from service.features.web.router import router, get_service
+from service.features.engine import EngineState
 from detectmatelibrary.utils.persistency import PersistencyLoadError
 
 
@@ -47,7 +48,7 @@ def mock_saver():
 @pytest.fixture
 def service_with_saver(mock_saver):
     svc = MagicMock()
-    svc._running = False
+    svc._state = EngineState.STOPPED
     svc.library_component = MagicMock()
     svc.library_component.saver = mock_saver
     return svc
@@ -107,7 +108,7 @@ class TestPersistencyLoad:
 
     def test_load_rejected_when_engine_running(self, app):
         svc = MagicMock()
-        svc._running = True
+        svc._state = EngineState.RUNNING
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
         resp = c.post("/admin/persistency/load")
@@ -117,7 +118,7 @@ class TestPersistencyLoad:
 
     def test_load_no_library_component(self, app):
         svc = MagicMock()
-        svc._running = False
+        svc._state = EngineState.STOPPED
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
@@ -217,7 +218,7 @@ class TestPersistencyImport:
 
     def test_import_rejected_when_engine_running(self, app):
         svc = MagicMock()
-        svc._running = True
+        svc._state = EngineState.RUNNING
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
         data = _make_zip({"metadata.json": b"{}"})
@@ -228,7 +229,7 @@ class TestPersistencyImport:
 
     def test_import_no_library_component(self, app):
         svc = MagicMock()
-        svc._running = False
+        svc._state = EngineState.STOPPED
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)

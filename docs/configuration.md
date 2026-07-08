@@ -110,9 +110,9 @@ The service provides a REST API for runtime management and monitoring.
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/admin/status` | Returns the health, running state, and current effective configurations. |
-| `POST` | `/admin/start` | Starts the data processing engine thread. |
-| `POST` | `/admin/stop` | Stops the data processing engine thread. |
-| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. |
+| `POST` | `/admin/start` | Starts the data processing engine thread. Idempotent — returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
+| `POST` | `/admin/stop` | Stops the data processing engine thread. Idempotent — returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
+| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys — returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
 | `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |
 
 ### Persistency Endpoints

@@ -7,6 +7,7 @@ import pytest
 from contextlib import contextmanager
 from service.settings import ServiceSettings
 from service.core import Service
+from service.features.engine import EngineState
 
 
 class MockComponent(Service):
@@ -98,7 +99,7 @@ def test_admin_stop(comp):
 
     assert response.status_code == 200
     time.sleep(0.1)
-    assert comp._running is False
+    assert comp._state == EngineState.STOPPED
 
 
 def test_restart_after_stop_processes_messages(comp):
@@ -109,11 +110,11 @@ def test_restart_after_stop_processes_messages(comp):
 
     assert httpx.post(f"{admin_url}/admin/stop").status_code == 200
     time.sleep(0.1)
-    assert comp._running is False
+    assert comp._state == EngineState.STOPPED
 
     assert httpx.post(f"{admin_url}/admin/start").status_code == 200
     time.sleep(0.1)
-    assert comp._running is True
+    assert comp._state == EngineState.RUNNING
 
     with pair_socket(comp.settings.engine_addr) as sock:
         sock.send(b"hello")
