@@ -272,7 +272,7 @@ wheels = [
 
 [[package]]
 name = "detectmatelibrary"
-version = "0.3.1"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "detectmateperformance" },
@@ -292,9 +292,9 @@ dependencies = [
     { name = "tenacity" },
     { name = "tiktoken" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/8e/ac9ebd2d1bae9d7ab28292e938e4caa961c3a529bd99bb85683a0d7a66d8/detectmatelibrary-0.3.1.tar.gz", hash = "sha256:11df9899ef47c800d9b3212519e38d8b97b89ca70896bd85826a212daf838b95", size = 135113, upload-time = "2026-06-12T10:47:55.316Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/f3/dfd1442490cb74794864914152615c8823065085b281ec02e4f3ba043522/detectmatelibrary-0.3.2.tar.gz", hash = "sha256:7d245600ebc741fe65b33c6703534fb75d3a8f2645d30f6f195c33c5ca29db70", size = 89023, upload-time = "2026-07-06T11:31:45.742Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b1/4d/bb0f2e4c2f6d45990f04510bb2d82fbf56072c8970dcafb8bae0741bf373/detectmatelibrary-0.3.1-py3-none-any.whl", hash = "sha256:6cf54a586d9184ab93c0c5bca8dc31f4444ed7b104ecf0c220be7769bf055d32", size = 201929, upload-time = "2026-06-12T10:47:53.821Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/9e/85f85435a3048eb242583dfd7e0f67dd77d4b6c94700da9895ad2095f7a0/detectmatelibrary-0.3.2-py3-none-any.whl", hash = "sha256:002c9c1912474048d6a0de05e3fc5b44ab9064aea76a45dc3354a936e820fb5d", size = 129869, upload-time = "2026-07-06T11:31:44.083Z" },
 ]
 
 [[package]]
@@ -343,7 +343,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "detectmatelibrary", specifier = "==0.3.1" },
+    { name = "detectmatelibrary", specifier = "==0.3.2" },
     { name = "fastapi", specifier = ">=0.137.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pathlib", specifier = ">=1.0.1" },
