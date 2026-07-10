@@ -64,3 +64,19 @@ uv sync --extra full
 already installs the `full` extra via the `dev` dependency group, so
 contributors get every optional component out of the box.
 
+### Extras in Docker
+
+`Dockerfile` and `Dockerfile-dev` take a `LIBRARY_EXTRAS` build arg (comma-separated
+extras, default `full`) that controls which extras get installed in the image:
+
+```bash
+docker build --build-arg LIBRARY_EXTRAS=llm,dataframes -t detectmate .
+```
+
+With `docker compose`, set the `LIBRARY_EXTRAS` env var before building (it defaults
+to `full` if unset):
+
+```bash
+LIBRARY_EXTRAS=llm docker compose build parser detector
+```
+
