@@ -5,6 +5,13 @@
 The Service can be run as any component imported from the [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary).
 For this, ensure that the library is installed in the same activated virtual environment, where the service is installed.
 
+> **Note:** Some library components depend on optional extras (e.g. LLM-backed
+> detectors need `llm`, dataframe-based persistency backends need `dataframes`).
+> If the component you want to use raises an `ImportError` mentioning a missing
+> extra, install the service with the matching extra — see
+> [Optional library components](installation.md#optional-library-components-extras)
+> in the installation guide.
+
 ### 1. Update settings
 
 Modify `settings.yaml` to use a library component:

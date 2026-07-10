@@ -17,5 +17,5 @@ fi
 
 echo "Using branch: $BRANCH"
 
-NEW_DEP="detectmatelibrary @ git+https://github.com/ait-detectmate/DetectMateLibrary.git@${BRANCH}\""
-sed -i "s|detectmatelibrary[^,]*|$NEW_DEP|g" pyproject.toml
+GIT_SOURCE="git+https://github.com/ait-detectmate/DetectMateLibrary.git@${BRANCH}"
+sed -i -E "s|detectmatelibrary==[^\"]+|detectmatelibrary @ ${GIT_SOURCE}|g" pyproject.toml

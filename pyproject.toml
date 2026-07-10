@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dynamic = ["version"]
 
 dependencies = [
-    "detectmatelibrary==0.3.1",
+    "detectmatelibrary==0.4.0",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
@@ -22,6 +22,18 @@ dependencies = [
     "python-multipart>=0.0.20",
 ]
 
+[project.optional-dependencies]
+# pass-through extras for optional detectmatelibrary components, e.g. uv sync --extra llm
+llm = ["detectmatelibrary[llm]==0.4.0"]
+dataframes = ["detectmatelibrary[dataframes]==0.4.0"]
+polars-rtcompat = ["detectmatelibrary[polars-rtcompat]==0.4.0"]
+# install all optional extras at once: uv sync --extra full
+full = [
+    "DetectMateService[llm]",
+    "DetectMateService[dataframes]",
+    "DetectMateService[polars-rtcompat]",
+]
+
 [dependency-groups]
 dev = [
     "mike>=2.2.0",
@@ -29,6 +41,7 @@ dev = [
     "prek>=0.4.5",
     "pytest-cov>=6.2.1",
     "types-requests",
+    "DetectMateService[full]",
 ]
 
 [project.scripts]

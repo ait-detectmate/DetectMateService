@@ -31,5 +31,36 @@ source .venv/bin/activate
 pip install .
 ```
 
+## Optional library components (extras)
 
+[DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary) ships some
+components (e.g. LLM-backed detectors, dataframe-based persistency backends) as
+optional extras rather than hard dependencies, to keep lean installs lean. The
+service exposes matching pass-through extras so you only pull in what your
+configured components actually need:
+
+| Extra              | Adds                                    | Needed for |
+|---------------------|------------------------------------------|------------|
+| `llm`               | `openai`, `tiktoken`, `scikit-learn`, `scipy`, `tenacity` | LLM-backed detectors/parsers |
+| `dataframes`        | `pandas`, `polars`                        | Dataframe-based persistency backends and components |
+| `polars-rtcompat`   | `polars[rtcompat]`                        | Polars runtime compatibility on older CPUs |
+| `full`              | all of the above                          | Running any/all library components, e.g. local development |
+
+Install only what you need:
+
+```bash
+uv sync --extra llm
+# or with pip
+pip install ".[llm]"
+```
+
+Or install everything:
+
+```bash
+uv sync --extra full
+```
+
+`uv sync --dev` (used for local development, see [development.md](development.md))
+already installs the `full` extra via the `dev` dependency group, so
+contributors get every optional component out of the box.
 
