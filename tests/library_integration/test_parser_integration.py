@@ -19,8 +19,8 @@ def running_parser_service(tmp_path: Path) -> Generator[dict, None, None]:
     timestamp = int(time.time() * 1000)
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     settings = {
-        "component_type": "dummy_components.test_parsers.dummy_parser.DummyParser",
-        "component_config_class": "dummy_components.test_parsers.dummy_parser.DummyParserConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_parser.DummyParser",
+        "component_config_class": "detectmatelibrary._testutils.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": "8020",
