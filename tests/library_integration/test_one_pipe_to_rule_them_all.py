@@ -17,7 +17,7 @@ from typing import Generator
 from pathlib import Path
 import time
 from library_integration_base import start_service, cleanup_service, AUDIT_LOG
-from dummy_components.test_parsers.dummy_parser import DummyParser
+from detectmatelibrary._testutils.dummy_parser import DummyParser
 import os
 import sys
 
@@ -33,8 +33,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Parser settings
     parser_settings = {
-        "component_type": "dummy_components.test_parsers.dummy_parser.DummyParser",
-        "component_config_class": "dummy_components.test_parsers.dummy_parser.DummyParserConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_parser.DummyParser",
+        "component_config_class": "detectmatelibrary._testutils.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": "8020",
@@ -59,8 +59,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Detector settings
     detector_settings = {
-        "component_type": "dummy_components.test_detectors.dummy_detector.DummyDetector",
-        "component_config_class": "dummy_components.test_detectors.dummy_detector.DummyDetectorConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_detector.DummyDetector",
+        "component_config_class": "detectmatelibrary._testutils.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": "8030",

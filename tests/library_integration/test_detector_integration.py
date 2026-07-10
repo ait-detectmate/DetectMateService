@@ -22,8 +22,8 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
     timestamp = int(time.time() * 1000)
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     settings = {
-        "component_type": "dummy_components.test_detectors.dummy_detector.DummyDetector",
-        "component_config_class": "dummy_components.test_detectors.dummy_detector.DummyDetectorConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_detector.DummyDetector",
+        "component_config_class": "detectmatelibrary._testutils.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": "8010",
