@@ -29,7 +29,8 @@ Open a pull request to merge the `development` branch into `main`. Once CI passe
 
 !!! note
 
-    Merging `development` into `main` will delete the `development` branch. See the last step for how to recreate it.
+    Merging `development` into `main` will delete the `development` branch. A GitHub Actions
+    workflow (`recreate-development-branch.yml`) automatically recreates it from `main`, see the last step for details and the manual fallback.
 
 ### 3. Determine the new version number
 
@@ -79,7 +80,13 @@ Monitor the [Actions tab](https://github.com/ait-detectmate/DetectMateService/ac
 
 ### 7. Recreate the development branch
 
-Because merging `development` into `main` deletes the `development` branch, create a new one branching from the now-updated `main`:
+Because merging `development` into `main` deletes the `development` branch, it needs to be
+recreated from the now-updated `main`. This happens automatically: `.github/workflows/recreate-development-branch.yml`
+listens for the branch deletion and pushes a new `development` branch from `main` for you.
+Check the [Actions tab](https://github.com/ait-detectmate/DetectMateService/actions) to confirm
+it ran successfully.
+
+If the workflow fails or you need to do it manually:
 
 ```bash
 git checkout main
