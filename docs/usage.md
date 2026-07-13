@@ -48,8 +48,29 @@ To start the service, use the `detectmate` command. You can optionally specify a
 detectmate --settings settings.yaml --config config.yaml
 ```
 
-- `--settings`: Path to the service settings YAML file.
-- `--config`: Path to the component configuration YAML file.
+| Flag | Description |
+| :--- | :--- |
+| `--settings` | Path to the service settings YAML file. |
+| `--config` | Path to the component configuration YAML file. |
+| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /admin/start` to begin processing. |
+
+## Starting in standby mode
+
+By default the engine starts automatically when the service launches. Pass `--no-autostart` to keep the engine idle on startup:
+
+```bash
+detectmate --settings settings.yaml --no-autostart
+```
+
+The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/admin/start
+```
+
+This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.
+
+The same behaviour can also be configured persistently via the settings file or environment variable - see [`engine_autostart`](configuration.md#service-settings).
 
 ## Checking status
 
@@ -91,10 +112,75 @@ Add `--persist` to save the new configuration to the original config file (if su
 detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
 ```
 
-## Stopping the service
+## Stopping the engine
 
-To stop the service:
+To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with `start`:
 
 ```bash
-detectmate stop --url <http_host:http_port>
+detectmate-client --url <http_host:http_port> stop
 ```
+
+## Stopping the process
+
+To shut down the entire service process (not just the engine) send `SIGINT` (Ctrl+C if it's running in your foreground terminal, as in the [Quick start](#quick-start-your-first-service) output above) or `SIGTERM` (what `docker stop` and systemd send), or call the shutdown endpoint directly:
+
+```bash
+curl -X POST http://<http_host:http_port>/admin/shutdown
+```
+
+Unlike `stop`, this is not restartable, the process exits. Expect these two log lines:
+
+```
+Shutdown signal received (SIGINT)...
+Clean exit.
+```
+
+(`SIGTERM` logs the same two lines with `SIGTERM` in place of `SIGINT`.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown. you don't need to call `stop` first.
+
+## Controlling state persistency
+
+When a component has persistency configured, you can manage its saved state at runtime.
+
+```bash
+# Show persistency config, event counters, and last save timestamp
+detectmate-client --url <http_host:http_port> persistency-status
+
+# Force an immediate save of learned state to storage
+detectmate-client --url <http_host:http_port> persistency-save
+
+# Restore learned state from storage (replaces current in-memory state)
+detectmate-client --url <http_host:http_port> persistency-load
+```
+
+These commands return `404` if persistency is not configured for the loaded component. `persistency-load` and `persistency-import` return `409` if the engine is running — stop it first, then load/import, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
+
+```bash
+# Download the current learned state to a file
+detectmate-client --url <http_host:http_port> persistency-export detector_state.zip
+
+# Restore state from a previously exported archive
+detectmate-client --url <http_host:http_port> stop
+detectmate-client --url <http_host:http_port> persistency-import detector_state.zip
+detectmate-client --url <http_host:http_port> start
+```
+
+## Controlling training state
+
+By default a detector trains for a fixed number of events, then switches to inference-only mode. You can override this at runtime:
+
+```bash
+# Check what the component is currently doing
+detectmate-client --url <http_host:http_port> training-get-state
+
+# Freeze the model, stop training immediately
+detectmate-client --url <http_host:http_port> training-set-state stop_training
+
+# Resume training, eep updating past the configured event limit
+detectmate-client --url <http_host:http_port> training-set-state keep_training
+
+# Force the configure phase on or off
+detectmate-client --url <http_host:http_port> training-set-state keep_configuring
+detectmate-client --url <http_host:http_port> training-set-state stop_configuring
+```
+
+Valid values for `training-set-state` are `keep_training`, `stop_training`, `keep_configuring`, and `stop_configuring`. Any other value is rejected before the request is sent.

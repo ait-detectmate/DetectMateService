@@ -5,6 +5,7 @@ import socket
 import pytest
 
 from service.core import Service
+from service.features.engine import EngineState
 from service.settings import ServiceSettings
 
 
@@ -52,11 +53,8 @@ def smoke_service(tmp_path, free_port):
     if hasattr(service, '_pair_sock'):
         service._pair_sock.close()
 
-    if hasattr(service, '_rep_sock'):
-        service._rep_sock.close()
-
     # Wait for threads to finish
-    if hasattr(service, '_thread') and service._thread.is_alive():
+    if getattr(service, '_thread', None) is not None and service._thread.is_alive():
         service._thread.join(timeout=1.0)
 
     if thread.is_alive():
@@ -69,7 +67,7 @@ def test_service_creation(smoke_service):
     assert smoke_service.component_id is not None
     assert smoke_service.settings is not None
     assert smoke_service.component_type == "smoke_test"
-    assert hasattr(smoke_service, '_stop_event')
+    assert hasattr(smoke_service, '_state')
 
 
 def test_engine_processing(smoke_service):
@@ -87,7 +85,7 @@ def test_engine_processing(smoke_service):
 def test_service_stop_command(smoke_service):
     """Test that the stop command works correctly."""
     smoke_service.stop()
-    assert smoke_service._stop_event.is_set()
+    assert smoke_service._state == EngineState.STOPPED
 
 
 def test_service_id_stability():
@@ -115,3 +113,17 @@ def test_service_id_stability():
     )
 
     assert settings1.component_id != settings3.component_id
+
+
+def test_core_service_instantiation(tmp_path, free_port):
+    """Service with component_type=core must not raise AttributeError on
+    init."""
+    settings = ServiceSettings(
+        component_type="core",
+        engine_addr=f"ipc://{tmp_path}/core_test.ipc",
+        http_port=free_port,
+        log_level="ERROR",
+    )
+    service = Service(settings=settings)
+    assert service.component_type == "core"
+    service.stop()

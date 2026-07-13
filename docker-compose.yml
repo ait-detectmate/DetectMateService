@@ -12,10 +12,12 @@ services:
         - '$PWD/container/run:/run'
       depends_on:
         - parser
-
     parser:
       # image: detectmate:dev-0.1.6
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
         - '$PWD/container/config:/config'
         - '$PWD/container/logs:/logs'
@@ -28,11 +30,15 @@ services:
 
     detector:
       # image: detectmate:dev-0.1.6
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
         - '$PWD/container/config:/config'
         - '$PWD/container/logs:/logs'
         - '$PWD/container/run:/run'
+        - '$PWD/container/state:/state'
       command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
       ports:
         - "8002:8000"
@@ -64,8 +70,6 @@ services:
         - '--web.enable-lifecycle'
       expose:
         - 9090
-      ports:
-        - "9090:9090"
 
     grafana:
       image: grafana/grafana:latest

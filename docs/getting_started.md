@@ -271,6 +271,7 @@ services:
         - '$PWD/container/config:/config'
         - '$PWD/container/logs:/logs'
         - '$PWD/container/run:/run'
+        - '$PWD/container/state:/state'
       command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
       ports:
         - "8002:8000"

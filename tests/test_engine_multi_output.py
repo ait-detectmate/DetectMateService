@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from pydantic import ValidationError
 
 from service.settings import ServiceSettings
-from service.features.engine import Engine
+from service.features.engine import Engine, EngineState
 
 
 # Timing constants
@@ -82,7 +82,7 @@ def engine_manager():
     yield create
 
     for engine in engines:
-        if engine._running:
+        if engine._state == EngineState.RUNNING:
             engine.stop()
 
 
@@ -167,7 +167,7 @@ def test_no_output_destinations(ipc_paths, engine_manager):
         sender.send(b"test message")
         time.sleep(STARTUP_DELAY)
 
-        assert engine._running
+        assert engine._state == EngineState.RUNNING
 
 
 def test_mixed_ipc_tcp_destinations(ipc_paths, engine_manager):
@@ -227,7 +227,7 @@ def test_output_socket_failure_resilience(ipc_paths, engine_manager):
             time.sleep(0.05)
 
         assert recv1.recv() == b"PROCESSED: RESILIENCE TEST"
-        assert engine._running
+        assert engine._state == EngineState.RUNNING
 
 
 def test_multiple_messages_sequence(ipc_paths, engine_manager, receiver_manager):
@@ -365,7 +365,7 @@ def test_output_socket_failure_resilience_runtime(ipc_paths, engine_manager):
         # Second message: out1 still works
         sender.send(b"resilience test")
         assert recv1.recv() == b"PROCESSED: RESILIENCE TEST"
-        assert engine._running
+        assert engine._state == EngineState.RUNNING
 
 
 def test_unreachable_output_does_not_fail_startup(ipc_paths, engine_manager):
@@ -384,7 +384,7 @@ def test_output_socket_unavailable_does_not_fail_startup(ipc_paths, engine_manag
     with pair_socket('listen', ipc_paths['out1']):
         engine = engine_manager(settings)
         engine.start()
-        assert engine._running
+        assert engine._state == EngineState.RUNNING
         engine.stop()
 
 

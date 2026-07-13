@@ -7,13 +7,11 @@ import threading
 import json
 from typing import Optional, Type, Literal, Dict, Any, cast
 from types import TracebackType
-
 from pydantic import BaseModel
-
 from service.features.web.server import WebServer
-from service.features.config_manager import ConfigManager
+from service.features.config_manager import ConfigManager, ServiceConfig
 from service.settings import ServiceSettings
-from service.features.engine import Engine, EngineException
+from service.features.engine import Engine, EngineException, EngineState
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from service.features.component_resolver import ComponentResolver
@@ -76,40 +74,37 @@ class Service(Engine, ABC):
         # Prepare attributes & logger first
         self.settings: ServiceSettings = settings
         self.component_id: str = settings.component_id  # type: ignore[assignment]
-        self._service_exit_event: threading.Event = threading.Event()
-        self.web_server = None
+        self.service_exit_event: threading.Event = threading.Event()
         self.web_server = WebServer(self)
 
         self.log: logging.Logger = self._build_logger()
-        # set component_type
-        if hasattr(self, 'component_type'):  # prioritize class attribute over settings
-            pass  # already set by the child class
-        elif (hasattr(settings, "component_type") and
-                settings.component_type not in ("core",) and
-                not settings.component_type.startswith("core")):
+        # set component_type: class attribute (set by the child class) wins;
+        # otherwise resolve it from settings
+        if not hasattr(self, 'component_type'):
+            if (hasattr(settings, "component_type")
+                    and self._is_library_component_type(settings.component_type)):
+                resolved_type, resolved_config = ComponentResolver.resolve(
+                    settings.component_type
+                )
+                old_component_type = settings.component_type
+                settings.component_type = resolved_type
 
-            resolved_type, resolved_config = ComponentResolver.resolve(
-                settings.component_type
-            )
-            old_component_type = settings.component_type
-            settings.component_type = resolved_type
-
-            # Keep self.component_type in sync with the resolved full path
-            if not hasattr(self.__class__, 'component_type'):
                 self.component_type = resolved_type
 
-            # Now build the logger (which uses component_type)
-            self.log = self._build_logger()
+                # Now build the logger (which uses component_type)
+                self.log = self._build_logger()
 
-            # Log what resolver did
-            if resolved_type != old_component_type:
-                self.log.info(
-                    "Resolved '%s'  →  component: %s  |  config: %s",
-                    old_component_type, resolved_type, resolved_config,
-                )
+                # Log what resolver did
+                if resolved_type != old_component_type:
+                    self.log.info(
+                        "Resolved '%s'  →  component: %s  |  config: %s",
+                        old_component_type, resolved_type, resolved_config,
+                    )
 
-            if not settings.component_config_class:
-                settings.component_config_class = resolved_config
+                if not settings.component_config_class:
+                    settings.component_config_class = resolved_config
+            else:
+                self.component_type = settings.component_type
 
         # Initialize config manager before loading the library component
         # so we can pass the loaded configs to the component
@@ -117,7 +112,7 @@ class Service(Engine, ABC):
         loaded_config_dict: Dict[str, Any] = {}
 
         if hasattr(settings, 'config_file') and settings.config_file:
-            self.log.debug(f"Initializing ConfigManager with file: {settings.config_file}")
+            self.log.debug(f"Init ConfigManager with file: {settings.config_file}")
             self.config_manager = ConfigManager(
                 str(settings.config_file),
                 self.get_config_schema(),
@@ -134,9 +129,7 @@ class Service(Engine, ABC):
 
         # Load library component if component_type is specified and not core
         self.library_component: Optional[CoreComponent] = None
-        if (hasattr(settings, 'component_type') and
-                settings.component_type != "core" and
-                not settings.component_type.startswith("core")):
+        if hasattr(settings, 'component_type') and self._is_library_component_type(settings.component_type):
 
             try:
                 self.log.info(f"Loading library component: {settings.component_type}")
@@ -154,6 +147,12 @@ class Service(Engine, ABC):
         # Service IS the processor - Engine will call self.process() directly
         Engine.__init__(self, settings=settings, processor=self, logger=self.log)
         self.log.debug("%s[%s] created and fully initialized", self.component_type, self.component_id)
+
+    @staticmethod
+    def _is_library_component_type(component_type: str) -> bool:
+        """True if component_type names a loadable library component rather
+        than plain 'core'."""
+        return component_type != "core" and not component_type.startswith("core")
 
     def get_config_schema(self) -> Type[CoreConfig]:
         """Return the configuration schema for this service.
@@ -212,67 +211,67 @@ class Service(Engine, ABC):
 
     def run(self) -> None:
         """Starts the WebServer and waits for the shutdown signal."""
-        # 1. Start Web Server (Admin API)
-        if self.web_server:
-            self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
-            self.web_server.start()
+        try:
+            # 1. Start Web Server (Admin API)
+            if self.web_server:
+                self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+                self.web_server.start()
 
-        # 2. Engine Start logic
-        # __init__ is 100% finished
-        if self.settings.engine_autostart:
-            self.log.info("Auto-starting engine...")
-            self.start()
-        else:
-            self.log.info("Engine idle. Awaiting /admin/start")
+            # 2. Engine Start logic
+            # __init__ is 100% finished
+            if self.settings.engine_autostart:
+                self.log.info("Auto-starting engine...")
+                self.start()
+            else:
+                self.log.info("Engine idle. Awaiting /admin/start")
 
-        # 3. Wait for the global shutdown event
-        self._service_exit_event.wait()
-
-        # 4. Final teardown
-        if self.web_server:
-            self.web_server.stop()
-        if getattr(self, "_running", False):
-            self.stop()  # This calls the Service.stop which calls Engine.stop
-        else:
-            self.log.debug("Engine already stopped")
+            # 3. Wait for the global shutdown event
+            self.service_exit_event.wait()
+        finally:
+            # 4. Final teardown
+            if self.web_server:
+                self.web_server.stop()
+            # This calls the Service.stop which calls Engine.stop; stop() is
+            # a safe no-op if the engine isn't running, so no need to
+            # pre-check state here (that check belongs solely to Engine's
+            # locked transition, not to callers racing against it).
+            self.stop()
 
     def start(self) -> str:
         """Expose engine start as a command."""
-        # Check if already running to avoid redundant starts
-        if getattr(self, '_running', False):
-            msg = "Ignored: Engine is already running"
-            self.log.debug(msg)
-            return msg
+        try:
+            msg = Engine.start(self)
+        except EngineException as e:
+            self.log.error("Failed to start engine: %s", e)
+            return f"error: failed to start engine - {e}"
 
-        engine_starts_total.labels(
-            component_type=self.component_type,
-            component_id=self.component_id
-        ).inc()
-
-        msg = Engine.start(self)
-
-        engine_running.labels(
-            component_type=self.component_type,
-            component_id=self.component_id
-        ).state('running')
+        if msg == "engine started":
+            engine_starts_total.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).inc()
+            engine_running.labels(
+                component_type=self.component_type,
+                component_id=self.component_id
+            ).state('running')
 
         self.log.info(msg)
         return msg
 
     def stop(self) -> str:
         """Stop both the engine loop and mark the component to exit."""
-        if not getattr(self, "_running", False):
-            return "engine already stopped"
-
         self.log.info("Stop command received")
         try:
-            Engine.stop(self)
-            engine_running.labels(
-                component_type=self.component_type,
-                component_id=self.component_id
-            ).state('stopped')
-            self.log.info("Engine stopped successfully")
-            return "engine stopped"
+            msg = Engine.stop(self)
+            if msg == "engine stopped":
+                engine_running.labels(
+                    component_type=self.component_type,
+                    component_id=self.component_id
+                ).state('stopped')
+                self.log.info("Engine stopped successfully")
+            else:
+                self.log.info(msg)
+            return msg
         except EngineException as e:
             self.log.error("Failed to stop engine: %s", e)
             return f"error: failed to stop engine - {e}"
@@ -281,9 +280,8 @@ class Service(Engine, ABC):
         """Comprehensive status report including settings and configs."""
         if self.config_manager:
             configs = self.config_manager.get()
-            print(f"DEBUG: Configs from manager: {configs}")
 
-        running = getattr(self, "_running", False)
+        running = self._state == EngineState.RUNNING
 
         # Debug logging
         self.log.debug(f"Config manager exists: {self.config_manager is not None}")
@@ -312,6 +310,10 @@ class Service(Engine, ABC):
 
         if not config_data:
             return "reconfigure: no-op (empty config data)"
+
+        unknown_keys = set(config_data) - set(ServiceConfig.model_fields)
+        if unknown_keys:
+            return f"reconfigure: error - unknown config key(s): {', '.join(sorted(unknown_keys))}"
 
         try:
             # update in memory
@@ -347,7 +349,7 @@ class Service(Engine, ABC):
     def shutdown(self) -> str:
         """Stops everything and exits the process."""
         self.log.info("Process shutdown initiated.")
-        self._service_exit_event.set()
+        self.service_exit_event.set()
         return "Service is shutting down..."
 
     # helpers
@@ -431,6 +433,6 @@ class Service(Engine, ABC):
             _exc_val: BaseException | None,
             _exc_tb: TracebackType | None
     ) -> Literal[False]:
-        if not self._service_exit_event.is_set():  # only stop if not already stopped
+        if not self.service_exit_event.is_set():  # only stop if not already stopped
             self.shutdown()  # shut down gracefully  # close REP socket & thread
         return False  # propagate exceptions

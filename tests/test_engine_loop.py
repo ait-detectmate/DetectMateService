@@ -7,6 +7,7 @@ import pytest
 from contextlib import contextmanager
 from service.settings import ServiceSettings
 from service.core import Service
+from service.features.engine import EngineState
 
 
 class MockComponent(Service):
@@ -47,7 +48,7 @@ def service_thread():
     yield start
 
     for service, thread in threads:
-        service._service_exit_event.set()
+        service.service_exit_event.set()
         thread.join(timeout=2.0)
 
 
@@ -98,4 +99,23 @@ def test_admin_stop(comp):
 
     assert response.status_code == 200
     time.sleep(0.1)
-    assert comp._running is False
+    assert comp._state == EngineState.STOPPED
+
+
+def test_restart_after_stop_processes_messages(comp):
+    """Regression test: start() must recreate the pair socket stop() closed,
+    otherwise the engine loop spins forever on a dead socket instead of
+    receiving messages again."""
+    admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
+
+    assert httpx.post(f"{admin_url}/admin/stop").status_code == 200
+    time.sleep(0.1)
+    assert comp._state == EngineState.STOPPED
+
+    assert httpx.post(f"{admin_url}/admin/start").status_code == 200
+    time.sleep(0.1)
+    assert comp._state == EngineState.RUNNING
+
+    with pair_socket(comp.settings.engine_addr) as sock:
+        sock.send(b"hello")
+        assert sock.recv() == b"olleh"

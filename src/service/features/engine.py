@@ -3,7 +3,8 @@ import pynng
 import logging
 import time
 from abc import ABC
-from typing import Optional, List, Protocol
+from enum import Enum, auto
+from typing import Any, Dict, Optional, List, Protocol
 from prometheus_client import Counter
 from service.settings import ServiceSettings
 from service.features.engine_socket import (
@@ -58,6 +59,25 @@ class EngineException(Exception):
     """Custom exception for engine-related errors."""
 
 
+class EngineState(Enum):
+    """Lifecycle state of an Engine, transitioned only under _lifecycle_lock.
+
+    READY    - sockets open, no loop thread running (initial state)
+    RUNNING  - loop thread active, processing messages
+    STOPPING - stop() requested; _run_loop must exit but its death isn't
+               confirmed yet. Distinct from RUNNING so the loop notices the
+               request immediately, and distinct from STOPPED so start()
+               can't spin up a second thread while the first might still be
+               alive.
+    STOPPED  - the loop thread is confirmed dead and its sockets closed (or
+               close was attempted); start() must recreate the sockets
+    """
+    READY = auto()
+    RUNNING = auto()
+    STOPPING = auto()
+    STOPPED = auto()
+
+
 class Processor(Protocol):
     """Protocol defining the interface for message processors.
 
@@ -97,14 +117,15 @@ class Engine(ABC):
             )
 
         self.processor = processor
-        self._stop_event = threading.Event()
         self.log = logger or logging.getLogger(__name__)
 
-        # control flags
-        self._running = False
-        self._thread = threading.Thread(
-            target=self._run_loop, name="EngineLoop", daemon=True
-        )
+        # serializes start()/stop() transitions so concurrent callers can't
+        # both pass the "not running" guard and double-start/double-close
+        self._lifecycle_lock = threading.Lock()
+
+        self._state = EngineState.READY
+        # created fresh on every start(); no thread exists until then
+        self._thread: Optional[threading.Thread] = None
 
         # set up the engine socket via the factory abstraction
         addr = str(self.settings.engine_addr)
@@ -179,27 +200,117 @@ class Engine(ABC):
                 # We attempt to continue with other sockets rather than crashing entirely
 
     def start(self) -> str:
-        if not self._running:
-            self._running = True
-            self._stop_event.clear()
-            # RECREATE THE THREAD if it's dead or doesn't exist
-            if not self._thread.is_alive():
-                self._thread = threading.Thread(
-                    target=self._run_loop,
-                    name="EngineLoop",
-                    daemon=True
+        """Start the engine loop.
+
+        Returns:
+            "engine started" or "engine already running"
+        Raises:
+            EngineException: If the loop thread fails to start
+        """
+        with self._lifecycle_lock:
+            if self._state in (EngineState.RUNNING, EngineState.STOPPING):
+                # STOPPING means a previous stop() couldn't confirm the loop
+                # thread died.  refuse to start a second one on top of it.
+                return "engine already running"
+
+            previous_state = self._state  # READY or STOPPED, to roll back to on failure
+
+            if self._state == EngineState.STOPPED:
+                # stop() closed _pair_sock and _out_sockets. recreate them
+                # here, otherwise the loop spins forever calling recv() on
+                # a dead socket.
+                addr = str(self.settings.engine_addr)
+                self._pair_sock = self._engine_socket_factory.create(
+                    addr, self.log, tls_config=self.settings.tls_input
                 )
-            self._thread.start()
+                self._pair_sock.recv_timeout = self.settings.engine_recv_timeout
+                self._out_sockets = []
+                self._setup_output_sockets()
+
+            self._state = EngineState.RUNNING
+            thread = threading.Thread(
+                target=self._run_loop,
+                name="EngineLoop",
+                daemon=True
+            )
+            try:
+                thread.start()
+            except Exception as e:
+                # Thread creation can fail under OS resource exhaustion. Roll
+                # back so start() can retry, instead of leaving _state at
+                # RUNNING with no thread for stop() to join.
+                self._state = previous_state
+                raise EngineException(f"Failed to start engine thread: {e}") from e
+
+            self._thread = thread
             return "engine started"
-        return "engine already running"
 
     def _run_loop(self) -> None:
+        # wrapper: runs the loop and guarantees _handle_unexpected_loop_exit fires
         labels = {
             "component_type": getattr(self, "component_type", "core"),
             "component_id": self.settings.component_id
         }
 
-        while self._running and not self._stop_event.is_set():
+        try:
+            self._run_loop_body(labels)
+        finally:
+            self._handle_unexpected_loop_exit()
+
+    def _handle_unexpected_loop_exit(self) -> None:
+        """Self-heal _state if the loop thread died without stop() being
+        called.
+
+        Without this, an uncaught exception in the loop would leave
+        _state stuck at RUNNING with a dead thread - start() would
+        refuse to restart, and status would keep reporting healthy.
+
+        _state must be checked *before* acquiring _lifecycle_lock: a
+        normal stop() holds this lock while blocked in
+        self._thread.join() waiting for this thread, so acquiring it
+        unconditionally here would deadlock. If _state is already non-
+        RUNNING, a stop() call already owns the shutdown - nothing to
+        do.
+
+        The acquire below is bounded (not indefinite) for the rare case
+        where a stop() call starts concurrently, wins the lock, and
+        joins us while we're still waiting on it.
+        """
+        if self._state != EngineState.RUNNING:
+            return
+
+        if not self._lifecycle_lock.acquire(timeout=0.5):
+            # A concurrent stop() is holding the lock and already
+            # responsible for shutting things down - let this thread finish
+            # so that stop()'s join() can succeed.
+            self.log.warning(
+                "Engine loop thread exiting unexpectedly, but a concurrent "
+                "stop() already holds the lifecycle lock; leaving it to finish shutdown"
+            )
+            return
+        try:
+            # Re-check: a concurrent stop() may have won the race and
+            # already be blocked joining us since the check above.
+            if self._state != EngineState.RUNNING:
+                return
+            self.log.critical(
+                "Engine loop thread exiting unexpectedly; marking engine stopped"
+            )
+            self._state = EngineState.STOPPED
+            try:
+                self._pair_sock.close()
+            except Exception as e:
+                self.log.error("Failed to close engine socket after unexpected exit: %s", e)
+            for i, sock in enumerate(self._out_sockets):
+                try:
+                    sock.close()
+                except Exception as e:
+                    self.log.error("Failed to close output socket %d after unexpected exit: %s", i, e)
+        finally:
+            self._lifecycle_lock.release()
+
+    def _run_loop_body(self, labels: Dict[str, Any]) -> None:
+        while self._state == EngineState.RUNNING:
 
             # recv phase
             try:
@@ -216,8 +327,7 @@ class Engine(ABC):
             except pynng.Timeout:
                 continue  # Timeout occurred, check running flag and continue
             except pynng.NNGException as e:
-                # Socket likely closed during shutdown; leave loop if we're stopping.
-                if not self._running or self._stop_event.is_set():
+                if self._state != EngineState.RUNNING:
                     break
                 self.log.exception("Engine error during receive: %s", e)
                 continue
@@ -237,6 +347,14 @@ class Engine(ABC):
 
             if out is None:
                 self.log.debug("Engine: Processor returned None, skipping send")
+                continue
+
+            if not isinstance(out, (bytes, bytearray)):
+                processing_errors_total.labels(**labels).inc()
+                self.log.error(
+                    "Engine: processor.process() returned %s, expected bytes|None; dropping message",
+                    type(out).__name__,
+                )
                 continue
 
             # send phase
@@ -261,6 +379,11 @@ class Engine(ABC):
                     data_dropped_bytes_total.labels(**labels).inc(len(out))
                     data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
                     self.log.error("Engine error sending reply on engine socket: %s", e)
+                    continue
+                except Exception as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(out))
+                    data_dropped_lines_total.labels(**labels).inc(out.count(b'\n') or 1)
+                    self.log.exception("Unexpected engine error sending reply on engine socket: %s", e)
                     continue
 
     def _send_to_outputs(self, data: bytes) -> bool:
@@ -299,44 +422,75 @@ class Engine(ABC):
                     data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
                     self.log.error(f"Engine error sending to output socket {i}: {e}")
                     break
+                except Exception as e:
+                    data_dropped_bytes_total.labels(**labels).inc(len(data))
+                    data_dropped_lines_total.labels(**labels).inc(data.count(b'\n') or 1)
+                    self.log.exception(f"Unexpected engine error sending to output socket {i}: {e}")
+                    break
         return any_sent
 
-    def stop(self) -> None | str:
+    def stop(self) -> str:
         """Stop the engine loop and clean up resources.
 
         Returns:
-            None on success
+            "engine stopped" if this call actually stopped it, or
+            "engine already stopped" if it was a no-op. Callers should
+            branch on this (rather than re-checking state themselves
+            outside the lock) to know whether they were the one that did it.
         Raises:
             EngineException: If stopping fails for any reason
         """
-        if not self._running:
-            if self.log:
-                self.log.debug("Engine is not running, skipping stop")
-            return None
-        self._running = False
-        self._stop_event.set()
+        with self._lifecycle_lock:
+            if self._state not in (EngineState.RUNNING, EngineState.STOPPING):
+                if self.log:
+                    self.log.debug("Engine is not running, skipping stop")
+                return "engine already stopped"
 
-        # WAIT for engine loop to exit recv()
-        self._thread.join(timeout=2.0)
+            # Signal _run_loop to exit *before* attempting to join it - this must
+            # happen immediately, independent of whether the join below confirms
+            # the thread actually died within the timeout.
+            self._state = EngineState.STOPPING
 
-        if self._thread.is_alive():
-            raise EngineException("Engine thread failed to stop cleanly")
+            if self._thread is None:  # satisfy type checker; should never happen
+                raise EngineException("Engine state is STOPPING but no thread was started")
 
-        # Close input socket
-        try:
-            self._pair_sock.close()
-        except pynng.NNGException as e:
-            raise EngineException(f"Failed to close engine socket: {e}") from e
+            # WAIT for engine loop to exit recv()
+            self._thread.join(timeout=2.0)
 
-        # Close all output sockets
-        for i, sock in enumerate(self._out_sockets):
+            if self._thread.is_alive():
+                # Leave _state as STOPPING: the loop's exit can't be confirmed, so a
+                # later start() must not spin up a second thread on top of this one.
+                # A later stop() call will retry the join.
+                raise EngineException("Engine thread failed to stop cleanly")
+
+            # The loop is confirmed dead, so the engine is stopped regardless of
+            # whether the socket cleanup below succeeds.
+            self._state = EngineState.STOPPED
+
+            # Close every socket regardless of individual failures, then report
+            # them together instead of raising on the first one and leaking the rest.
+            close_failures: List[pynng.NNGException] = []
+
             try:
-                sock.close()
-                self.log.debug(f"Closed output socket {i}")
+                self._pair_sock.close()
             except pynng.NNGException as e:
-                self.log.error(f"Failed to close output socket {i}: {e}")
+                close_failures.append(e)
 
-        if self.log:
-            self.log.debug("Engine stopped successfully")
+            for i, sock in enumerate(self._out_sockets):
+                try:
+                    sock.close()
+                    self.log.debug(f"Closed output socket {i}")
+                except pynng.NNGException as e:
+                    self.log.error(f"Failed to close output socket {i}: {e}")
+                    close_failures.append(e)
 
-        return None
+            if close_failures:
+                raise EngineException(
+                    f"Failed to close {len(close_failures)} socket(s) during stop: "
+                    + "; ".join(str(e) for e in close_failures)
+                ) from close_failures[0]
+
+            if self.log:
+                self.log.debug("Engine stopped successfully")
+
+            return "engine stopped"

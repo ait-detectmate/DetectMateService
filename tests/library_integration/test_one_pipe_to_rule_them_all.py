@@ -7,19 +7,20 @@ Tests verify the full data flow where:
 
 The DummyDetector alternates: False, True, False
 """
-from detectmatelibrary_tests.test_parsers.dummy_parser import DummyParser
-from library_integration_base import start_service, cleanup_service, AUDIT_LOG
-import time
-from pathlib import Path
-from typing import Generator
-import pytest
-import pynng
-import json
-import sys
-import os
-from subprocess import Popen, PIPE
-from detectmatelibrary.schemas import ParserSchema, DetectorSchema
 from detectmatelibrary.helper.from_to import From
+from detectmatelibrary.schemas import ParserSchema, DetectorSchema
+from subprocess import Popen, PIPE
+import json
+import pynng
+import pytest
+from typing import Generator
+from pathlib import Path
+import time
+from library_integration_base import start_service, cleanup_service, AUDIT_LOG
+from detectmatelibrary._testutils.dummy_parser import DummyParser
+import os
+import sys
+
 pytest_plugins = ["library_integration_base_fixtures"]
 
 
@@ -32,8 +33,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Parser settings
     parser_settings = {
-        "component_type": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParser",
-        "component_config_class": "detectmatelibrary_tests.test_parsers.dummy_parser.DummyParserConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_parser.DummyParser",
+        "component_config_class": "detectmatelibrary._testutils.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": "8020",
@@ -58,8 +59,8 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
 
     # Detector settings
     detector_settings = {
-        "component_type": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetector",
-        "component_config_class": "detectmatelibrary_tests.test_detectors.dummy_detector.DummyDetectorConfig",
+        "component_type": "detectmatelibrary._testutils.dummy_detector.DummyDetector",
+        "component_config_class": "detectmatelibrary._testutils.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": "8030",
