@@ -561,7 +561,7 @@ If you check `container/fluentlogs/output-rule.%Y%m%d` at this point, you'll fin
 
 So far, `detector-rule` has been running quietly next to `detector`, since none of our requests matched any of its enabled rules. To see it raise an alert, we'll enable the `R001 - TemplateNotFound` rule and then generate a log line that the parser cannot match against the template in `container/config/templates.txt`.
 
-Edit `container/config/detector_rule_config.yaml` and add the rule:
+Edit `container/config/detector_rule_config.yaml` and add the rule "R001 - TemplateNotFound":
 
 ```
 detectors:
@@ -582,7 +582,7 @@ alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
  ✔ Container detectmateservice-detector-rule-1  Started
 ```
 
-Now append a contrived log line to `/var/log/nginx/access.log` that doesn't match the Nginx access log template at all,  for example a line without the expected quotes and brackets:
+Now append a contrived log line to `/var/log/nginx/access.log` that doesn't match the Nginx access log template at all, for example a line without the expected quotes and brackets:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
