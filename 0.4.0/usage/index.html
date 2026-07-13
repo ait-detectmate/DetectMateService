@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.4.0/usage/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Quick Start - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Quick Start";
+        var mkdocs_page_input_path = "usage.md";
+        var mkdocs_page_url = "/DetectMateService/0.4.0/usage/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Usage</a>
+    <ul class="current">
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Quick Start</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#quick-start-your-first-service">Quick start your first Service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#create-service-settings">Create service settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#start-the-service-with-settings">Start the service with settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#starting-in-standby-mode">Starting in standby mode</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#checking-status">Checking status</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#reconfiguring">Reconfiguring</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stopping-the-engine">Stopping the engine</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stopping-the-process">Stopping the process</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#controlling-state-persistency">Controlling state persistency</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#controlling-training-state">Controlling training state</a>
+    </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../prometheus/">Monitoring with Prometheus</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Maintainers</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release/">Release Process</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Usage</li>
+      <li class="breadcrumb-item active">Quick Start</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="usage">Usage</h1>
+<p>DetectMateService provides a command-line interface (CLI) <code>detectmate</code> to manage the service.</p>
+<h2 id="quick-start-your-first-service">Quick start your first Service</h2>
+<p>To run a component with default settings only, you can use this command:</p>
+<pre><code class="language-bash">detectmate
+</code></pre>
+<p>You should see output like:</p>
+<pre><code>[2026-01-20 15:16:21,140] INFO service.cli: config file: None
+[2026-01-20 15:16:21,140] INFO service.cli: config file: None
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP Admin active at 127.0.0.1:8000
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
+INFO:     Started server process [3933168]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+</code></pre>
+<h2 id="create-service-settings">Create service settings</h2>
+<p>To run the service with custom variables, we can define settings. For example, create a file named <code>settings.yaml</code>:</p>
+<pre><code class="language-yaml">component_name: my-first-service
+component_type: core  # or use a library component like &quot;detectors.RandomDetector&quot;
+log_level: INFO
+log_dir: ./logs
+http_host: 127.0.0.1
+http_port: 8000
+engine_addr: ipc:///tmp/detectmate.engine.ipc
+</code></pre>
+<h2 id="start-the-service-with-settings">Start the service with settings</h2>
+<p>To start the service, use the <code>detectmate</code> command. You can optionally specify a settings file and a component configuration file.</p>
+<pre><code class="language-bash">detectmate --settings settings.yaml --config config.yaml
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>--settings</code></td>
+<td style="text-align: left;">Path to the service settings YAML file.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--config</code></td>
+<td style="text-align: left;">Path to the component configuration YAML file.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--no-autostart</code></td>
+<td style="text-align: left;">Start the service without auto-starting the engine. Use <code>POST /admin/start</code> to begin processing.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="starting-in-standby-mode">Starting in standby mode</h2>
+<p>By default the engine starts automatically when the service launches. Pass <code>--no-autostart</code> to keep the engine idle on startup:</p>
+<pre><code class="language-bash">detectmate --settings settings.yaml --no-autostart
+</code></pre>
+<p>The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:</p>
+<pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/admin/start
+</code></pre>
+<p>This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.</p>
+<p>The same behaviour can also be configured persistently via the settings file or environment variable - see <a href="../configuration/#service-settings"><code>engine_autostart</code></a>.</p>
+<h2 id="checking-status">Checking status</h2>
+<p>To check the status of a running service run:</p>
+<pre><code class="language-bash">detectmate-client status --url &lt;http_host:http_port&gt;
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-json">{
+  &quot;status&quot;: {
+    &quot;component_type&quot;: &quot;core&quot;,
+    &quot;component_id&quot;: &quot;abc123...&quot;,
+    &quot;running&quot;: true
+  },
+  &quot;settings&quot;: {
+    &quot;component_name&quot;: &quot;my-first-service&quot;,
+    &quot;log_level&quot;: &quot;INFO&quot;,
+    ...
+  },
+  &quot;configs&quot;: {}
+}
+</code></pre>
+<h2 id="reconfiguring">Reconfiguring</h2>
+<p>You can update the component configuration of a running service without restarting it:</p>
+<pre><code class="language-bash">detectmate-client --url &lt;http_host:http_port&gt; reconfigure new_config.yaml
+</code></pre>
+<p>Add <code>--persist</code> to save the new configuration to the original config file (if supported).</p>
+<pre><code class="language-bash">detectmate --url &lt;http_host:http_port&gt; reconfigure new_config.yaml --persist
+</code></pre>
+<h2 id="stopping-the-engine">Stopping the engine</h2>
+<p>To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with <code>start</code>:</p>
+<pre><code class="language-bash">detectmate-client --url &lt;http_host:http_port&gt; stop
+</code></pre>
+<h2 id="stopping-the-process">Stopping the process</h2>
+<p>To shut down the entire service process (not just the engine) send <code>SIGINT</code> (Ctrl+C if it's running in your foreground terminal, as in the <a href="#quick-start-your-first-service">Quick start</a> output above) or <code>SIGTERM</code> (what <code>docker stop</code> and systemd send), or call the shutdown endpoint directly:</p>
+<pre><code class="language-bash">curl -X POST http://&lt;http_host:http_port&gt;/admin/shutdown
+</code></pre>
+<p>Unlike <code>stop</code>, this is not restartable, the process exits. Expect these two log lines:</p>
+<pre><code>Shutdown signal received (SIGINT)...
+Clean exit.
+</code></pre>
+<p>(<code>SIGTERM</code> logs the same two lines with <code>SIGTERM</code> in place of <code>SIGINT</code>.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown. you don't need to call <code>stop</code> first.</p>
+<h2 id="controlling-state-persistency">Controlling state persistency</h2>
+<p>When a component has persistency configured, you can manage its saved state at runtime.</p>
+<pre><code class="language-bash"># Show persistency config, event counters, and last save timestamp
+detectmate-client --url &lt;http_host:http_port&gt; persistency-status
+
+# Force an immediate save of learned state to storage
+detectmate-client --url &lt;http_host:http_port&gt; persistency-save
+
+# Restore learned state from storage (replaces current in-memory state)
+detectmate-client --url &lt;http_host:http_port&gt; persistency-load
+</code></pre>
+<p>These commands return <code>404</code> if persistency is not configured for the loaded component. <code>persistency-load</code> and <code>persistency-import</code> return <code>409</code> if the engine is running — stop it first, then load/import, then restart. See <a href="../configuration/">configuration.md</a> for how to enable persistency via the <code>persist</code> block.</p>
+<pre><code class="language-bash"># Download the current learned state to a file
+detectmate-client --url &lt;http_host:http_port&gt; persistency-export detector_state.zip
+
+# Restore state from a previously exported archive
+detectmate-client --url &lt;http_host:http_port&gt; stop
+detectmate-client --url &lt;http_host:http_port&gt; persistency-import detector_state.zip
+detectmate-client --url &lt;http_host:http_port&gt; start
+</code></pre>
+<h2 id="controlling-training-state">Controlling training state</h2>
+<p>By default a detector trains for a fixed number of events, then switches to inference-only mode. You can override this at runtime:</p>
+<pre><code class="language-bash"># Check what the component is currently doing
+detectmate-client --url &lt;http_host:http_port&gt; training-get-state
+
+# Freeze the model, stop training immediately
+detectmate-client --url &lt;http_host:http_port&gt; training-set-state stop_training
+
+# Resume training, eep updating past the configured event limit
+detectmate-client --url &lt;http_host:http_port&gt; training-set-state keep_training
+
+# Force the configure phase on or off
+detectmate-client --url &lt;http_host:http_port&gt; training-set-state keep_configuring
+detectmate-client --url &lt;http_host:http_port&gt; training-set-state stop_configuring
+</code></pre>
+<p>Valid values for <code>training-set-state</code> are <code>keep_training</code>, <code>stop_training</code>, <code>keep_configuring</code>, and <code>stop_configuring</code>. Any other value is rejected before the request is sent.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../configuration/" class="btn btn-neutral float-left" title="Configuration"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../library/" class="btn btn-neutral float-right" title="Using a Library Component">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../configuration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../library/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

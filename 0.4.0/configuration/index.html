@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.4.0/configuration/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Configuration - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Configuration";
+        var mkdocs_page_input_path = "configuration.md";
+        var mkdocs_page_url = "/DetectMateService/0.4.0/configuration/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Configuration</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#service-settings">Service settings</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#yaml-files">YAML files</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment variables</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#component-configuration">Component configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#http-admin-interface">HTTP Admin Interface</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#core-endpoints">Core Endpoints</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#persistency-endpoints">Persistency Endpoints</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#adminpersistencystatus-response">/admin/persistency/status response</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#training-state-endpoints">Training State Endpoints</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#background-training-vs-configuration">Background: training vs. configuration</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#post-admintrainingstate-payload">POST /admin/training/state payload</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get-admintrainingstate-response">GET /admin/training/state response</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#persistency-component-configuration">Persistency component configuration</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../prometheus/">Monitoring with Prometheus</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Maintainers</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release/">Release Process</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+      <li class="breadcrumb-item active">Configuration</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="configuration">Configuration</h1>
+<p>DetectMateService can be configured using a YAML settings file, environment variables, or CLI flags. The precedence order is:</p>
+<p><strong>CLI flags &gt; environment variables &gt; YAML file</strong></p>
+<h2 id="service-settings">Service settings</h2>
+<p>These settings control the service infrastructure.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Setting</th>
+<th style="text-align: left;">Env Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>component_name</code></td>
+<td style="text-align: left;"><code>DETECTMATE_COMPONENT_NAME</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">A human-readable name for the service instance.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>component_id</code></td>
+<td style="text-align: left;"><code>DETECTMATE_COMPONENT_ID</code></td>
+<td style="text-align: left;"><code>None</code> (computed)</td>
+<td style="text-align: left;">Unique identifier for the component; computed automatically if not provided.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>component_type</code></td>
+<td style="text-align: left;"><code>DETECTMATE_COMPONENT_TYPE</code></td>
+<td style="text-align: left;"><code>core</code></td>
+<td style="text-align: left;">Python import path for the component class (e.g., <code>detectors.MyDetector</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>component_config_class</code></td>
+<td style="text-align: left;"><code>DETECTMATE_COMPONENT_CONFIG_CLASS</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Python import path of the configuration class used by the component (e.g., <code>detectors.MyDetectorConfig</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>log_level</code></td>
+<td style="text-align: left;"><code>DETECTMATE_LOG_LEVEL</code></td>
+<td style="text-align: left;"><code>INFO</code></td>
+<td style="text-align: left;">Logging level (<code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>log_dir</code></td>
+<td style="text-align: left;"><code>DETECTMATE_LOG_DIR</code></td>
+<td style="text-align: left;"><code>./logs</code></td>
+<td style="text-align: left;">Directory for log files.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>log_to_console</code></td>
+<td style="text-align: left;"><code>DETECTMATE_LOG_TO_CONSOLE</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;">Whether logs are written to stdout/stderr.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>log_to_file</code></td>
+<td style="text-align: left;"><code>DETECTMATE_LOG_TO_FILE</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;">Whether logs are written to files in <code>log_dir</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>http_host</code></td>
+<td style="text-align: left;"><code>DETECTMATE_HTTP_HOST</code></td>
+<td style="text-align: left;"><code>127.0.0.1</code></td>
+<td style="text-align: left;">Host address for the HTTP server.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>http_port</code></td>
+<td style="text-align: left;"><code>DETECTMATE_HTTP_PORT</code></td>
+<td style="text-align: left;"><code>8000</code></td>
+<td style="text-align: left;">Port for the HTTP server.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>manager_recv_timeout</code></td>
+<td style="text-align: left;"><code>DETECTMATE_MANAGER_RECV_TIMEOUT</code></td>
+<td style="text-align: left;"><code>100</code></td>
+<td style="text-align: left;">Receive timeout (ms) for the manager command channel.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>manager_thread_join_timeout</code></td>
+<td style="text-align: left;"><code>DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT</code></td>
+<td style="text-align: left;"><code>1.0</code></td>
+<td style="text-align: left;">Timeout (s) when waiting for the manager thread to stop.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_addr</code></td>
+<td style="text-align: left;"><code>DETECTMATE_ENGINE_ADDR</code></td>
+<td style="text-align: left;"><code>ipc:///tmp/detectmate.engine.ipc</code></td>
+<td style="text-align: left;">Address for data processing (PAIR0/1).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_autostart</code></td>
+<td style="text-align: left;"><code>DETECTMATE_ENGINE_AUTOSTART</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;">Whether the engine starts automatically on launch. Can also be overridden at runtime with <code>--no-autostart</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_recv_timeout</code></td>
+<td style="text-align: left;"><code>DETECTMATE_ENGINE_RECV_TIMEOUT</code></td>
+<td style="text-align: left;"><code>100</code></td>
+<td style="text-align: left;">Receive timeout (ms) for the engine channel.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_retry_count</code></td>
+<td style="text-align: left;"><code>DETECTMATE_ENGINE_RETRY_COUNT</code></td>
+<td style="text-align: left;"><code>10</code></td>
+<td style="text-align: left;">Retry count for resending messages when TryAgain exception occurs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_buffer_size</code></td>
+<td style="text-align: left;"><code>DETECTMATE_ENGINE_BUFFER_SIZE</code></td>
+<td style="text-align: left;"><code>100</code></td>
+<td style="text-align: left;">Buffer size for the number of sent and received messages in NNG.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>out_addr</code></td>
+<td style="text-align: left;"><code>DETECTMATE_OUT_ADDR</code></td>
+<td style="text-align: left;"><code>[]</code></td>
+<td style="text-align: left;">List of output addresses (strongly typed NNG URLs).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>out_dial_timeout</code></td>
+<td style="text-align: left;"><code>DETECTMATE_OUT_DIAL_TIMEOUT</code></td>
+<td style="text-align: left;"><code>1000</code></td>
+<td style="text-align: left;">Timeout (ms) for connecting to output addresses.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="yaml-files">YAML files</h3>
+<p>You can provide a YAML file containing the service settings. Below is an example <code>settings.yaml</code>:</p>
+<pre><code class="language-yaml">component_name: &quot;my-detector&quot;
+log_level: &quot;DEBUG&quot;
+log_dir: &quot;./logs&quot;
+
+# Manager Interface
+http_host: 127.0.0.1
+http_port: 8000
+
+# Engine Interface (Data Channel)
+engine_addr: &quot;ipc:///tmp/detectmate.engine.ipc&quot;
+engine_autostart: true
+
+# Output Destinations (where processed data is sent)
+out_addr:
+  - &quot;tcp://127.0.0.1:5000&quot;
+  - &quot;ipc:///tmp/output.ipc&quot;
+
+out_dial_timeout: 1000
+</code></pre>
+<h3 id="environment-variables">Environment variables</h3>
+<p>Environment variables override values in the YAML file. They are prefixed with <code>DETECTMATE_</code>.</p>
+<p>Example:</p>
+<pre><code class="language-bash">export DETECTMATE_LOG_LEVEL=DEBUG
+export DETECTMATE_COMPONENT_NAME=worker-1
+detectmate start
+</code></pre>
+<h2 id="component-configuration">Component configuration</h2>
+<p>In addition to the service settings (which configure the <em>runner</em>), you can also pass a separate configuration file for the specific component logic (e.g., detector parameters) using the <code>--config</code> flag in the CLI. This file is specific to the implementation of the component you are running.</p>
+<p>Component configuration controls the specific logic of the detector or parser. To support dynamic library loading, this file uses a nested structure.
+The configuration must be namespaced by the component category (detectors or parsers) and the specific class name to allow the library to correctly route parameters.
+Example detector_config.yaml</p>
+<pre><code class="language-yaml">detectors:                 # Category Level
+  NewValueDetector:        # Class Name Level
+    auto_config: false
+    method_type: new_value_detector
+    params:                # Implementation Specific Level
+    events:
+        1:
+            test:
+                params: {}
+                variables:
+                    - pos: 0
+                      name: var1
+                      params:
+                          threshold: 0.5
+                header_variables:
+                    - pos: level
+                      params: {}
+
+</code></pre>
+<p>You can read more about Components in the <a href="../library/">Using a Library Component</a> section.</p>
+<h2 id="http-admin-interface">HTTP Admin Interface</h2>
+<p>The service provides a REST API for runtime management and monitoring.</p>
+<h3 id="core-endpoints">Core Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Method</th>
+<th style="text-align: left;">Endpoint</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GET</code></td>
+<td style="text-align: left;"><code>/admin/status</code></td>
+<td style="text-align: left;">Returns the health, running state, and current effective configurations.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/start</code></td>
+<td style="text-align: left;">Starts the data processing engine thread. Idempotent — returns <code>200</code>/<code>"engine already running"</code> if already started. Returns <code>500</code> if the engine thread fails to start.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/stop</code></td>
+<td style="text-align: left;">Stops the data processing engine thread. Idempotent — returns <code>200</code>/<code>"engine already stopped"</code> if already stopped. Returns <code>500</code> if the engine fails to stop cleanly.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/reconfigure</code></td>
+<td style="text-align: left;">Updates component parameters dynamically. Only <code>detectors</code>, <code>parsers</code>, and <code>readers</code> are valid top-level config keys — returns <code>400</code> for unknown keys or other invalid config data, and <code>409</code> if no config manager is configured (e.g. no <code>config_file</code> was set for this component).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/shutdown</code></td>
+<td style="text-align: left;">Gracefully terminates the entire service process.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="persistency-endpoints">Persistency Endpoints</h3>
+<p>These endpoints are available when the loaded library component has persistency configured (via the <code>persist</code> block in its component config).</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Method</th>
+<th style="text-align: left;">Endpoint</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GET</code></td>
+<td style="text-align: left;"><code>/admin/persistency/status</code></td>
+<td style="text-align: left;">Returns persistency configuration, in-memory event counters, and timestamp of the last save.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/persistency/save</code></td>
+<td style="text-align: left;">Forces an immediate flush of in-memory learned state to storage.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/persistency/load</code></td>
+<td style="text-align: left;">Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first — returns <code>409</code> if it is running.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GET</code></td>
+<td style="text-align: left;"><code>/admin/persistency/export</code></td>
+<td style="text-align: left;">Downloads the current learned state as a zip archive.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/persistency/import</code></td>
+<td style="text-align: left;">Uploads a zip archive and restores state from it. The engine must be stopped first — returns <code>409</code> if it is running.</td>
+</tr>
+</tbody>
+</table>
+<p><code>/admin/persistency/save</code>, <code>/admin/persistency/status</code>, and <code>/admin/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/admin/persistency/load</code> and <code>/admin/persistency/import</code> additionally return <code>409</code> if the engine is running — stop it first with <code>/admin/stop</code>. <code>/admin/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
+<h4 id="adminpersistencystatus-response"><code>/admin/persistency/status</code> response</h4>
+<pre><code class="language-json">{
+  &quot;path&quot;: &quot;/state/NewValueDetector&quot;,
+  &quot;save_interval_seconds&quot;: 300,
+  &quot;events_until_save&quot;: null,
+  &quot;auto_load&quot;: false,
+  &quot;events_seen_count&quot;: 12,
+  &quot;events_with_data_count&quot;: 8,
+  &quot;events_since_save&quot;: 47,
+  &quot;last_saved_at&quot;: &quot;2026-06-16T10:30:00+00:00&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: left;">Storage path (local or remote fsspec URL) where state files are written.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>save_interval_seconds</code></td>
+<td style="text-align: left;">Background timer interval between automatic saves.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>events_until_save</code></td>
+<td style="text-align: left;">If set, a save is also triggered after this many ingested events. <code>null</code> means disabled.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>auto_load</code></td>
+<td style="text-align: left;">Whether the component loaded its previous state automatically on startup.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>events_seen_count</code></td>
+<td style="text-align: left;">Total number of distinct event types observed since the last load.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>events_with_data_count</code></td>
+<td style="text-align: left;">Number of event types that have extracted variable data stored.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>events_since_save</code></td>
+<td style="text-align: left;">Events ingested since the last successful save.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>last_saved_at</code></td>
+<td style="text-align: left;">UTC timestamp of the last successful save, or <code>null</code> if no save has occurred yet.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="training-state-endpoints">Training State Endpoints</h3>
+<p>These endpoints control whether the library component is actively training or configuring its model. They are available whenever a library component is loaded.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Method</th>
+<th style="text-align: left;">Endpoint</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GET</code></td>
+<td style="text-align: left;"><code>/admin/training/state</code></td>
+<td style="text-align: left;">Returns the fit logic state from the last processed event.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>POST</code></td>
+<td style="text-align: left;"><code>/admin/training/state</code></td>
+<td style="text-align: left;">Overrides the training or configuration phase.</td>
+</tr>
+</tbody>
+</table>
+<p>Both endpoints return <code>404</code> if no library component is loaded. See <a href="../usage/#controlling-training-state">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
+<h4 id="background-training-vs-configuration">Background: training vs. configuration</h4>
+<p>Each incoming event is evaluated by the component's fit logic, which decides what to do with it. There are two independent phases:</p>
+<ul>
+<li><strong>Configure</strong>: the component learns the structure of the data (e.g. which event types and variables exist). Runs for a fixed number of events set via <code>data_use_configure</code> in the component config.</li>
+<li><strong>Train</strong>: the component fits its model on the observed data. Runs for a fixed number of events set via <code>data_use_training</code>.</li>
+</ul>
+<p>Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.</p>
+<h4 id="post-admintrainingstate-payload"><code>POST /admin/training/state</code> payload</h4>
+<pre><code class="language-json">{&quot;state&quot;: &quot;&lt;value&gt;&quot;}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>keep_training</code></td>
+<td style="text-align: left;">Force training <strong>on</strong> indefinitely, ignoring the event count limit.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>stop_training</code></td>
+<td style="text-align: left;">Force training <strong>off</strong> immediately, ignoring the event count limit.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>keep_configuring</code></td>
+<td style="text-align: left;">Force the configure phase <strong>on</strong> indefinitely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>stop_configuring</code></td>
+<td style="text-align: left;">Force the configure phase <strong>off</strong> immediately.</td>
+</tr>
+</tbody>
+</table>
+<p>Any other value is rejected with <code>422 Unprocessable Entity</code>.</p>
+<h4 id="get-admintrainingstate-response"><code>GET /admin/training/state</code> response</h4>
+<pre><code class="language-json">{&quot;state&quot;: &quot;Training.&quot;}
+</code></pre>
+<p>The <code>state</code> field reflects what the component did with the most recently processed event:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>"Training."</code></td>
+<td style="text-align: left;">Last event was used for model training.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>"Configuring"</code></td>
+<td style="text-align: left;">Last event was used for the configure phase.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>"Default"</code></td>
+<td style="text-align: left;">Neither,  the component is in inference-only mode.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="persistency-component-configuration">Persistency component configuration</h3>
+<p>Persistency for detector components is enabled through the <code>persist</code> block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.</p>
+<pre><code class="language-yaml">detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    persist:
+      path: ./state          # Directory to store state files (supports fsspec URLs)
+      interval_seconds: 300  # Save every 5 minutes (default)
+      events_until_save: 1000  # Also save after every 1000 ingested events (optional)
+      auto_load: true        # Restore previous state on startup (default: false)
+      storage_options: {}    # Extra options passed to fsspec (e.g. S3 credentials)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: left;"><code>./state</code></td>
+<td style="text-align: left;">Where to write state files. Accepts any fsspec-compatible URL (<code>s3://</code>, <code>gs://</code>, local path, etc.). The component name is appended automatically.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>interval_seconds</code></td>
+<td style="text-align: left;"><code>300</code></td>
+<td style="text-align: left;">Seconds between background saves.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>events_until_save</code></td>
+<td style="text-align: left;"><code>null</code></td>
+<td style="text-align: left;">If set, trigger an additional save after this many events. Combines with the timer.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>auto_load</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">If <code>true</code>, the component restores its previous state from <code>path</code> when it starts.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>storage_options</code></td>
+<td style="text-align: left;"><code>{}</code></td>
+<td style="text-align: left;">Passed directly to fsspec (e.g. AWS credentials, GCS project, etc.).</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../usage/" class="btn btn-neutral float-right" title="Quick Start">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
