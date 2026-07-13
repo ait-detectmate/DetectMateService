@@ -2,6 +2,8 @@ detectors:
   RuleDetector:
    method_type: rule_detector
    auto_config: false
+   # Rules run independently against every log line (no training needed).
    rules:
-     - rule: "R003 - CheckForExceptions"
-     - rule: "R004 - ErrorLevelFound"
+     # - rule: "R001 - TemplateNotFound"       # alerts if the parser couldn't match the line to any template in templates.txt
+     - rule: "R003 - CheckForExceptions"     # alerts if the log text contains "exception", "fail", "error" or "raise"
+     - rule: "R004 - ErrorLevelFound"        # alerts if a parsed "Level" field equals "error" (not produced by this Nginx setup)
