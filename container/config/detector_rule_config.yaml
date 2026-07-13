@@ -1,0 +1,7 @@
+detectors:
+  RuleDetector:
+   method_type: rule_detector
+   auto_config: false
+   rules:
+     - rule: "R003 - CheckForExceptions"
+     - rule: "R004 - ErrorLevelFound"
