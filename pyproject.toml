@@ -6,6 +6,10 @@ requires-python = ">=3.12"
 
 dynamic = ["version"]
 
+# NOTE: this is the only place detectmatelibrary's version is pinned. The
+# llm/dataframes/polars-rtcompat extras below deliberately reference
+# detectmatelibrary[extra] with no version — since it's the same package name,
+# uv/pip unify it to this pin. Bump here, then run `uv lock`.
 dependencies = [
     "detectmatelibrary==0.4.0",
     "pathlib>=1.0.1",
@@ -22,6 +26,18 @@ dependencies = [
     "python-multipart>=0.0.20",
 ]
 
+[project.optional-dependencies]
+# pass-through extras for optional detectmatelibrary components, e.g. uv sync --extra llm
+llm = ["detectmatelibrary[llm]"]
+dataframes = ["detectmatelibrary[dataframes]"]
+polars-rtcompat = ["detectmatelibrary[polars-rtcompat]"]
+# install all optional extras at once: uv sync --extra full
+full = [
+    "DetectMateService[llm]",
+    "DetectMateService[dataframes]",
+    "DetectMateService[polars-rtcompat]",
+]
+
 [dependency-groups]
 dev = [
     "mike>=2.2.0",
@@ -29,6 +45,7 @@ dev = [
     "prek>=0.4.5",
     "pytest-cov>=6.2.1",
     "types-requests",
+    "DetectMateService[full]",
 ]
 
 [project.scripts]
