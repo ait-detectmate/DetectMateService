@@ -469,8 +469,8 @@ detectors:
      - rule: "R003 - CheckForExceptions"
      - rule: "R004 - ErrorLevelFound"
 ```
-
-With this config only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
+By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
+With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
 
 Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
 
