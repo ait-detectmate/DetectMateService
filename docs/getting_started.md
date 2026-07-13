@@ -185,13 +185,14 @@ Let's start the default pipeline, just to test it:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
-[+] up 6/6
- ✔ Container detectmateservice-fluentout-1 Started                                                                                                                                                                                 
- ✔ Container prometheus                    Started                                                                                                                                                                                 s
- ✔ Container grafana                       Started                                                                                                                                                                                 s
- ✔ Container detectmateservice-detector-1  Started                                                                                                                                                                                 s
- ✔ Container detectmateservice-parser-1    Started                                                                                                                                                                                  
- ✔ Container detectmateservice-fluentin-1  Started                                                                                                                                                                                  
+[+] up 7/7
+ ✔ Container detectmateservice-fluentout-1      Started                                                                                                                                                                                 
+ ✔ Container prometheus                         Started                                                                                                                                                                                 s
+ ✔ Container grafana                            Started                                                                                                                                                                                 s
+ ✔ Container detectmateservice-detector-1       Started                                                                                                                                                                                 s
+ ✔ Container detectmateservice-detector-rule-1  Started                                                                                                                                                                                 s
+ ✔ Container detectmateservice-parser-1         Started                                                                                                                                                                                  
+ ✔ Container detectmateservice-fluentin-1       Started                                                                                                                                                                                  
 alice@ubuntu2404:~/DetectMateService$
 ```
 
@@ -199,14 +200,17 @@ To check the status of the containers, we can use `docker compose ps`:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
-NAME                            IMAGE                         COMMAND                  SERVICE      CREATED         STATUS         PORTS
-detectmateservice-detector-1    detectmateservice-detector    "uv run detectmate -…"   detector     4 minutes ago   Up 3 minutes   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
-detectmateservice-fluentin-1    detectmateservice-fluentin    "tini -- /bin/entryp…"   fluentin     4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
-detectmateservice-fluentout-1   detectmateservice-fluentout   "tini -- /bin/entryp…"   fluentout    4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
-detectmateservice-parser-1      detectmateservice-parser      "uv run detectmate -…"   parser       4 minutes ago   Up 3 minutes   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                         grafana/grafana:latest        "/run.sh"                grafana      4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                      prom/prometheus:latest        "/bin/prometheus --c…"   prometheus   4 minutes ago   Up 3 minutes   9090/tcp
+NAME                                 IMAGE                              COMMAND                  SERVICE          CREATED         STATUS         PORTS
+detectmateservice-detector-1         detectmateservice-detector         "uv run detectmate -…"   detector         4 minutes ago   Up 3 minutes   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
+detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run detectmate -…"   detector-rule    4 minutes ago   Up 3 minutes   0.0.0.0:8003->8000/tcp, [::]:8003->8000/tcp
+detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
+detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
+detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           4 minutes ago   Up 3 minutes   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
+grafana                              grafana/grafana:latest             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
 ```
+
+Notice that the pipeline has **two** detector services running side by side: `detector` (running `NewValueDetector`) and `detector-rule` (running `RuleDetector`). The `parser` sends every parsed log line to both, and `fluentout` writes each detector's alerts to its own output file (`output.%Y%m%d` and `output-rule.%Y%m%d`).
 
 
 For now, we will shutdown all containers:
@@ -214,14 +218,15 @@ For now, we will shutdown all containers:
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
 [+] down 9/9
- ✔ Container grafana                        Removed                                                                                                                                                                              
- ✔ Container detectmateservice-fluentin-1   Removed                                                                                                                                                                               
- ✔ Container prometheus                     Removed                                                                                                                                                                               
- ✔ Container detectmateservice-parser-1     Removed                                                                                                                                                                               
- ✔ Container detectmateservice-detector-1   Removed                                                                                                                                                                               
- ✔ Container detectmateservice-fluentout-1  Removed                                                                                                                                                                              
- ✔ Volume detectmateservice_grafana_data    Removed                                                                                                                                                                               
- ✔ Network detectmateservice_default        Removed                                                                                                                                                                               
+ ✔ Container grafana                             Removed                                                                                                                                                                              
+ ✔ Container detectmateservice-fluentin-1        Removed                                                                                                                                                                               
+ ✔ Container prometheus                          Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-parser-1          Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-detector-1        Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-detector-rule-1   Removed                                                                                                                                                                               
+ ✔ Container detectmateservice-fluentout-1       Removed                                                                                                                                                                              
+ ✔ Volume detectmateservice_grafana_data         Removed                                                                                                                                                                               
+ ✔ Network detectmateservice_default             Removed                                                                                                                                                                               
  ✔ Volume detectmateservice_prometheus_data Removed
 ```
 
@@ -252,7 +257,6 @@ services:
         - parser
 
     parser:
-      # image: detectmate:dev-0.1.6
       build: .
       volumes:
         - '$PWD/container/config:/config'
@@ -265,7 +269,6 @@ services:
         - detector
 
     detector:
-      # image: detectmate:dev-0.1.6
       build: .
       volumes:
         - '$PWD/container/config:/config'
@@ -275,6 +278,18 @@ services:
       command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
       ports:
         - "8002:8000"
+      depends_on:
+        - fluentout
+
+    detector-rule:
+      build: .
+      volumes:
+        - '$PWD/container/config:/config'
+        - '$PWD/container/logs:/logs'
+        - '$PWD/container/run:/run'
+      command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
+      ports:
+        - "8003:8000"
       depends_on:
         - fluentout
 
@@ -382,7 +397,7 @@ generate anomalies.
 
 ## DetectMate Config
 
-The log pipeline uses two DetectMate services, parser and detector. The parser splits the log line into meaningful tokens, which the detector then uses to identify anomalies. We need to configure the parser and detector. Since the detector needs to know which tokens it receives from the parser so it can look for anomalies, the two configurations are closely related.
+The log pipeline uses three DetectMate services: `parser`, `detector` and `detector-rule`. The parser splits the log line into meaningful tokens, which the two detectors then use to identify anomalies, each with a different strategy. We need to configure the parser and both detectors. Since the detectors need to know which tokens they receive from the parser so they can look for anomalies, all three configurations are closely related.
 
 ### Parser
 
@@ -412,10 +427,16 @@ parsers:
       remove_spaces: false
       remove_punctuation: false
       lowercase: false
-      path_templates: /config/templates.txt  # empty file because there are no templates necessary for apache access logs
+      path_templates: /config/templates.txt
 ```
 
-We don't need to modify that configuration, since it is compatible with the nginx access.log format and we can now continue with the configuration of the detector.
+`container/config/templates.txt` contains a single wildcard template that matches any well-formed access-log line:
+
+```
+<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"
+```
+
+This means every normal Nginx request parses successfully. We will rely on this later: a log line that does **not** match this template is exactly what the rule-based detector's `TemplateNotFound` rule reacts to. We don't need to modify the parser configuration otherwise, since it is already compatible with the nginx access.log format. We can now continue with the configuration of the detectors.
 
 ### Detector
 
@@ -435,30 +456,48 @@ detectors:
 
 Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the first two log lines are used for training (`data_use_training: 2`). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.
 
+### Rule-Based Detector
+
+Next to the `NewValueDetector`, the pipeline also runs a second detector, `detector-rule`, using the `rule_detector` method. Unlike `NewValueDetector`, it needs no training: it evaluates a fixed list of simple rules against every log line, such as "no template was found by the parser" or "the log text contains a keyword like 'error' or 'exception'". Its configuration lives in `container/config/detector_rule_config.yaml`:
+
+```
+detectors:
+  RuleDetector:
+   method_type: rule_detector
+   auto_config: false
+   rules:
+     - rule: "R003 - CheckForExceptions"
+     - rule: "R004 - ErrorLevelFound"
+```
+By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
+With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
+
 Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
 [+] up 7/7
- ✔ Network detectmateservice_default       Created                                                                                                                                                                      
- ✔ Container prometheus                    Started                                                                                                                                                                        
- ✔ Container detectmateservice-fluentout-1 Started                                                                                                                                                                          
- ✔ Container detectmateservice-detector-1  Started                                                                                                                                                                            
- ✔ Container grafana                       Started                                                                                                                                                                              
- ✔ Container detectmateservice-parser-1    Started                                                                                                                                                                                  
- ✔ Container detectmateservice-fluentin-1  Started                                                              
+ ✔ Network detectmateservice_default            Created                                                                                                                                                                      
+ ✔ Container prometheus                         Started                                                                                                                                                                        
+ ✔ Container detectmateservice-fluentout-1      Started                                                                                                                                                                          
+ ✔ Container detectmateservice-detector-1       Started                                                                                                                                                                            
+ ✔ Container detectmateservice-detector-rule-1  Started                                                                                                                                                                            
+ ✔ Container grafana                            Started                                                                                                                                                                              
+ ✔ Container detectmateservice-parser-1         Started                                                                                                                                                                                  
+ ✔ Container detectmateservice-fluentin-1       Started                                                              
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
-NAME                            IMAGE                         COMMAND                  SERVICE      CREATED         STATUS         PORTS
-detectmateservice-detector-1    detectmateservice-detector    "uv run detectmate -…"   detector     7 seconds ago   Up 5 seconds   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
-detectmateservice-fluentin-1    detectmateservice-fluentin    "tini -- /bin/entryp…"   fluentin     7 seconds ago   Up 4 seconds   5140/tcp, 24224/tcp
-detectmateservice-fluentout-1   detectmateservice-fluentout   "tini -- /bin/entryp…"   fluentout    8 seconds ago   Up 6 seconds   5140/tcp, 24224/tcp
-detectmateservice-parser-1      detectmateservice-parser      "uv run detectmate -…"   parser       7 seconds ago   Up 5 seconds   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                         grafana/grafana:latest        "/run.sh"                grafana      7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                      prom/prometheus:latest        "/bin/prometheus --c…"   prometheus   8 seconds ago   Up 6 seconds   9090/tcp
+NAME                                 IMAGE                              COMMAND                  SERVICE          CREATED         STATUS         PORTS
+detectmateservice-detector-1         detectmateservice-detector         "uv run detectmate -…"   detector         7 seconds ago   Up 5 seconds   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
+detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run detectmate -…"   detector-rule    7 seconds ago   Up 5 seconds   0.0.0.0:8003->8000/tcp, [::]:8003->8000/tcp
+detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         7 seconds ago   Up 4 seconds   5140/tcp, 24224/tcp
+detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        8 seconds ago   Up 6 seconds   5140/tcp, 24224/tcp
+detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           7 seconds ago   Up 5 seconds   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
+grafana                              grafana/grafana:latest             "/run.sh"                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-**Wait a couple of minutes until parser and detector containers are up and running.** You can check by executing `sudo docker compose logs parser` or `sudo docker compose logs detector`.
+**Wait a couple of minutes until parser and detector containers are up and running.** You can check by executing `sudo docker compose logs parser`, `sudo docker compose logs detector` or `sudo docker compose logs detector-rule`.
 When the containers are ready, the output of the component will show `Uvicorn running on` or any HTTP-requests for the `/metrics` endpoint:
 
 ```
@@ -514,7 +553,53 @@ alice@ubuntu2404:~/DetectMateService$
 
 Great! We detected our first anomaly.
 
+If you check `container/fluentlogs/output-rule.%Y%m%d` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
+
+
+
+## Triggering the Rule-Based Detector
+
+So far, `detector-rule` has been running quietly next to `detector`, since none of our requests matched any of its enabled rules. To see it raise an alert, we'll enable the `R001 - TemplateNotFound` rule and then generate a log line that the parser cannot match against the template in `container/config/templates.txt`.
+
+Edit `container/config/detector_rule_config.yaml` and add the rule "R001 - TemplateNotFound":
+
+```
+detectors:
+  RuleDetector:
+   method_type: rule_detector
+   auto_config: false
+   rules:
+     - rule: "R001 - TemplateNotFound"
+     - rule: "R003 - CheckForExceptions"
+     - rule: "R004 - ErrorLevelFound"
+```
+
+Restart just the `detector-rule` service to pick up the change:
+
+```
+alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
+[+] Restarting 1/1
+ ✔ Container detectmateservice-detector-rule-1  Started
+```
+
+Now append a contrived log line to `/var/log/nginx/access.log` that doesn't match the Nginx access log template at all, for example a line without the expected quotes and brackets:
+
+```
+alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
+```
+
+Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.%Y%m%d`:
+
+```
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
+2026-07-13T12:03:55+00:00	nng.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"10","detectionTimestamp":1783944235,"logIDs":["5269c4a0-304c-431d-809b-ae34a15aa68b"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1783944235,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
+```
+
+The rule-based detector caught it: `"R001 - TemplateNotFound":"No template found by parser"`. Unlike `NewValueDetector`, it needed no training data at all — it was ready to alert from the very first log line.
+
+## Grafana UI
+
 The Grafana UI is accessible at http://localhost:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics".
 Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Processing rate and Engine state.
 
-This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two DetectMate services, using a parser for the Nginx access log format, and how this is then used to flag an anomaly. 
+This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two different DetectMate detectors, using a parser for the Nginx access log format, and how this is then used to flag anomalies.
