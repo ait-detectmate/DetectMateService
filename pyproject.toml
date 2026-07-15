@@ -42,7 +42,7 @@ full = [
 dev = [
     "mike>=2.2.0",
     "pytest>=9.1.0",
-    "prek>=0.4.8",
+    "prek>=0.4.9",
     "pytest-cov>=6.2.1",
     "types-requests",
     "DetectMateService[full]",
