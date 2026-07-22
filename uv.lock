@@ -272,7 +272,7 @@ wheels = [
 
 [[package]]
 name = "detectmatelibrary"
-version = "0.4.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "detectmateperformance" },
@@ -285,9 +285,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "regex" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/40/f3/7397c5e667feddfcb042da2f3edf23f81ad777e798533e15f80b279378e2/detectmatelibrary-0.4.0.tar.gz", hash = "sha256:dc6bbaae82f2a0fb8c2a21fde66f9e58f1db0fa6b153e3fae9cd42ab6314bf34", size = 94244, upload-time = "2026-07-10T11:20:01.091Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/2c/276f4a64ce43e2755ed31d8790af53a68a57e0ae73eb8076779a3c356f88/detectmatelibrary-0.4.1.tar.gz", hash = "sha256:013ea8166a8438a35b5f6c85fbdb4536626eb0549ca079c821c2996afb5c3cdc", size = 94848, upload-time = "2026-07-17T08:48:28.05Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/19/f7059c4b0e00fe1dc4d4d756b9266b4e1f2c8ad668599cbe815079031954/detectmatelibrary-0.4.0-py3-none-any.whl", hash = "sha256:70192525258c4878bd019a80a3c56d341891b66cdda9c1add0e007b1dd51f973", size = 134553, upload-time = "2026-07-10T11:19:59.858Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/83/4eb9d3af5980702565b14304483888e8fcf3085faf8c3b91a94f7ff2524a/detectmatelibrary-0.4.1-py3-none-any.whl", hash = "sha256:95f303354ec33156d68ab17d778448eec6c7431b56c50b8451997f5e63a44802", size = 135126, upload-time = "2026-07-17T08:48:26.247Z" },
 ]
 
 [package.optional-dependencies]
@@ -369,7 +369,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "detectmatelibrary", specifier = "==0.4.0" },
+    { name = "detectmatelibrary", specifier = "==0.4.1" },
     { name = "detectmatelibrary", extras = ["dataframes"], marker = "extra == 'dataframes'" },
     { name = "detectmatelibrary", extras = ["llm"], marker = "extra == 'llm'" },
     { name = "detectmatelibrary", extras = ["polars-rtcompat"], marker = "extra == 'polars-rtcompat'" },

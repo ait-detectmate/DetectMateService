@@ -11,7 +11,7 @@ dynamic = ["version"]
 # detectmatelibrary[extra] with no version — since it's the same package name,
 # uv/pip unify it to this pin. Bump here, then run `uv lock`.
 dependencies = [
-    "detectmatelibrary==0.4.0",
+    "detectmatelibrary==0.4.1",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
