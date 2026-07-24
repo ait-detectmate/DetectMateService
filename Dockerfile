@@ -32,7 +32,6 @@ RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
     fi
 
 COPY ./src ./src
-COPY ./tests ./tests
 
 # dependencies are already installed above, so this is fast.
 RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
