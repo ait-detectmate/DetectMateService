@@ -1,0 +1,25 @@
+# Exclude everything by default, then explicitly allow what the
+# Dockerfiles actually COPY. keeps the build context small an stop
+# unrelated files from interfering with layer cache.
+*
+
+!pyproject.toml
+!uv.lock
+!README.md
+!src
+!src/**
+!tests
+!tests/**
+
+# note container/Dockerfile_fluentd doesn't COPY anything from the build
+# context (it only installs gems)
+
+# Never use even if a rule above would match them.
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.venv/
+.git/
+.github/
