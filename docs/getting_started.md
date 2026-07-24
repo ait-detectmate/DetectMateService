@@ -206,8 +206,8 @@ detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run 
 detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
 detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
 detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           4 minutes ago   Up 3 minutes   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                              grafana/grafana:latest             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
+grafana                              grafana/grafana:13.1.1             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:v3.13.1            "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
 ```
 
 Notice that the pipeline has **two** detector services running side by side: `detector` (running `NewValueDetector`) and `detector-rule` (running `RuleDetector`). The `parser` sends every parsed log line to both, and `fluentout` writes each detector's alerts to its own output file (`output.%Y%m%d` and `output-rule.%Y%m%d`).
@@ -250,31 +250,38 @@ services:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
-        - '$PWD/container/fluentin:/fluentd/etc'
+        - ./container/fluentin:/fluentd/etc
         - '/var/log/nginx:/fluentd/log'
-        - '$PWD/container/run:/run'
+        - ./container/run:/run
       depends_on:
         - parser
 
     parser:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
       command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
       ports:
         - "8001:8000"
       depends_on:
         - detector
+        - detector-rule
 
     detector:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
-        - '$PWD/container/state:/state'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
+        - ./container/state:/state
       command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
       ports:
         - "8002:8000"
@@ -282,11 +289,14 @@ services:
         - fluentout
 
     detector-rule:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
       command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
       ports:
         - "8003:8000"
@@ -299,12 +309,12 @@ services:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
-        - '$PWD/container/fluentout:/fluentd/etc'
-        - '$PWD/container/fluentlogs:/fluentd/log'
-        - '$PWD/container/run:/run'
+        - ./container/fluentout:/fluentd/etc
+        - ./container/fluentlogs:/fluentd/log
+        - ./container/run:/run
 
     prometheus:
-      image: prom/prometheus:latest
+      image: prom/prometheus:v3.13.1
       container_name: prometheus
       restart: unless-stopped
       volumes:
@@ -320,7 +330,7 @@ services:
         - 9090
 
     grafana:
-      image: grafana/grafana:latest
+      image: grafana/grafana:13.1.1
       container_name: grafana
       ports:
         - "3000:3000"
@@ -330,6 +340,8 @@ services:
         - prometheus
       volumes:
         - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+        - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
         - grafana_data:/var/lib/grafana
 
           #    kafka:
@@ -492,8 +504,8 @@ detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run 
 detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         7 seconds ago   Up 4 seconds   5140/tcp, 24224/tcp
 detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        8 seconds ago   Up 6 seconds   5140/tcp, 24224/tcp
 detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           7 seconds ago   Up 5 seconds   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                              grafana/grafana:latest             "/run.sh"                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
+grafana                              grafana/grafana:13.1.1             "/run.sh"                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:v3.13.1            "/bin/prometheus --c…"   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
 alice@ubuntu2404:~/DetectMateService$
 ```
 
