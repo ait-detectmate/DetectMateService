@@ -20,11 +20,21 @@ RUN apt-get update && \
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock README.md ./
+
+# --locked asserts uv.lock is up to date with pyproject.toml; the build
+# fails instead of silently re-resolving if the lock is stale.
+# --no-install-project installs only third-party dependencies,
+# so this layer stays cached if the project code changes but dependencies don't.
+RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
+    uv sync --locked --no-dev --no-install-project --extra "$LIBRARY_EXTRAS" ; \
+    else \
+    uv sync --locked --no-dev --no-install-project ; \
+    fi
+
 COPY ./src ./src
 COPY ./tests ./tests
 
-# --locked asserts uv.lock is up to date with pyproject.toml
-# the build fails instead of silently re-resolving if the lock is stale.
+# dependencies are already installed above, so this is fast.
 RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
     uv sync --locked --no-dev --extra "$LIBRARY_EXTRAS" ; \
     else \
