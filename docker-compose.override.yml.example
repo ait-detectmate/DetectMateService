@@ -1,0 +1,13 @@
+# Local development override — installs DetectMateLibrary from source instead of PyPI.
+# docker compose automatically merges docker-compose.override.yml with docker-compose.yml.
+#
+# To use: copy this file to docker-compose.override.yml and point the volume at your
+# local DetectMateLibrary checkout. docker-compose.override.yml is gitignored, so your
+# local path never ends up in version control.
+services:
+  detector:
+    volumes:
+      - '/path/to/your/DetectMateLibrary:/detectmatelibrary'
+    command: >
+      sh -c "uv sync --extra full && uv pip install '/detectmatelibrary[full]' --force-reinstall &&
+             uv run --no-sync detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml"
