@@ -9,6 +9,7 @@ from detectmatelibrary.parsers.template_matcher import MatcherParser
 
 from library_integration_base import start_service, cleanup_service, free_port, AUDIT_LOG
 import time
+import uuid
 from pathlib import Path
 from subprocess import Popen
 from typing import Generator
@@ -30,7 +31,7 @@ def running_pipeline_services(
 ) -> Generator[dict, None, None]:
     """Start all three services (Reader, Parser, Detector) with test
     configs."""
-    timestamp = int(time.time() * 1000)
+    unique_id = uuid.uuid4().hex
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # Parser settings
@@ -40,7 +41,7 @@ def running_pipeline_services(
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
         "http_port": free_port(),
-        "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{timestamp}.ipc",
+        "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": True,
@@ -71,7 +72,7 @@ def running_pipeline_services(
         "component_name": "test-nvd",
         "http_host": "127.0.0.1",
         "http_port": free_port(),
-        "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{timestamp}.ipc",
+        "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": True,

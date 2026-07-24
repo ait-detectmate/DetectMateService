@@ -5,7 +5,7 @@ Timeout means no detection occurred (detector returns None/False).
 DummyDetector alternates: False, True, False
 """
 from library_integration_base import start_service, cleanup_service, free_port
-import time
+import uuid
 from pathlib import Path
 from typing import Generator
 import pytest
@@ -19,7 +19,7 @@ pytest_plugins = ["library_integration_base_fixtures"]
 def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
     """Start the detector service with test config and yield connection
     info."""
-    timestamp = int(time.time() * 1000)
+    unique_id = uuid.uuid4().hex
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     settings = {
         "component_type": "detectmatelibrary._testutils.dummy_detector.DummyDetector",
@@ -27,7 +27,7 @@ def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
         "http_port": free_port(),
-        "engine_addr": f"ipc:///tmp/test_detector_engine_{timestamp}.ipc",
+        "engine_addr": f"ipc:///tmp/test_detector_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": False,
