@@ -21,15 +21,29 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Use specific detematelibrary version
+      id: pin_library
+      run: chmod +x scripts/change_toml.sh && scripts/change_toml.sh $GITHUB_BASE_REF
+
+    # Keyed on the resolved DetectMateLibrary commit (see change_toml.sh) so a
+    # rerun or another PR against the same library commit gets a full cache
+    # hit instead of re-cloning/re-resolving/rebuilding it. The restore-keys
+    # fallback (lockfile hash only) still lets a *new* library commit reuse
+    # the cached stable dependencies and only fetch/build what changed.
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-${{ steps.pin_library.outputs.library_sha }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-
+
     - name: Set up uv (Python 3.12)
       uses: astral-sh/setup-uv@v6.6.0
       with:
         python-version: "3.12"
         activate-environment: true
-        enable-cache: true
-
-    - name: Use specific detematelibrary version
-      run: chmod +x scripts/change_toml.sh && scripts/change_toml.sh $GITHUB_BASE_REF
+        enable-cache: false
 
     - name: Run pre-commit with prek
       run: uv run --dev prek run -a
