@@ -2,7 +2,7 @@
 
 Tests verify parsing via engine socket with LogSchema input.
 """
-from library_integration_base import start_service, cleanup_service
+from library_integration_base import start_service, cleanup_service, free_port
 import time
 from pathlib import Path
 from typing import Generator
@@ -23,7 +23,7 @@ def running_parser_service(tmp_path: Path) -> Generator[dict, None, None]:
         "component_config_class": "detectmatelibrary._testutils.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
-        "http_port": "8020",
+        "http_port": free_port(),
         "engine_addr": f"ipc:///tmp/test_parser_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",

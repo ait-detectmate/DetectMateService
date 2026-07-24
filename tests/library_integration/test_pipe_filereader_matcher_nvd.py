@@ -7,7 +7,7 @@ Tests verify the full data flow where:
 """
 from detectmatelibrary.parsers.template_matcher import MatcherParser
 
-from library_integration_base import start_service, cleanup_service, AUDIT_LOG
+from library_integration_base import start_service, cleanup_service, free_port, AUDIT_LOG
 import time
 from pathlib import Path
 from subprocess import Popen
@@ -39,7 +39,7 @@ def running_pipeline_services(
         "component_config_class": "parsers.template_matcher.MatcherParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
-        "http_port": "8020",
+        "http_port": free_port(),
         "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
@@ -70,7 +70,7 @@ def running_pipeline_services(
         "component_config_class": "detectors.new_value_detector.NewValueDetectorConfig",
         "component_name": "test-nvd",
         "http_host": "127.0.0.1",
-        "http_port": "8030",
+        "http_port": free_port(),
         "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",

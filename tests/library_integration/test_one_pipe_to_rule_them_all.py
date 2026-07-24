@@ -16,7 +16,7 @@ import pytest
 from typing import Generator
 from pathlib import Path
 import time
-from library_integration_base import start_service, cleanup_service, AUDIT_LOG
+from library_integration_base import start_service, cleanup_service, free_port, AUDIT_LOG
 from detectmatelibrary._testutils.dummy_parser import DummyParser
 import os
 import sys
@@ -37,7 +37,7 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
         "component_config_class": "detectmatelibrary._testutils.dummy_parser.DummyParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
-        "http_port": "8020",
+        "http_port": free_port(),
         "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
@@ -63,7 +63,7 @@ def running_pipeline_services(tmp_path: Path, test_templates_file: Path) -> Gene
         "component_config_class": "detectmatelibrary._testutils.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
-        "http_port": "8030",
+        "http_port": free_port(),
         "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{timestamp}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",

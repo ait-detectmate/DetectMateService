@@ -1,12 +1,24 @@
 import time
 import json
 import signal
+import socket
 import yaml
 import sys
 from subprocess import Popen, PIPE, TimeoutExpired
 
 
 AUDIT_LOG = "tests/library_integration/audit.log"
+
+
+def free_port() -> str:
+    """Return an OS-assigned free TCP port on localhost.
+
+    Used instead of hardcoded ports so parallel test workers (pytest-
+    xdist) don't race to bind the same port.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return str(s.getsockname()[1])
 
 
 def start_service(module_path, settings, config, settings_file, config_file):
