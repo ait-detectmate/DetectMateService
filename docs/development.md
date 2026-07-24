@@ -46,15 +46,12 @@ uv run --dev pytest
 
 [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary) ships optional
 extras (`llm`, `dataframes`, `polars-rtcompat`) that the service passes through in
-`pyproject.toml`. The version is pinned in exactly **one place** — the base
+`pyproject.toml`. The version is pinned in one place:
 `detectmatelibrary==X.Y.Z` entry in `dependencies`. The `llm`/`dataframes`/
 `polars-rtcompat` extras deliberately reference `detectmatelibrary[extra]` with no
-version of their own; since it's the same package name, uv/pip unify them onto
-whatever version the base pin specifies. When bumping the library version:
-
+version of their own.
 1. Update the single `detectmatelibrary==X.Y.Z` pin in `pyproject.toml`.
 2. Run `uv lock` to regenerate `uv.lock`.
 3. Run `uv sync --extra full && uv run --dev pytest` to confirm every extra still resolves and installs correctly.
 
-`Dockerfile`, `Dockerfile-dev`, and `scripts/change_toml.sh` don't hardcode the
-library version either, so they don't need touching for a version bump.
+
