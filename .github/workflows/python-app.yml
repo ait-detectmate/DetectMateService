@@ -22,6 +22,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Pinned explicitly rather than left to setup-uv's default so the "Cache
+    # uv dependencies" step below is guaranteed to cache the same directory
+    # uv actually writes to.
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+
     steps:
     - uses: actions/checkout@v4
 
@@ -37,7 +43,7 @@ jobs:
     - name: Cache uv dependencies
       uses: actions/cache@v4
       with:
-        path: ~/.cache/uv
+        path: ${{ github.workspace }}/.cache/uv
         key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-${{ steps.pin_library.outputs.library_sha }}
         restore-keys: |
           ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-
