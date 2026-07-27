@@ -96,8 +96,8 @@ class TestDetectorServiceViaEngine:
         engine_addr = running_detector_service["engine_addr"]
         results = []
 
-        for i, parser_message in enumerate(test_parser_messages):
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for i, parser_message in enumerate(test_parser_messages):
                 socket.send(parser_message)
 
                 try:
@@ -130,8 +130,7 @@ class TestDetectorServiceViaEngine:
             except pynng.Timeout:
                 pass  # Expected
 
-        # Second message WILL trigger detection
-        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            # Second message WILL trigger detection
             socket.send(test_parser_messages[1])
 
             try:
@@ -169,8 +168,8 @@ class TestDetectorServiceViaEngine:
         detection_count = 0
         no_detection_count = 0
 
-        for i, parser_message in enumerate(test_parser_messages):
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for i, parser_message in enumerate(test_parser_messages):
                 socket.send(parser_message)
 
                 try:
@@ -199,8 +198,8 @@ class TestDetectorServiceViaEngine:
 
         # Try all messages and collect scores from successful detections
         scores = []
-        for parser_message in test_parser_messages:
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for parser_message in test_parser_messages:
                 socket.send(parser_message)
                 try:
                     response = socket.recv()

@@ -175,27 +175,27 @@ class TestFullPipeline:
 
         detection_results: list[bool] = []
 
-        for iteration in range(3):
-            # Step 1: Read log
-            parser = DummyParser(config=running_pipeline_services["parser_config"])
-            logs = [log for log in From.log(parser, AUDIT_LOG, do_process=True) if log is not None]
-            log_schema = logs[0]
-            assert hasattr(log_schema, "log")
-            assert hasattr(log_schema, "logID")
+        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as parser_socket, \
+                pynng.Pair0(dial=detector_engine, recv_timeout=2000) as detector_socket:
+            for iteration in range(3):
+                # Step 1: Read log
+                parser = DummyParser(config=running_pipeline_services["parser_config"])
+                logs = [log for log in From.log(parser, AUDIT_LOG, do_process=True) if log is not None]
+                log_schema = logs[0]
+                assert hasattr(log_schema, "log")
+                assert hasattr(log_schema, "logID")
 
-            # Step 2: Parse log
-            with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as socket:
-                socket.send(log_schema.serialize())
-                parser_response = socket.recv()
+                # Step 2: Parse log
+                parser_socket.send(log_schema.serialize())
+                parser_response = parser_socket.recv()
 
-            parser_schema = ParserSchema()
-            parser_schema.deserialize(parser_response)
+                parser_schema = ParserSchema()
+                parser_schema.deserialize(parser_response)
 
-            # Step 3: Detect
-            with pynng.Pair0(dial=detector_engine, recv_timeout=2000) as socket:
-                socket.send(parser_schema.serialize())
+                # Step 3: Detect
+                detector_socket.send(parser_schema.serialize())
                 try:
-                    detector_response = socket.recv()
+                    detector_response = detector_socket.recv()
                     detector_schema = DetectorSchema()
                     detector_schema.deserialize(detector_response)
 
@@ -251,35 +251,33 @@ class TestFullPipeline:
         assert hasattr(log_schema, "log")
         assert hasattr(log_schema, "logID")
 
-        # Parse
-        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as socket:
-            socket.send(log_schema.serialize())
-            parser_response = socket.recv()
+        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as parser_socket, \
+                pynng.Pair0(dial=detector_engine, recv_timeout=2000) as detector_socket:
+            # Parse
+            parser_socket.send(log_schema.serialize())
+            parser_response = parser_socket.recv()
 
-        parser_schema = ParserSchema()
-        parser_schema.deserialize(parser_response)
+            parser_schema = ParserSchema()
+            parser_schema.deserialize(parser_response)
 
-        # Detect
-        with pynng.Pair0(dial=detector_engine, recv_timeout=2000) as socket:
-            socket.send(parser_schema.serialize())
+            # Detect
+            detector_socket.send(parser_schema.serialize())
             try:
-                socket.recv()
+                detector_socket.recv()
             except pynng.Timeout:
                 pass  # Expected (no detection for first flow)
 
-        # Second flow: WITH detection (True)
-        log_schema_2 = logs[1]
+            # Second flow: WITH detection (True)
+            log_schema_2 = logs[1]
 
-        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as socket:
-            socket.send(log_schema_2.serialize())
-            parser_response_2 = socket.recv()
+            parser_socket.send(log_schema_2.serialize())
+            parser_response_2 = parser_socket.recv()
 
-        parser_schema_2 = ParserSchema()
-        parser_schema_2.deserialize(parser_response_2)
+            parser_schema_2 = ParserSchema()
+            parser_schema_2.deserialize(parser_response_2)
 
-        with pynng.Pair0(dial=detector_engine, recv_timeout=2000) as socket:
-            socket.send(parser_schema_2.serialize())
-            detector_response = socket.recv()
+            detector_socket.send(parser_schema_2.serialize())
+            detector_response = detector_socket.recv()
 
         # Verify detection occurred
         detector_schema = DetectorSchema()
@@ -304,31 +302,31 @@ class TestFullPipeline:
         # Read
         parser = DummyParser(config=running_pipeline_services["parser_config"])
         logs = [log for log in From.log(parser, AUDIT_LOG, do_process=True) if log is not None]
-        for i in range(3):
-            log_schema = logs[i]
-            assert hasattr(log_schema, "log")
-            assert hasattr(log_schema, "logID")
+        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as parser_socket, \
+                pynng.Pair0(dial=detector_engine, recv_timeout=2000) as detector_socket:
+            for i in range(3):
+                log_schema = logs[i]
+                assert hasattr(log_schema, "log")
+                assert hasattr(log_schema, "logID")
 
-            # Parse
-            with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as socket:
-                socket.send(log_schema.serialize())
-                parser_response = socket.recv()
+                # Parse
+                parser_socket.send(log_schema.serialize())
+                parser_response = parser_socket.recv()
 
-            parser_schema = ParserSchema()
-            parser_schema.deserialize(parser_response)
+                parser_schema = ParserSchema()
+                parser_schema.deserialize(parser_response)
 
-            processed_logs.append({
-                "original_log": log_schema.log,
-                "parsed_log": parser_schema.log,
-                "logID": log_schema.logID,
-            })
+                processed_logs.append({
+                    "original_log": log_schema.log,
+                    "parsed_log": parser_schema.log,
+                    "logID": log_schema.logID,
+                })
 
-            # Detect
-            with pynng.Pair0(dial=detector_engine, recv_timeout=2000) as socket:
-                socket.send(parser_schema.serialize())
+                # Detect
+                detector_socket.send(parser_schema.serialize())
                 try:
                     # we only care if a detection response was produced
-                    socket.recv()
+                    detector_socket.recv()
                     detection_count += 1
                 except pynng.Timeout:
                     pass  # No detection
