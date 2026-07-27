@@ -41,7 +41,6 @@ jobs:
     # fallback (lockfile hash only) still lets a *new* library commit reuse
     # the cached stable dependencies and only fetch/build what changed
     - name: Cache uv dependencies
-      id: cache-uv
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/.cache/uv
@@ -58,16 +57,6 @@ jobs:
         activate-environment: true
         enable-cache: false
         cache-local-path: ${{ github.workspace }}/.cache/uv
-
-    # TEMPORARY: remove once caching bug is fixed
-    - name: Debug uv cache
-      run: |
-        echo "restore step outputs: cache-hit=${{ steps.cache-uv.outputs.cache-hit }}"
-        echo "UV_CACHE_DIR=$UV_CACHE_DIR"
-        echo "expected path=${{ github.workspace }}/.cache/uv"
-        ls -la "$UV_CACHE_DIR" 2>&1 | head -20
-        du -sh "$UV_CACHE_DIR" 2>&1 || true
-        uv cache dir
 
     - name: Run pre-commit with prek
       run: uv run --dev prek run -a
