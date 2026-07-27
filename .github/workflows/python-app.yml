@@ -49,12 +49,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-
 
+    # cache-local-path is set explicitly because setup-uv otherwise
+    # overrides UV_CACHE_DIR to an ephemeral per-job temp dir 
     - name: Set up uv (Python 3.12)
       uses: astral-sh/setup-uv@v6.6.0
       with:
         python-version: "3.12"
         activate-environment: true
         enable-cache: false
+        cache-local-path: ${{ github.workspace }}/.cache/uv
 
     # TEMPORARY: remove once caching bug is fixed
     - name: Debug uv cache
