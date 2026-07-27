@@ -22,12 +22,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # Pinned explicitly rather than left to setup-uv's default so the "Cache
-    # uv dependencies" step below is guaranteed to cache the same directory
-    # uv actually writes to.
-    env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
-
     steps:
     - uses: actions/checkout@v4
 
