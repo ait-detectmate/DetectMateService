@@ -42,6 +42,25 @@ In oder to run the tests run the following command:
 uv run --dev pytest
 ```
 
+## Hot-reloading the Docker Compose stack
+
+`docker-compose.dev.yml` is an overlay for the stack from
+[Docker Compose reference](docker-compose.md): it bind-mounts `./src` into
+`parser`, `detector`, and `detector-rule`, and wraps each service's command
+in [`watchfiles`](https://watchfiles.helpmanual.io/) (already installed as a
+transitive dependency of `uvicorn[standard]`), which restarts the process
+whenever a `.py` file under `src/` changes. `uv sync` already installs
+`detectmateservice` in editable mode, the restarted process picks up
+edits immediately without a rebuild.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+Restarting resets in-memory state (e.g. `NewValueDetector`'s learned
+values) unless persistence with `auto_load` is configured — see
+[Persistency Endpoints](configuration.md#persistency-endpoints).
+
 ## Updating the DetectMateLibrary version
 
 [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary) ships optional
