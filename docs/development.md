@@ -44,7 +44,7 @@ uv run --dev pytest
 
 ## Hot-reloading the Docker Compose stack
 
-`docker-compose.dev.yml` is an overlay for the stack from
+`docker-compose.hotreload.yml` is an overlay for the stack from
 [Docker Compose reference](docker-compose.md): it bind-mounts `./src` into
 `parser`, `detector`, and `detector-rule`, and wraps each service's command
 in [`watchfiles`](https://watchfiles.helpmanual.io/) (already installed as a
@@ -54,12 +54,45 @@ whenever a `.py` file under `src/` changes. `uv sync` already installs
 edits immediately without a rebuild.
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
 ```
 
 Restarting resets in-memory state (e.g. `NewValueDetector`'s learned
 values) unless persistence with `auto_load` is configured — see
 [Persistency Endpoints](configuration.md#persistency-endpoints).
+
+## Developing against a local DetectMateLibrary checkout
+
+`docker-compose.library-source.yml.example` is a template overlay that
+installs `detectmatelibrary` from a local source checkout instead of PyPI,
+for the `detector` service. Copy it to `docker-compose.library-source.yml`
+(gitignored, so your local path never ends up in version control) and point
+the volume at your checkout:
+
+```bash
+cp docker-compose.library-source.yml.example docker-compose.library-source.yml
+# edit the volume path in docker-compose.library-source.yml, then:
+docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --build
+```
+
+## TLS between parser and detector
+
+`docker-compose.tls.yml` is an overlay that switches the parser → detector
+link from IPC to `tls+tcp`, leaving the rest of the stack unchanged. Generate
+a throwaway CA + server certificate once before first use:
+
+```bash
+bash scripts/gen_tls_certs.sh
+```
+
+Then start the stack with the overlay applied:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
+```
+
+See the comments in `docker-compose.tls.yml` for how to verify the
+connection is actually encrypted with `openssl s_client`.
 
 ## Updating the DetectMateLibrary version
 
