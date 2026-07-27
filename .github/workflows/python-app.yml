@@ -31,7 +31,8 @@ jobs:
 
     # Keyed on the resolved DetectMateLibrary commit (see change_toml.sh) so a
     # rerun or another PR against the same library commit gets a full cache
-    # hit instead of re-cloning/re-resolving/rebuilding it. The restore-keys
+    # hit instead of re-cloning/re-resolving/rebuilding it
+    # The restore-keys
     # fallback (lockfile hash only) still lets a *new* library commit reuse
     # the cached stable dependencies and only fetch/build what changed
     - name: Cache uv dependencies
