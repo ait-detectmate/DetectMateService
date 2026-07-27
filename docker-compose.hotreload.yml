@@ -1,4 +1,4 @@
-# docker-compose.dev.yml, hot-reload overlay for local development
+# docker-compose.hotreload.yml, hot-reload overlay for local development
 #
 # Bind-mounts this repo's ./src into parser/detector/detector-rule (the
 # package installs editable — see pyproject.toml/uv.lock — so the running
@@ -8,7 +8,7 @@
 # dependency of uvicorn[standard], so no extra install is needed.
 #
 # Usage:
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#   docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
 #
 # Restarting loses in-memory state (e.g. NewValueDetector's learned
 # values) unless persistence is configured and auto_load is enabled — see

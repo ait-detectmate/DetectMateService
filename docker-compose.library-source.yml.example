@@ -1,0 +1,16 @@
+# docker-compose.library-source.yml, local-dev overlay that installs
+# DetectMateLibrary from source instead of PyPI.
+#
+# To use: copy this file to docker-compose.library-source.yml, point the
+# volume at your local DetectMateLibrary checkout, then run:
+#   docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --build
+#
+# docker-compose.library-source.yml is gitignored, so your local path never
+# ends up in version control.
+services:
+  detector:
+    volumes:
+      - '/path/to/your/DetectMateLibrary:/detectmatelibrary'
+    command: >
+      sh -c "uv sync --extra full && uv pip install '/detectmatelibrary[full]' --force-reinstall &&
+             uv run --no-sync detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml"
