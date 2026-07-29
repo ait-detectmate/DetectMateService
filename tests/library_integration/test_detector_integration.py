@@ -4,8 +4,8 @@ Tests verify detection via engine socket with ParserSchema input.
 Timeout means no detection occurred (detector returns None/False).
 DummyDetector alternates: False, True, False
 """
-from library_integration_base import start_service, cleanup_service
-import time
+from library_integration_base import start_service, cleanup_service, free_port
+import uuid
 from pathlib import Path
 from typing import Generator
 import pytest
@@ -19,15 +19,15 @@ pytest_plugins = ["library_integration_base_fixtures"]
 def running_detector_service(tmp_path: Path) -> Generator[dict, None, None]:
     """Start the detector service with test config and yield connection
     info."""
-    timestamp = int(time.time() * 1000)
+    unique_id = uuid.uuid4().hex
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     settings = {
         "component_type": "detectmatelibrary._testutils.dummy_detector.DummyDetector",
         "component_config_class": "detectmatelibrary._testutils.dummy_detector.DummyDetectorConfig",
         "component_name": "test-detector",
         "http_host": "127.0.0.1",
-        "http_port": "8010",
-        "engine_addr": f"ipc:///tmp/test_detector_engine_{timestamp}.ipc",
+        "http_port": free_port(),
+        "engine_addr": f"ipc:///tmp/test_detector_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": False,
@@ -96,8 +96,8 @@ class TestDetectorServiceViaEngine:
         engine_addr = running_detector_service["engine_addr"]
         results = []
 
-        for i, parser_message in enumerate(test_parser_messages):
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for i, parser_message in enumerate(test_parser_messages):
                 socket.send(parser_message)
 
                 try:
@@ -130,8 +130,7 @@ class TestDetectorServiceViaEngine:
             except pynng.Timeout:
                 pass  # Expected
 
-        # Second message WILL trigger detection
-        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            # Second message WILL trigger detection
             socket.send(test_parser_messages[1])
 
             try:
@@ -169,8 +168,8 @@ class TestDetectorServiceViaEngine:
         detection_count = 0
         no_detection_count = 0
 
-        for i, parser_message in enumerate(test_parser_messages):
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for i, parser_message in enumerate(test_parser_messages):
                 socket.send(parser_message)
 
                 try:
@@ -199,8 +198,8 @@ class TestDetectorServiceViaEngine:
 
         # Try all messages and collect scores from successful detections
         scores = []
-        for parser_message in test_parser_messages:
-            with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+        with pynng.Pair0(dial=engine_addr, recv_timeout=2000) as socket:
+            for parser_message in test_parser_messages:
                 socket.send(parser_message)
                 try:
                     response = socket.recv()
