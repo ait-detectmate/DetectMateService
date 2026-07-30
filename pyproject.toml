@@ -44,7 +44,9 @@ dev = [
     "pytest>=9.1.0",
     "prek>=0.4.8",
     "pytest-cov>=6.2.1",
+    "pytest-xdist>=3.8.0",
     "types-requests",
+    "httpx2>=2.7.0",
     "DetectMateService[full]",
 ]
 

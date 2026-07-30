@@ -7,8 +7,9 @@ Tests verify the full data flow where:
 """
 from detectmatelibrary.parsers.template_matcher import MatcherParser
 
-from library_integration_base import start_service, cleanup_service, AUDIT_LOG
+from library_integration_base import start_service, cleanup_service, free_port, AUDIT_LOG
 import time
+import uuid
 from pathlib import Path
 from subprocess import Popen
 from typing import Generator
@@ -30,7 +31,7 @@ def running_pipeline_services(
 ) -> Generator[dict, None, None]:
     """Start all three services (Reader, Parser, Detector) with test
     configs."""
-    timestamp = int(time.time() * 1000)
+    unique_id = uuid.uuid4().hex
     module_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # Parser settings
@@ -39,8 +40,8 @@ def running_pipeline_services(
         "component_config_class": "parsers.template_matcher.MatcherParserConfig",
         "component_name": "test-parser",
         "http_host": "127.0.0.1",
-        "http_port": "8020",
-        "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{timestamp}.ipc",
+        "http_port": free_port(),
+        "engine_addr": f"ipc:///tmp/test_pipeline_parser_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": True,
@@ -70,8 +71,8 @@ def running_pipeline_services(
         "component_config_class": "detectors.new_value_detector.NewValueDetectorConfig",
         "component_name": "test-nvd",
         "http_host": "127.0.0.1",
-        "http_port": "8030",
-        "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{timestamp}.ipc",
+        "http_port": free_port(),
+        "engine_addr": f"ipc:///tmp/test_pipeline_detector_engine_{unique_id}.ipc",
         "log_level": "DEBUG",
         "log_dir": "./logs",
         "log_to_console": True,
@@ -177,31 +178,31 @@ class TestFullPipeline:
         detector_engine = running_pipeline_services["detector_engine_addr"]
         processed_logs = []
 
-        for i in range(5):
-            # Step 1: Read log
-            parser = MatcherParser(config=running_pipeline_services["parser_config"])
-            logs = [log for log in From.log(parser, AUDIT_LOG, do_process=True) if log is not None]
-            log_schema = logs[0]
+        with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as parser_socket, \
+                pynng.Pair0(dial=detector_engine, recv_timeout=2000) as detector_socket:
+            for i in range(5):
+                # Step 1: Read log
+                parser = MatcherParser(config=running_pipeline_services["parser_config"])
+                logs = [log for log in From.log(parser, AUDIT_LOG, do_process=True) if log is not None]
+                log_schema = logs[0]
 
-            # Step 2: Parse log
-            with pynng.Pair0(dial=parser_engine, recv_timeout=3000) as socket:
-                socket.send(log_schema.serialize())
-                parser_response = socket.recv()
+                # Step 2: Parse log
+                parser_socket.send(log_schema.serialize())
+                parser_response = parser_socket.recv()
 
-            parser_schema = ParserSchema()
-            parser_schema.deserialize(parser_response)
+                parser_schema = ParserSchema()
+                parser_schema.deserialize(parser_response)
 
-            processed_logs.append({
-                "original_log": log_schema.log,
-                "parsed_log": parser_schema.log,
-                "logID": log_schema.logID,
-            })
+                processed_logs.append({
+                    "original_log": log_schema.log,
+                    "parsed_log": parser_schema.log,
+                    "logID": log_schema.logID,
+                })
 
-            # Step 3: Send to Detector
-            with pynng.Pair0(dial=detector_engine, recv_timeout=2000) as socket:
-                socket.send(parser_schema.serialize())
+                # Step 3: Send to Detector
+                detector_socket.send(parser_schema.serialize())
                 try:
-                    detector_response = socket.recv()
+                    detector_response = detector_socket.recv()
                     detector_schema = DetectorSchema()
                     detector_schema.deserialize(detector_response)
                 except pynng.Timeout:
