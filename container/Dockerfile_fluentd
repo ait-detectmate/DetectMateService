@@ -17,8 +17,8 @@ FROM fluent/fluentd:v1.19.3-2.2
 
 USER root
 
-# Only the nng plugin needs a runtime shared library beyond what the base
-# image already ships; no compiler/headers needed here.
+# Only the nng plugin needs a runtime shared library besides what the base
+# image already ships (libnng1)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libnng1 && \
     rm -rf /var/lib/apt/lists/*
