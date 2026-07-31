@@ -206,8 +206,8 @@ detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run 
 detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
 detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
 detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           4 minutes ago   Up 3 minutes   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                              grafana/grafana:13.1.1             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                           prom/prometheus:v3.13.1            "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
+grafana                              grafana/grafana:latest             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
 ```
 
 Notice that the pipeline has **two** detector services running side by side: `detector` (running `NewValueDetector`) and `detector-rule` (running `RuleDetector`). The `parser` sends every parsed log line to both, and `fluentout` writes each detector's alerts to its own output file (`output.%Y%m%d` and `output-rule.%Y%m%d`).
@@ -314,7 +314,7 @@ services:
         - ./container/run:/run
 
     prometheus:
-      image: prom/prometheus:v3.13.1
+      image: prom/prometheus:latest
       container_name: prometheus
       restart: unless-stopped
       volumes:
@@ -330,7 +330,7 @@ services:
         - 9090
 
     grafana:
-      image: grafana/grafana:13.1.1
+      image: grafana/grafana:latest
       container_name: grafana
       ports:
         - "3000:3000"
@@ -504,8 +504,8 @@ detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run 
 detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         7 seconds ago   Up 4 seconds   5140/tcp, 24224/tcp
 detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        8 seconds ago   Up 6 seconds   5140/tcp, 24224/tcp
 detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           7 seconds ago   Up 5 seconds   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                              grafana/grafana:13.1.1             "/run.sh"                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                           prom/prometheus:v3.13.1            "/bin/prometheus --c…"   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
+grafana                              grafana/grafana:latest             "/run.sh"                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
 alice@ubuntu2404:~/DetectMateService$
 ```
 

@@ -9,22 +9,3 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-
-  # Covers Dockerfile and Dockerfile-dev (matched by filename containing
-  # "dockerfile", case-insensitive).
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # Covers container/Dockerfile_fluentd.
-  - package-ecosystem: "docker"
-    directory: "/container"
-    schedule:
-      interval: "weekly"
-
-  # Covers docker-compose.yml (prometheus/grafana ).
-  - package-ecosystem: "docker-compose"
-    directory: "/"
-    schedule:
-      interval: "weekly"
