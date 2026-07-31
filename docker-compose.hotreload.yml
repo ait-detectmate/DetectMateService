@@ -1,0 +1,31 @@
+# docker-compose.hotreload.yml, hot-reload overlay for local development
+#
+# Bind-mounts this repo's ./src into parser/detector/detector-rule (the
+# package installs editable — see pyproject.toml/uv.lock — so the running
+# interpreter reads straight from the mounted files) and wraps each
+# service's command in `watchfiles`, which restarts the process whenever a
+# .py file under /app/src changes. watchfiles ships as a transitive
+# dependency of uvicorn[standard], so no extra install is needed.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
+#
+# Restarting loses in-memory state (e.g. NewValueDetector's learned
+# values) unless persistence is configured and auto_load is enabled — see
+# docs/configuration.md#persistency-endpoints.
+
+services:
+  parser:
+    volumes:
+      - ./src:/app/src
+    command: watchfiles --filter python "uv run --no-sync detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml" /app/src
+
+  detector:
+    volumes:
+      - ./src:/app/src
+    command: watchfiles --filter python "uv run --no-sync detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml" /app/src
+
+  detector-rule:
+    volumes:
+      - ./src:/app/src
+    command: watchfiles --filter python "uv run --no-sync detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml" /app/src

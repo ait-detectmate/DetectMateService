@@ -250,31 +250,38 @@ services:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
-        - '$PWD/container/fluentin:/fluentd/etc'
+        - ./container/fluentin:/fluentd/etc
         - '/var/log/nginx:/fluentd/log'
-        - '$PWD/container/run:/run'
+        - ./container/run:/run
       depends_on:
         - parser
 
     parser:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
       command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
       ports:
         - "8001:8000"
       depends_on:
         - detector
+        - detector-rule
 
     detector:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
-        - '$PWD/container/state:/state'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
+        - ./container/state:/state
       command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
       ports:
         - "8002:8000"
@@ -282,11 +289,14 @@ services:
         - fluentout
 
     detector-rule:
-      build: .
+      build:
+        context: .
+        args:
+          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
       volumes:
-        - '$PWD/container/config:/config'
-        - '$PWD/container/logs:/logs'
-        - '$PWD/container/run:/run'
+        - ./container/config:/config
+        - ./container/logs:/logs
+        - ./container/run:/run
       command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
       ports:
         - "8003:8000"
@@ -299,9 +309,9 @@ services:
         context: .
         dockerfile: container/Dockerfile_fluentd
       volumes:
-        - '$PWD/container/fluentout:/fluentd/etc'
-        - '$PWD/container/fluentlogs:/fluentd/log'
-        - '$PWD/container/run:/run'
+        - ./container/fluentout:/fluentd/etc
+        - ./container/fluentlogs:/fluentd/log
+        - ./container/run:/run
 
     prometheus:
       image: prom/prometheus:latest
@@ -330,6 +340,8 @@ services:
         - prometheus
       volumes:
         - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+        - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
         - grafana_data:/var/lib/grafana
 
           #    kafka:

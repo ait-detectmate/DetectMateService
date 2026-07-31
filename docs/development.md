@@ -42,19 +42,68 @@ In oder to run the tests run the following command:
 uv run --dev pytest
 ```
 
+## Hot-reloading the Docker Compose stack
+
+`docker-compose.hotreload.yml` is an overlay for the stack from
+[Docker Compose reference](docker-compose.md): it bind-mounts `./src` into
+`parser`, `detector`, and `detector-rule`, and wraps each service's command
+in [`watchfiles`](https://watchfiles.helpmanual.io/) (already installed as a
+transitive dependency of `uvicorn[standard]`), which restarts the process
+whenever a `.py` file under `src/` changes. `uv sync` already installs
+`detectmateservice` in editable mode, the restarted process picks up
+edits immediately without a rebuild.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
+```
+
+Restarting resets in-memory state (e.g. `NewValueDetector`'s learned
+values) unless persistence with `auto_load` is configured — see
+[Persistency Endpoints](configuration.md#persistency-endpoints).
+
+## Developing against a local DetectMateLibrary checkout
+
+`docker-compose.library-source.yml.example` is a template overlay that
+installs `detectmatelibrary` from a local source checkout instead of PyPI,
+for the `detector` service. Copy it to `docker-compose.library-source.yml`
+(gitignored, so your local path never ends up in version control) and point
+the volume at your checkout:
+
+```bash
+cp docker-compose.library-source.yml.example docker-compose.library-source.yml
+# edit the volume path in docker-compose.library-source.yml, then:
+docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --build
+```
+
+## TLS between parser and detector
+
+`docker-compose.tls.yml` is an overlay that switches the parser → detector
+link from IPC to `tls+tcp`, leaving the rest of the stack unchanged. Generate
+a throwaway CA + server certificate once before first use:
+
+```bash
+bash scripts/gen_tls_certs.sh
+```
+
+Then start the stack with the overlay applied:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
+```
+
+See the comments in `docker-compose.tls.yml` for how to verify the
+connection is actually encrypted with `openssl s_client`.
+
 ## Updating the DetectMateLibrary version
 
 [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary) ships optional
 extras (`llm`, `dataframes`, `polars-rtcompat`) that the service passes through in
-`pyproject.toml`. The version is pinned in exactly **one place** — the base
+`pyproject.toml`. The version is pinned in one place:
 `detectmatelibrary==X.Y.Z` entry in `dependencies`. The `llm`/`dataframes`/
 `polars-rtcompat` extras deliberately reference `detectmatelibrary[extra]` with no
-version of their own; since it's the same package name, uv/pip unify them onto
-whatever version the base pin specifies. When bumping the library version:
-
+version of their own.
 1. Update the single `detectmatelibrary==X.Y.Z` pin in `pyproject.toml`.
 2. Run `uv lock` to regenerate `uv.lock`.
 3. Run `uv sync --extra full && uv run --dev pytest` to confirm every extra still resolves and installs correctly.
 
-`Dockerfile`, `Dockerfile-dev`, and `scripts/change_toml.sh` don't hardcode the
-library version either, so they don't need touching for a version bump.
+

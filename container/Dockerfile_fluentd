@@ -1,10 +1,26 @@
-FROM fluent/fluentd:latest
+FROM fluent/fluentd:latest AS builder
 
 USER root
 
-RUN apt update -y && apt install -y make build-essential libnng-dev
+# libnng-dev pulls in build headers + the libnng1 runtime lib as a
+# dependency; only the toolchain here is builder-only.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends make build-essential libnng-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN fluent-gem install fluent-plugin-parser-protobuf
 RUN fluent-gem install fluent-plugin-detectmate
 RUN fluent-gem install fluent-plugin-nng
 RUN fluent-gem install fluent-plugin-kafka
+
+FROM fluent/fluentd:v1.19.3-2.2
+
+USER root
+
+# Only the nng plugin needs a runtime shared library besides what the base
+# image already ships (libnng1)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libnng1 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/bundle /usr/local/bundle

@@ -1,0 +1,57 @@
+# docker-compose.tls.yml, TLS overlay for the DetectMate demo stack
+#
+# This file is a Docker Compose override. It replaces the parser → detector
+# link from IPC to tls+tcp, leaving everything else (fluentin, fluentout,
+# prometheus, grafana) unchanged.
+#
+# ── Prerequisites ────────────────────────────────────────────────────────────
+#
+#   Generate self-signed certificates once before first use:
+#
+#     bash scripts/gen_tls_certs.sh
+#
+#   This creates container/certs/ca.pem and container/certs/server.pem.
+#   Do not commit these files (they contain a private key).
+#
+# ── How to run ───────────────────────────────────────────────────────────────
+#
+#   Start the TLS stack:
+#     docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
+#
+#   Start the plain IPC stack (unchanged behaviour):
+#     docker compose up --build
+#
+# ── What changes vs the base stack ───────────────────────────────────────────
+#
+#   parser   out_addr:    ipc:///run/detector.ipc  →  tls+tcp://detector:5555
+#   detector engine_addr: ipc:///run/detector.ipc  →  tls+tcp://0.0.0.0:5555
+#
+#   Both containers get /certs mounted read-only.
+#   detector exposes port 5555 for the TLS connection.
+#
+# ── Verifying the connection is encrypted ────────────────────────────────────
+#
+#   While the stack is running, use openssl s_client from the host to confirm
+#   that the detector is presenting a TLS certificate on port 5555:
+#
+#     openssl s_client -connect localhost:5555 -CAfile container/certs/ca.pem
+#
+#   A successful TLS handshake prints the certificate chain and
+#   "Verify return code: 0 (ok)". If the port is reachable but unencrypted,
+#   openssl will print "wrong version number" or similar.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  parser:
+    volumes:
+      - ./container/certs:/certs:ro
+    command: uv run detectmate --settings /config/parser_settings_tls.yaml --config /config/parser_config.yaml
+
+  detector:
+    volumes:
+      - ./container/certs:/certs:ro
+    command: uv run detectmate --settings /config/detector_settings_tls.yaml --config /config/detector_config.yaml
+    ports:
+      - "5555:5555"
