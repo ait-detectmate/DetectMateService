@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.4.1/prometheus/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Monitoring with Prometheus - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Monitoring with Prometheus";
+        var mkdocs_page_input_path = "prometheus.md";
+        var mkdocs_page_url = "/DetectMateService/0.4.1/prometheus/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Usage</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Monitoring with Prometheus</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#metrics-endpoint">Metrics endpoint</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#available-metrics">Available metrics</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#connecting-a-standalone-prometheus">Connecting a standalone Prometheus</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#docker-compose-setup">Docker Compose setup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#visualizing-metrics-with-grafana">Visualizing metrics with Grafana</a>
+    </li>
+    </ul>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Development</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Maintainers</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release/">Release Process</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Usage</li>
+      <li class="breadcrumb-item active">Monitoring with Prometheus</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="monitoring-with-prometheus">Monitoring with Prometheus</h1>
+<p>Every DetectMate service exposes a Prometheus-compatible metrics endpoint on its HTTP server. Prometheus can scrape this endpoint to collect operational metrics, and tools like Grafana can visualize them.</p>
+<h2 id="metrics-endpoint">Metrics endpoint</h2>
+<p>The metrics endpoint is available at:</p>
+<pre><code>http://&lt;http_host&gt;:&lt;http_port&gt;/metrics
+</code></pre>
+<p>With default settings this is <code>http://127.0.0.1:8000/metrics</code>. You can fetch it directly with curl:</p>
+<pre><code class="language-bash">curl http://127.0.0.1:8000/metrics
+</code></pre>
+<p>Or use the DetectMate client CLI:</p>
+<pre><code class="language-bash">detectmate-client --url http://127.0.0.1:8000 metrics
+</code></pre>
+<h2 id="available-metrics">Available metrics</h2>
+<p>All metrics are labeled with <code>component_type</code> and <code>component_id</code>, so a single Prometheus instance can distinguish between multiple DetectMate services.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>engine_running</code></td>
+<td style="text-align: left;">Enum (<code>running</code>, <code>stopped</code>)</td>
+<td style="text-align: left;">Current state of the processing engine</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>engine_starts_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Number of times the engine has been started</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>processing_duration_seconds</code></td>
+<td style="text-align: left;">Histogram</td>
+<td style="text-align: left;">Time spent processing each message, in seconds</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>processing_errors_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Number of exceptions raised during processing</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_read_bytes_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total bytes read from input interfaces</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_read_lines_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total lines read from input interfaces</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_processed_bytes_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total bytes processed by the component</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_processed_lines_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total lines processed by the component</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_written_bytes_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total bytes written to output interfaces</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_written_lines_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total lines written to output interfaces</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_dropped_bytes_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total bytes dropped due to disconnected or slow downstream peers</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_dropped_lines_total</code></td>
+<td style="text-align: left;">Counter</td>
+<td style="text-align: left;">Total lines dropped due to disconnected or slow downstream peers</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>processing_duration_seconds</code> histogram uses the following buckets: 1 ms, 5 ms, 10 ms, 25 ms, 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2.5 s, 5 s, 10 s.</p>
+<div class="admonition note">
+<p class="admonition-title">Counting with multiple output interfaces</p>
+<p>When multiple output addresses are configured, <code>data_written_bytes_total</code> and <code>data_written_lines_total</code> are incremented <strong>once per message</strong> as long as at least one output send succeeded. <code>data_dropped_bytes_total</code> and <code>data_dropped_lines_total</code> are incremented <strong>once per failing output interface</strong>, so a single message can contribute to the dropped counter multiple times if several outputs are unavailable simultaneously.</p>
+</div>
+<h2 id="connecting-a-standalone-prometheus">Connecting a standalone Prometheus</h2>
+<p>If you run DetectMate outside of Docker Compose, add a scrape job to your <code>prometheus.yml</code>:</p>
+<pre><code class="language-yaml">global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'detectmate'
+    static_configs:
+      - targets:
+          - '127.0.0.1:8000'
+</code></pre>
+<p>If you run multiple services, list each one under <code>targets</code>:</p>
+<pre><code class="language-yaml">scrape_configs:
+  - job_name: 'detectmate'
+    static_configs:
+      - targets:
+          - '127.0.0.1:8001'  # parser
+          - '127.0.0.1:8002'  # detector
+</code></pre>
+<h2 id="docker-compose-setup">Docker Compose setup</h2>
+<p>The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at <code>container/prometheus.yml</code> is pre-configured to scrape the <code>parser</code> and <code>detector</code> services:</p>
+<pre><code class="language-yaml">global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['parser:8000', 'detector:8000']
+</code></pre>
+<p>Prometheus is accessible at <code>http://localhost:9090</code> after starting the stack with:</p>
+<pre><code class="language-bash">docker compose up
+</code></pre>
+<p>See the <a href="../docker-compose/">Docker Compose reference</a> for details on the full stack setup.</p>
+<h2 id="visualizing-metrics-with-grafana">Visualizing metrics with Grafana</h2>
+<p>The Docker Compose stack includes a Grafana instance pre-configured with Prometheus as a datasource. Access it at <code>http://localhost:3000</code> (default credentials: <code>admin</code> / <code>admin</code>).</p>
+<p>To explore DetectMate metrics, open "Drilldown" and select "Metrics". Filter by the <code>detectmate</code> job or search for any of the metric names listed above.</p>
+<p>A <strong>DetectMateService Overview</strong> dashboard is provisioned automatically from <code>container/grafana/dashboards/detectmate.json</code> </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you connect your own Grafana to a standalone Prometheus, add a Prometheus datasource pointing to <code>http://&lt;prometheus-host&gt;:9090</code>.</p>
+</div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../library/" class="btn btn-neutral float-left" title="Using a Library Component"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../contribution/" class="btn btn-neutral float-right" title="Contribution">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../library/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../contribution/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
