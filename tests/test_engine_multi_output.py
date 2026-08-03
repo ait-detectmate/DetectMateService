@@ -1,6 +1,7 @@
 """Tests for Engine multi-destination output functionality."""
 import pytest
 import time
+import socket
 import pynng
 from contextlib import contextmanager
 from pydantic import ValidationError
@@ -39,6 +40,15 @@ class FailingProcessor:
 
 
 # Fixtures
+@pytest.fixture
+def free_tcp_port():
+    """Find a free port on the system, avoiding collisions under parallel test
+    runs."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+
 @pytest.fixture
 def ipc_paths(tmp_path):
     """Generate temporary IPC paths."""
@@ -170,9 +180,9 @@ def test_no_output_destinations(ipc_paths, engine_manager):
         assert engine._state == EngineState.RUNNING
 
 
-def test_mixed_ipc_tcp_destinations(ipc_paths, engine_manager):
+def test_mixed_ipc_tcp_destinations(ipc_paths, engine_manager, free_tcp_port):
     """Engine sends to both IPC and TCP destinations."""
-    tcp_addr = 'tcp://127.0.0.1:15555'
+    tcp_addr = f'tcp://127.0.0.1:{free_tcp_port}'
     settings = create_settings(ipc_paths, [ipc_paths['out1'], tcp_addr])
 
     with pair_socket('listen', ipc_paths['out1']) as ipc_recv, \

@@ -11,8 +11,15 @@ engine_addr: "ipc:///run/parser.engine.ipc"
 engine_autostart: true
 
 # Output Destinations (where processed data is sent)
+# parser -> detector uses tls+tcp here; parser -> detector-rule stays IPC,
+# see docker-compose.tls.yml.
 out_addr:
-  - "ipc:///run/detector.ipc"
+  - "tls+tcp://detector:5555"
   - "ipc:///run/detector-rule.ipc"
 
 out_dial_timeout: 1000
+
+# Verifies the detector's certificate (container/certs/server.pem, CN=detector).
+tls_output:
+  ca_file: /certs/ca.pem
+  server_name: detector

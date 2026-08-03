@@ -13,26 +13,47 @@ permissions:
   contents: read
   packages: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
 
     steps:
     - uses: actions/checkout@v4
 
+    - name: Use specific detematelibrary version
+      id: pin_library
+      run: chmod +x scripts/change_toml.sh && scripts/change_toml.sh $GITHUB_BASE_REF
+
+    # Keyed on the resolved DetectMateLibrary commit (see change_toml.sh) so a
+    # rerun or another PR against the same library commit gets a full cache
+    # hit instead of re-cloning/re-resolving/rebuilding it
+    # The restore-keysfallback (lockfile hash only) still lets a *new* library commit reuse
+    # the cached stable dependencies and only fetch/build what changed
+    - name: Cache uv dependencies
+      uses: actions/cache@v5
+      with:
+        path: ${{ github.workspace }}/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-${{ steps.pin_library.outputs.library_sha }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}-
+
+    # cache-local-path is set explicitly because setup-uv otherwise
+    # overrides UV_CACHE_DIR to an ephemeral per-job temp dir 
     - name: Set up uv (Python 3.12)
       uses: astral-sh/setup-uv@v6.6.0
       with:
         python-version: "3.12"
         activate-environment: true
-        enable-cache: true
-
-    - name: Use specific detematelibrary version
-      run: chmod +x scripts/change_toml.sh && scripts/change_toml.sh $GITHUB_BASE_REF
+        enable-cache: false
+        cache-local-path: ${{ github.workspace }}/.cache/uv
 
     - name: Run pre-commit with prek
       run: uv run --dev prek run -a
         
     - name: Test with pytest
-      run: uv run --dev pytest -s
+      run: uv run --dev pytest -s -n 4

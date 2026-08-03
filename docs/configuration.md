@@ -110,9 +110,9 @@ The service provides a REST API for runtime management and monitoring.
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/admin/status` | Returns the health, running state, and current effective configurations. |
-| `POST` | `/admin/start` | Starts the data processing engine thread. Idempotent — returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
-| `POST` | `/admin/stop` | Stops the data processing engine thread. Idempotent — returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
-| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys — returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
+| `POST` | `/admin/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
+| `POST` | `/admin/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
+| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
 | `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |
 
 ### Persistency Endpoints
@@ -123,11 +123,11 @@ These endpoints are available when the loaded library component has persistency 
 | :--- | :--- | :--- |
 | `GET` | `/admin/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
 | `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
-| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first — returns `409` if it is running. |
+| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running. |
 | `GET` | `/admin/persistency/export` | Downloads the current learned state as a zip archive. |
-| `POST` | `/admin/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first — returns `409` if it is running. |
+| `POST` | `/admin/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
 
-`/admin/persistency/save`, `/admin/persistency/status`, and `/admin/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/admin/persistency/load` and `/admin/persistency/import` additionally return `409` if the engine is running — stop it first with `/admin/stop`. `/admin/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
+`/admin/persistency/save`, `/admin/persistency/status`, and `/admin/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/admin/persistency/load` and `/admin/persistency/import` additionally return `409` if the engine is running - stop it first with `/admin/stop`. `/admin/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
 #### `/admin/persistency/status` response
 

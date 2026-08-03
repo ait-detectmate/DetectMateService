@@ -4,4 +4,4 @@ global:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['parser:8000', 'detector:8000']
+      - targets: ['parser:8000', 'detector:8000', 'detector-rule:8000']

@@ -8,6 +8,10 @@ ARG DETECTMATELIBRARY_BRANCH=development
 # string to install only the base library.
 ARG LIBRARY_EXTRAS=full
 
+# Install straight into the system site-packages
+# .venv, so `detectmate`/`python` work without activating anything.
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
+
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -16,14 +20,27 @@ RUN apt-get update && \
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml uv.lock README.md ./
+
+# --locked asserts uv.lock is up to date with pyproject.toml; the build
+# fails instead of silently re-resolving if the lock is stale.
+# --no-install-project installs only third-party dependencies,
+# so this layer stays cached if the project code changes but dependencies don't..
+RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
+    uv sync --locked --no-dev --no-install-project --extra "$LIBRARY_EXTRAS" ; \
+    else \
+    uv sync --locked --no-dev --no-install-project ; \
+    fi
+
 COPY ./src ./src
 COPY ./tests ./tests
 
+# dependencies are already installed above, so this is fast.
+
 RUN if [ -n "$LIBRARY_EXTRAS" ]; then \
-    uv pip install --system ".[$LIBRARY_EXTRAS]" ; \
+    uv sync --locked --no-dev --extra "$LIBRARY_EXTRAS" ; \
     else \
-    uv pip install --system . ; \
+    uv sync --locked --no-dev ; \
     fi
 
 RUN if [ "$DETECTMATELIBRARY_BRANCH" != "main" ]; then \

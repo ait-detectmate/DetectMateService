@@ -1,0 +1,23 @@
+component_name: NewValueDetector01
+component_type: NewValueDetector  # this is the component class name, the service will automatically search for the matching component config schema
+log_level: "DEBUG"
+log_dir: "/logs"
+
+# Manager Interface (Command Channel)
+http_host: 0.0.0.0
+
+# Engine Interface (Data Channel)
+# Listens for the parser's tls+tcp connection instead of IPC, see
+# docker-compose.tls.yml. Port 5555 is published in that overlay.
+engine_addr: "tls+tcp://0.0.0.0:5555"
+engine_autostart: true
+
+# Output Destinations (where processed data is sent) — unchanged, still IPC.
+out_addr:
+  - "ipc:///run/output.ipc"
+
+out_dial_timeout: 1000
+
+# container/certs/server.pem is the combined cert+key PEM (CN=detector).
+tls_input:
+  cert_key_file: /certs/server.pem
