@@ -2,6 +2,12 @@ name: Publish Docs
 on:
   release:
     types: [published]
+  push:
+    branches: [main, development]
+
+concurrency:
+  group: publish-docs
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -27,7 +33,8 @@ jobs:
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
-      - name: Deploy docs
+      - name: Deploy release docs
+        if: github.event_name == 'release'
         run: |
           # Extract version from tag (remove 'v' prefix if present)
           VERSION=${GITHUB_REF_NAME#v}
@@ -36,3 +43,9 @@ jobs:
           # Optional: make the released version the default shown when visiting the site
           # it's enough to run this once
           # uv run mike set-default --push latest
+
+      - name: Deploy branch docs
+        if: github.event_name == 'push'
+        run: |
+          echo "Deploying docs for branch $GITHUB_REF_NAME"
+          uv run mike deploy --push --title "$GITHUB_REF_NAME (unreleased)" "$GITHUB_REF_NAME"
