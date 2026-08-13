@@ -17,13 +17,7 @@ For this, ensure that the library is installed in the same activated virtual env
 Modify `settings.yaml` to use a library component:
 
 ```yaml
-component_name: new_value_detector
-component_type: detectors.NewValueDetector
-component_config_class: detectors.NewValueDetectorConfig
-config_file: detector-config.yaml
-log_level: INFO
-manager_addr: ipc:///tmp/detectmate.cmd.ipc
-engine_addr: ipc:///tmp/detectmate.engine.ipc
+--8<-- "docs/examples/library/settings.yaml"
 ```
 
 ### 2. Create component configuration
@@ -31,20 +25,7 @@ engine_addr: ipc:///tmp/detectmate.engine.ipc
 Create `detector-config.yaml`:
 
 ```yaml
-detectors:                 # Category Level
-  NewValueDetector:        # Class Name Level
-    auto_config: false
-    method_type: new_value_detector
-    params:                # Implementation Specific Level
-    events:
-      1:
-          test:
-              params: {}
-              variables:
-                  - pos: 0
-                    name: var1
-                    params:
-                        threshold: 0.5
+--8<-- "docs/examples/library/detector-config.yaml"
 ```
 
 ### 3. Start with configuration
@@ -58,23 +39,7 @@ detectmate --settings settings.yaml --config detector-config.yaml
 Create `new-config.yaml`:
 
 ```yaml
-detectors:
-  NewValueDetector:
-    auto_config: false
-    method_type: new_value_detector
-    params:
-        events:
-            1:
-                test:
-                    params: {}
-                    variables:
-                        - pos: 0
-                          name: var1
-                          params:
-                              threshold: 0.5
-                    header_variables:
-                        - pos: level
-                          params: {}
+--8<-- "docs/examples/library/new-config.yaml"
 ```
 
 The service supports dynamic reconfiguration with two modes:
@@ -102,13 +67,7 @@ Detectors accumulate learned state (observed values, variable distributions, etc
 Add a `persist` block to your component config:
 
 ```yaml
-detectors:
-  NewValueDetector:
-    method_type: new_value_detector
-    persist:
-      path: ./state      # Where to store state files
-      interval_seconds: 300  # Auto-save every 5 minutes
-      auto_load: true    # Restore previous state on startup
+--8<-- "docs/examples/library/detector_persist_config.yaml"
 ```
 
 The state is written under `{path}/{ComponentName}/` as a `metadata.json` index plus per-event data files (`.msgpack` for tracker backends, `.parquet` for dataframe backends).

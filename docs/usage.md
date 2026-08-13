@@ -31,13 +31,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 To run the service with custom variables, we can define settings. For example, create a file named `settings.yaml`:
 
 ```yaml
-component_name: my-first-service
-component_type: core  # or use a library component like "detectors.RandomDetector"
-log_level: INFO
-log_dir: ./logs
-http_host: 127.0.0.1
-http_port: 8000
-engine_addr: ipc:///tmp/detectmate.engine.ipc
+--8<-- "docs/examples/usage/settings.yaml"
 ```
 
 ## Start the service with settings

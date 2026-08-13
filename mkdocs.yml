@@ -25,3 +25,7 @@ nav:
 
 markdown_extensions:
   - admonition
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences
