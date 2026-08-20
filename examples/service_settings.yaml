@@ -1,6 +1,5 @@
 component_name: random-detector
 component_type: detectors.RandomDetector
-component_config_class: detectors.RandomDetectorConfig
 log_level: "DEBUG"
 log_dir: "./logs"
 
