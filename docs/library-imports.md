@@ -138,12 +138,14 @@ LogSchema bytes  --->  ParserSchema bytes  --->  DetectorSchema bytes
 
 ## Import Resolution
 
-The service uses a two-step import resolution for library components:
+The service uses a two-step import resolution, so short paths like `detectors.RandomDetector` resolve to `detectmatelibrary.detectors.RandomDetector` while custom components from external packages still work. The two loaders try the two prefixes in opposite order:
 
-1. **DetectMateLibrary-relative** (tried first): Prepends `detectmatelibrary.` to the path
-2. **Absolute import** (fallback): Uses the path as-is
+| Loader | Resolves | Order |
+|--------|----------|-------|
+| `ComponentLoader` | `component_type` | 1. path as-is → 2. `detectmatelibrary.{path}` |
+| `ConfigClassLoader` | `component_config_class` | 1. `detectmatelibrary.{path}` → 2. path as-is |
 
-This allows short paths like `detectors.RandomDetector` to resolve to `detectmatelibrary.detectors.RandomDetector`, while still supporting custom components from external packages.
+`component_type` may also be given as a bare class name, which `ComponentResolver` looks up by searching the library. See [Component Loading](interfaces.md#component-loading) for both forms and their trade-offs.
 
 ## File Reference
 

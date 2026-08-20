@@ -19,7 +19,6 @@ Modify `settings.yaml` to use a library component:
 ```yaml
 component_name: new_value_detector
 component_type: detectors.NewValueDetector
-component_config_class: detectors.NewValueDetectorConfig
 config_file: detector-config.yaml
 log_level: INFO
 manager_addr: ipc:///tmp/detectmate.cmd.ipc
