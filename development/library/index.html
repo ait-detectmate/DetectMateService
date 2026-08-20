@@ -145,140 +145,140 @@ in the installation guide.</p>
 </blockquote>
 <h3 id="1-update-settings">1. Update settings</h3>
 <p>Modify <code>settings.yaml</code> to use a library component:</p>
-<pre><code class="language-yaml">component_name: new_value_detector
-component_type: detectors.NewValueDetector
-component_config_class: detectors.NewValueDetectorConfig
-config_file: detector-config.yaml
-log_level: INFO
-manager_addr: ipc:///tmp/detectmate.cmd.ipc
-engine_addr: ipc:///tmp/detectmate.engine.ipc
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.NewValueDetector</span>
+<span class="nt">component_config_class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.NewValueDetectorConfig</span>
+<span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector-config.yaml</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span>
+<span class="nt">manager_addr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ipc:///tmp/detectmate.cmd.ipc</span>
+<span class="nt">engine_addr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ipc:///tmp/detectmate.engine.ipc</span>
+</code></pre></div>
 <h3 id="2-create-component-configuration">2. Create component configuration</h3>
 <p>Create <code>detector-config.yaml</code>:</p>
-<pre><code class="language-yaml">detectors:                 # Category Level
-  NewValueDetector:        # Class Name Level
-    auto_config: false
-    method_type: new_value_detector
-    params:                # Implementation Specific Level
-    events:
-      1:
-          test:
-              params: {}
-              variables:
-                  - pos: 0
-                    name: var1
-                    params:
-                        threshold: 0.5
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Category Level</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span><span class="w">        </span><span class="c1"># Class Name Level</span>
+<span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span><span class="w">                </span><span class="c1"># Implementation Specific Level</span>
+<span class="w">    </span><span class="nt">events</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">1</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">              </span><span class="nt">variables</span><span class="p">:</span>
+<span class="w">                  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">                    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">var1</span>
+<span class="w">                    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">                        </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</code></pre></div>
 <h3 id="3-start-with-configuration">3. Start with configuration</h3>
-<pre><code class="language-bash">detectmate --settings settings.yaml --config detector-config.yaml
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--config<span class="w"> </span>detector-config.yaml
+</code></pre></div>
 <h3 id="4-reconfigure-at-runtime">4. Reconfigure at runtime</h3>
 <p>Create <code>new-config.yaml</code>:</p>
-<pre><code class="language-yaml">detectors:
-  NewValueDetector:
-    auto_config: false
-    method_type: new_value_detector
-    params:
-        events:
-            1:
-                test:
-                    params: {}
-                    variables:
-                        - pos: 0
-                          name: var1
-                          params:
-                              threshold: 0.5
-                    header_variables:
-                        - pos: level
-                          params: {}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">events</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">1</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">                    </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">                    </span><span class="nt">variables</span><span class="p">:</span>
+<span class="w">                        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">                          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">var1</span>
+<span class="w">                          </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">                              </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">                    </span><span class="nt">header_variables</span><span class="p">:</span>
+<span class="w">                        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
+<span class="w">                          </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</code></pre></div>
 <p>The service supports dynamic reconfiguration with two modes:</p>
 <h4 id="1-in-memory-update-default">1. In-memory update (default)</h4>
 <p>Changes are applied to the running service but not saved to disk. The changes will be lost when the service restarts.</p>
-<pre><code class="language-bash">detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>reconfigure<span class="w"> </span>path/to/new-config.yaml
+</code></pre></div>
 <h4 id="2-persistent-update-with-persist-flag">2. Persistent update (with --persist flag)</h4>
 <p>Changes are applied to the running service AND saved to the original parameter file. The changes persist across service restarts.</p>
-<pre><code class="language-bash">detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml --persist
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>reconfigure<span class="w"> </span>path/to/new-config.yaml<span class="w"> </span>--persist
+</code></pre></div>
 <p><strong>Note:</strong> The <code>--persist</code> flag will overwrite the original parameter file specified in your service configuration with the new values.</p>
 <h3 id="5-enable-state-persistency">5. Enable state persistency</h3>
 <p>Detectors accumulate learned state (observed values, variable distributions, etc.) during training. You can configure the service to automatically save this state to disk and restore it across restarts.</p>
 <p>Add a <code>persist</code> block to your component config:</p>
-<pre><code class="language-yaml">detectors:
-  NewValueDetector:
-    method_type: new_value_detector
-    persist:
-      path: ./state      # Where to store state files
-      interval_seconds: 300  # Auto-save every 5 minutes
-      auto_load: true    # Restore previous state on startup
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">    </span><span class="nt">persist</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./state</span><span class="w">      </span><span class="c1"># Where to store state files</span>
+<span class="w">      </span><span class="nt">interval_seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w">  </span><span class="c1"># Auto-save every 5 minutes</span>
+<span class="w">      </span><span class="nt">auto_load</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">    </span><span class="c1"># Restore previous state on startup</span>
+</code></pre></div>
 <p>The state is written under <code>{path}/{ComponentName}/</code> as a <code>metadata.json</code> index plus per-event data files (<code>.msgpack</code> for tracker backends, <code>.parquet</code> for dataframe backends).</p>
 <h4 id="controlling-persistency-at-runtime">Controlling persistency at runtime</h4>
 <p>Once persistency is configured, three admin endpoints become available:</p>
-<pre><code class="language-bash"># Check current state: events seen, events since last save, last save timestamp
-curl http://127.0.0.1:8000/admin/persistency/status
+<div class="highlight"><pre><span></span><code><span class="c1"># Check current state: events seen, events since last save, last save timestamp</span>
+curl<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/status
 
-# Force an immediate save (e.g. before a planned maintenance window)
-curl -X POST http://127.0.0.1:8000/admin/persistency/save
+<span class="c1"># Force an immediate save (e.g. before a planned maintenance window)</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/save
 
-# Restore state from disk (e.g. after rolling back to a previous snapshot)
-curl -X POST http://127.0.0.1:8000/admin/persistency/load
-</code></pre>
+<span class="c1"># Restore state from disk (e.g. after rolling back to a previous snapshot)</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/load
+</code></pre></div>
 <blockquote>
 <p><strong>Warning:</strong> <code>/admin/persistency/load</code> returns <code>409 Conflict</code> if the engine is running. Stop it first with <code>/admin/stop</code>, then load, then restart with <code>/admin/start</code>. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.</p>
 </blockquote>
 <p>You can also use <code>detectmate-client</code> instead of curl — see <a href="../usage/#controlling-state-persistency">usage.md</a>.</p>
 <h4 id="exporting-and-importing-state">Exporting and importing state</h4>
 <p>You can download the current learned state as a portable zip archive and restore it later. Useful for backups, moving state between environments, or seeding a new instance.</p>
-<pre><code class="language-bash"># Download the current state to a local file
-curl http://127.0.0.1:8000/admin/persistency/export -o detector_state.zip
+<div class="highlight"><pre><span></span><code><span class="c1"># Download the current state to a local file</span>
+curl<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/export<span class="w"> </span>-o<span class="w"> </span>detector_state.zip
 
-# Restore state from a previously downloaded archive
-# (stop the engine first, import returns 409 if it is running)
-curl -X POST http://127.0.0.1:8000/admin/stop
-curl -X POST http://127.0.0.1:8000/admin/persistency/import -F &quot;file=@detector_state.zip&quot;
-curl -X POST http://127.0.0.1:8000/admin/start
-</code></pre>
+<span class="c1"># Restore state from a previously downloaded archive</span>
+<span class="c1"># (stop the engine first, import returns 409 if it is running)</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/stop
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/import<span class="w"> </span>-F<span class="w"> </span><span class="s2">&quot;file=@detector_state.zip&quot;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/start
+</code></pre></div>
 <p>You can also use <code>detectmate-client</code> instead of curl:</p>
-<pre><code class="language-bash"># Download the current state to a local file
-detectmate-client --url 127.0.0.1:8000 persistency-export detector_state.zip
+<div class="highlight"><pre><span></span><code><span class="c1"># Download the current state to a local file</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>persistency-export<span class="w"> </span>detector_state.zip
 
-# Restore state from a previously downloaded archive
-# (stop the engine first, import returns 409 if it is running)
-detectmate-client --url 127.0.0.1:8000 stop
-detectmate-client --url 127.0.0.1:8000 persistency-import detector_state.zip
-detectmate-client --url 127.0.0.1:8000 start
-</code></pre>
+<span class="c1"># Restore state from a previously downloaded archive</span>
+<span class="c1"># (stop the engine first, import returns 409 if it is running)</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>stop
+detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>persistency-import<span class="w"> </span>detector_state.zip
+detectmate-client<span class="w"> </span>--url<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>start
+</code></pre></div>
 <p>See <a href="../usage/#controlling-state-persistency">usage.md</a> for details.</p>
 <p>The archive contains <code>metadata.json</code> plus per-event data files. Import returns <code>422</code> if the file is not a valid zip or if <code>metadata.json</code> is missing.</p>
 <h3 id="6-control-training-at-runtime">6. Control training at runtime</h3>
 <p>Detectors go through two phases as they process events: a <strong>configure</strong> phase (learning data structure) and a <strong>train</strong> phase (fitting the model). Both run automatically for a fixed number of events configured via <code>data_use_configure</code> and <code>data_use_training</code>. After those limits are reached, the component switches to inference-only mode.</p>
 <p>You can override this behaviour at any time using the training state endpoints:</p>
-<pre><code class="language-bash"># Check what the component is currently doing
-curl http://127.0.0.1:8000/admin/training/state
-# → {&quot;state&quot;: &quot;Training.&quot;}  |  &quot;Configuring&quot;  |  &quot;Default&quot;
+<div class="highlight"><pre><span></span><code><span class="c1"># Check what the component is currently doing</span>
+curl<span class="w"> </span>http://127.0.0.1:8000/admin/training/state
+<span class="c1"># → {&quot;state&quot;: &quot;Training.&quot;}  |  &quot;Configuring&quot;  |  &quot;Default&quot;</span>
 
-# Freeze the model — stop updating it with new events
-curl -X POST http://127.0.0.1:8000/admin/training/state \
-  -H &quot;Content-Type: application/json&quot; \
-  -d '{&quot;state&quot;: &quot;stop_training&quot;}'
+<span class="c1"># Freeze the model — stop updating it with new events</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;stop_training&quot;}&#39;</span>
 
-# Resume training — keep updating even past the configured event limit
-curl -X POST http://127.0.0.1:8000/admin/training/state \
-  -H &quot;Content-Type: application/json&quot; \
-  -d '{&quot;state&quot;: &quot;keep_training&quot;}'
+<span class="c1"># Resume training — keep updating even past the configured event limit</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;keep_training&quot;}&#39;</span>
 
-# Similarly for the configure phase
-curl -X POST http://127.0.0.1:8000/admin/training/state \
-  -H &quot;Content-Type: application/json&quot; \
-  -d '{&quot;state&quot;: &quot;stop_configuring&quot;}'
+<span class="c1"># Similarly for the configure phase</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;stop_configuring&quot;}&#39;</span>
 
-curl -X POST http://127.0.0.1:8000/admin/training/state \
-  -H &quot;Content-Type: application/json&quot; \
-  -d '{&quot;state&quot;: &quot;keep_configuring&quot;}'
-</code></pre>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;keep_configuring&quot;}&#39;</span>
+</code></pre></div>
 <p>The four valid state values are <code>keep_training</code>, <code>stop_training</code>, <code>keep_configuring</code>, and <code>stop_configuring</code>. Any other value is rejected with <code>422</code>.</p>
 <p>You can also use <code>detectmate-client</code> instead of curl — see <a href="../usage/#controlling-training-state">usage.md</a>.</p>
               

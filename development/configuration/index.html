@@ -271,56 +271,55 @@
 </table>
 <h3 id="yaml-files">YAML files</h3>
 <p>You can provide a YAML file containing the service settings. Below is an example <code>settings.yaml</code>:</p>
-<pre><code class="language-yaml">component_name: &quot;my-detector&quot;
-log_level: &quot;DEBUG&quot;
-log_dir: &quot;./logs&quot;
+<div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-detector&quot;</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;DEBUG&quot;</span>
+<span class="nt">log_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./logs&quot;</span>
 
-# Manager Interface
-http_host: 127.0.0.1
-http_port: 8000
+<span class="c1"># Manager Interface</span>
+<span class="nt">http_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
+<span class="nt">http_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
 
-# Engine Interface (Data Channel)
-engine_addr: &quot;ipc:///tmp/detectmate.engine.ipc&quot;
-engine_autostart: true
+<span class="c1"># Engine Interface (Data Channel)</span>
+<span class="nt">engine_addr</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ipc:///tmp/detectmate.engine.ipc&quot;</span>
+<span class="nt">engine_autostart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
-# Output Destinations (where processed data is sent)
-out_addr:
-  - &quot;tcp://127.0.0.1:5000&quot;
-  - &quot;ipc:///tmp/output.ipc&quot;
+<span class="c1"># Output Destinations (where processed data is sent)</span>
+<span class="nt">out_addr</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;tcp://127.0.0.1:5000&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;ipc:///tmp/output.ipc&quot;</span>
 
-out_dial_timeout: 1000
-</code></pre>
+<span class="nt">out_dial_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</code></pre></div>
 <h3 id="environment-variables">Environment variables</h3>
 <p>Environment variables override values in the YAML file. They are prefixed with <code>DETECTMATE_</code>.</p>
-<p>Example:</p>
-<pre><code class="language-bash">export DETECTMATE_LOG_LEVEL=DEBUG
-export DETECTMATE_COMPONENT_NAME=worker-1
-detectmate start
-</code></pre>
+<p>Example:
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_LOG_LEVEL</span><span class="o">=</span>DEBUG
+<span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_COMPONENT_NAME</span><span class="o">=</span>worker-1
+detectmate<span class="w"> </span>start
+</code></pre></div></p>
 <h2 id="component-configuration">Component configuration</h2>
 <p>In addition to the service settings (which configure the <em>runner</em>), you can also pass a separate configuration file for the specific component logic (e.g., detector parameters) using the <code>--config</code> flag in the CLI. This file is specific to the implementation of the component you are running.</p>
 <p>Component configuration controls the specific logic of the detector or parser. To support dynamic library loading, this file uses a nested structure.
 The configuration must be namespaced by the component category (detectors or parsers) and the specific class name to allow the library to correctly route parameters.
 Example detector_config.yaml</p>
-<pre><code class="language-yaml">detectors:                 # Category Level
-  NewValueDetector:        # Class Name Level
-    auto_config: false
-    method_type: new_value_detector
-    params:                # Implementation Specific Level
-    events:
-        1:
-            test:
-                params: {}
-                variables:
-                    - pos: 0
-                      name: var1
-                      params:
-                          threshold: 0.5
-                header_variables:
-                    - pos: level
-                      params: {}
-
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Category Level</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span><span class="w">        </span><span class="c1"># Class Name Level</span>
+<span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span><span class="w">                </span><span class="c1"># Implementation Specific Level</span>
+<span class="w">    </span><span class="nt">events</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">1</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">                </span><span class="nt">variables</span><span class="p">:</span>
+<span class="w">                    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">                      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">var1</span>
+<span class="w">                      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">                          </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">                </span><span class="nt">header_variables</span><span class="p">:</span>
+<span class="w">                    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
+<span class="w">                      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</code></pre></div>
 <p>You can read more about Components in the <a href="../library/">Using a Library Component</a> section.</p>
 <h2 id="http-admin-interface">HTTP Admin Interface</h2>
 <p>The service provides a REST API for runtime management and monitoring.</p>
@@ -401,17 +400,17 @@ Example detector_config.yaml</p>
 </table>
 <p><code>/admin/persistency/save</code>, <code>/admin/persistency/status</code>, and <code>/admin/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/admin/persistency/load</code> and <code>/admin/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/admin/stop</code>. <code>/admin/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
 <h4 id="adminpersistencystatus-response"><code>/admin/persistency/status</code> response</h4>
-<pre><code class="language-json">{
-  &quot;path&quot;: &quot;/state/NewValueDetector&quot;,
-  &quot;save_interval_seconds&quot;: 300,
-  &quot;events_until_save&quot;: null,
-  &quot;auto_load&quot;: false,
-  &quot;events_seen_count&quot;: 12,
-  &quot;events_with_data_count&quot;: 8,
-  &quot;events_since_save&quot;: 47,
-  &quot;last_saved_at&quot;: &quot;2026-06-16T10:30:00+00:00&quot;
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/state/NewValueDetector&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;save_interval_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;events_until_save&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;auto_load&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;events_seen_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;events_with_data_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;events_since_save&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">47</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;last_saved_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-06-16T10:30:00+00:00&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -486,8 +485,8 @@ Example detector_config.yaml</p>
 </ul>
 <p>Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.</p>
 <h4 id="post-admintrainingstate-payload"><code>POST /admin/training/state</code> payload</h4>
-<pre><code class="language-json">{&quot;state&quot;: &quot;&lt;value&gt;&quot;}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;value&gt;&quot;</span><span class="p">}</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -516,8 +515,8 @@ Example detector_config.yaml</p>
 </table>
 <p>Any other value is rejected with <code>422 Unprocessable Entity</code>.</p>
 <h4 id="get-admintrainingstate-response"><code>GET /admin/training/state</code> response</h4>
-<pre><code class="language-json">{&quot;state&quot;: &quot;Training.&quot;}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training.&quot;</span><span class="p">}</span>
+</code></pre></div>
 <p>The <code>state</code> field reflects what the component did with the most recently processed event:</p>
 <table>
 <thead>
@@ -543,16 +542,16 @@ Example detector_config.yaml</p>
 </table>
 <h3 id="persistency-component-configuration">Persistency component configuration</h3>
 <p>Persistency for detector components is enabled through the <code>persist</code> block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.</p>
-<pre><code class="language-yaml">detectors:
-  NewValueDetector:
-    method_type: new_value_detector
-    persist:
-      path: ./state          # Directory to store state files (supports fsspec URLs)
-      interval_seconds: 300  # Save every 5 minutes (default)
-      events_until_save: 1000  # Also save after every 1000 ingested events (optional)
-      auto_load: true        # Restore previous state on startup (default: false)
-      storage_options: {}    # Extra options passed to fsspec (e.g. S3 credentials)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">    </span><span class="nt">persist</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./state</span><span class="w">          </span><span class="c1"># Directory to store state files (supports fsspec URLs)</span>
+<span class="w">      </span><span class="nt">interval_seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w">  </span><span class="c1"># Save every 5 minutes (default)</span>
+<span class="w">      </span><span class="nt">events_until_save</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w">  </span><span class="c1"># Also save after every 1000 ingested events (optional)</span>
+<span class="w">      </span><span class="nt">auto_load</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">        </span><span class="c1"># Restore previous state on startup (default: false)</span>
+<span class="w">      </span><span class="nt">storage_options</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">    </span><span class="c1"># Extra options passed to fsspec (e.g. S3 credentials)</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>

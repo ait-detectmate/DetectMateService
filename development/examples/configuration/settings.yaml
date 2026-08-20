@@ -1,0 +1,18 @@
+component_name: "my-detector"
+log_level: "DEBUG"
+log_dir: "./logs"
+
+# Manager Interface
+http_host: 127.0.0.1
+http_port: 8000
+
+# Engine Interface (Data Channel)
+engine_addr: "ipc:///tmp/detectmate.engine.ipc"
+engine_autostart: true
+
+# Output Destinations (where processed data is sent)
+out_addr:
+  - "tcp://127.0.0.1:5000"
+  - "ipc:///tmp/output.ipc"
+
+out_dial_timeout: 1000

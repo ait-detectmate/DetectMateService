@@ -128,11 +128,11 @@
                 <h1 id="usage">Usage</h1>
 <p>DetectMateService provides a command-line interface (CLI) <code>detectmate</code> to manage the service.</p>
 <h2 id="quick-start-your-first-service">Quick start your first Service</h2>
-<p>To run a component with default settings only, you can use this command:</p>
-<pre><code class="language-bash">detectmate
-</code></pre>
+<p>To run a component with default settings only, you can use this command:
+<div class="highlight"><pre><span></span><code>detectmate
+</code></pre></div></p>
 <p>You should see output like:</p>
-<pre><code>[2026-01-20 15:16:21,140] INFO service.cli: config file: None
+<div class="highlight"><pre><span></span><code>[2026-01-20 15:16:21,140] INFO service.cli: config file: None
 [2026-01-20 15:16:21,140] INFO service.cli: config file: None
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
@@ -143,22 +143,21 @@ INFO:     Started server process [3933168]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-
-</code></pre>
+</code></pre></div>
 <h2 id="create-service-settings">Create service settings</h2>
 <p>To run the service with custom variables, we can define settings. For example, create a file named <code>settings.yaml</code>:</p>
-<pre><code class="language-yaml">component_name: my-first-service
-component_type: core  # or use a library component like &quot;detectors.RandomDetector&quot;
-log_level: INFO
-log_dir: ./logs
-http_host: 127.0.0.1
-http_port: 8000
-engine_addr: ipc:///tmp/detectmate.engine.ipc
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-first-service</span>
+<span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core</span><span class="w">  </span><span class="c1"># or use a library component like &quot;detectors.RandomDetector&quot;</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span>
+<span class="nt">log_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs</span>
+<span class="nt">http_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
+<span class="nt">http_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
+<span class="nt">engine_addr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ipc:///tmp/detectmate.engine.ipc</span>
+</code></pre></div>
 <h2 id="start-the-service-with-settings">Start the service with settings</h2>
 <p>To start the service, use the <code>detectmate</code> command. You can optionally specify a settings file and a component configuration file.</p>
-<pre><code class="language-bash">detectmate --settings settings.yaml --config config.yaml
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -183,87 +182,87 @@ engine_addr: ipc:///tmp/detectmate.engine.ipc
 </table>
 <h2 id="starting-in-standby-mode">Starting in standby mode</h2>
 <p>By default the engine starts automatically when the service launches. Pass <code>--no-autostart</code> to keep the engine idle on startup:</p>
-<pre><code class="language-bash">detectmate --settings settings.yaml --no-autostart
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--no-autostart
+</code></pre></div>
 <p>The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:</p>
-<pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/admin/start
-</code></pre>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/start
+</code></pre></div>
 <p>This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.</p>
 <p>The same behaviour can also be configured persistently via the settings file or environment variable - see <a href="../configuration/#service-settings"><code>engine_autostart</code></a>.</p>
 <h2 id="checking-status">Checking status</h2>
 <p>To check the status of a running service run:</p>
-<pre><code class="language-bash">detectmate-client status --url &lt;http_host:http_port&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>status<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;
+</code></pre></div>
 <p>Output:</p>
-<pre><code class="language-json">{
-  &quot;status&quot;: {
-    &quot;component_type&quot;: &quot;core&quot;,
-    &quot;component_id&quot;: &quot;abc123...&quot;,
-    &quot;running&quot;: true
-  },
-  &quot;settings&quot;: {
-    &quot;component_name&quot;: &quot;my-first-service&quot;,
-    &quot;log_level&quot;: &quot;INFO&quot;,
-    ...
-  },
-  &quot;configs&quot;: {}
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;component_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;core&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;component_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123...&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;running&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;component_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;my-first-service&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;log_level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;configs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="reconfiguring">Reconfiguring</h2>
 <p>You can update the component configuration of a running service without restarting it:</p>
-<pre><code class="language-bash">detectmate-client --url &lt;http_host:http_port&gt; reconfigure new_config.yaml
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>reconfigure<span class="w"> </span>new_config.yaml
+</code></pre></div>
 <p>Add <code>--persist</code> to save the new configuration to the original config file (if supported).</p>
-<pre><code class="language-bash">detectmate --url &lt;http_host:http_port&gt; reconfigure new_config.yaml --persist
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>reconfigure<span class="w"> </span>new_config.yaml<span class="w"> </span>--persist
+</code></pre></div>
 <h2 id="stopping-the-engine">Stopping the engine</h2>
 <p>To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with <code>start</code>:</p>
-<pre><code class="language-bash">detectmate-client --url &lt;http_host:http_port&gt; stop
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>stop
+</code></pre></div>
 <h2 id="stopping-the-process">Stopping the process</h2>
 <p>To shut down the entire service process (not just the engine) send <code>SIGINT</code> (Ctrl+C if it's running in your foreground terminal, as in the <a href="#quick-start-your-first-service">Quick start</a> output above) or <code>SIGTERM</code> (what <code>docker stop</code> and systemd send), or call the shutdown endpoint directly:</p>
-<pre><code class="language-bash">curl -X POST http://&lt;http_host:http_port&gt;/admin/shutdown
-</code></pre>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://&lt;http_host:http_port&gt;/admin/shutdown
+</code></pre></div>
 <p>Unlike <code>stop</code>, this is not restartable, the process exits. Expect these two log lines:</p>
-<pre><code>Shutdown signal received (SIGINT)...
+<div class="highlight"><pre><span></span><code>Shutdown signal received (SIGINT)...
 Clean exit.
-</code></pre>
+</code></pre></div>
 <p>(<code>SIGTERM</code> logs the same two lines with <code>SIGTERM</code> in place of <code>SIGINT</code>.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown. you don't need to call <code>stop</code> first.</p>
 <h2 id="controlling-state-persistency">Controlling state persistency</h2>
 <p>When a component has persistency configured, you can manage its saved state at runtime.</p>
-<pre><code class="language-bash"># Show persistency config, event counters, and last save timestamp
-detectmate-client --url &lt;http_host:http_port&gt; persistency-status
+<div class="highlight"><pre><span></span><code><span class="c1"># Show persistency config, event counters, and last save timestamp</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>persistency-status
 
-# Force an immediate save of learned state to storage
-detectmate-client --url &lt;http_host:http_port&gt; persistency-save
+<span class="c1"># Force an immediate save of learned state to storage</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>persistency-save
 
-# Restore learned state from storage (replaces current in-memory state)
-detectmate-client --url &lt;http_host:http_port&gt; persistency-load
-</code></pre>
+<span class="c1"># Restore learned state from storage (replaces current in-memory state)</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>persistency-load
+</code></pre></div>
 <p>These commands return <code>404</code> if persistency is not configured for the loaded component. <code>persistency-load</code> and <code>persistency-import</code> return <code>409</code> if the engine is running — stop it first, then load/import, then restart. See <a href="../configuration/">configuration.md</a> for how to enable persistency via the <code>persist</code> block.</p>
-<pre><code class="language-bash"># Download the current learned state to a file
-detectmate-client --url &lt;http_host:http_port&gt; persistency-export detector_state.zip
+<div class="highlight"><pre><span></span><code><span class="c1"># Download the current learned state to a file</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>persistency-export<span class="w"> </span>detector_state.zip
 
-# Restore state from a previously exported archive
-detectmate-client --url &lt;http_host:http_port&gt; stop
-detectmate-client --url &lt;http_host:http_port&gt; persistency-import detector_state.zip
-detectmate-client --url &lt;http_host:http_port&gt; start
-</code></pre>
+<span class="c1"># Restore state from a previously exported archive</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>stop
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>persistency-import<span class="w"> </span>detector_state.zip
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>start
+</code></pre></div>
 <h2 id="controlling-training-state">Controlling training state</h2>
 <p>By default a detector trains for a fixed number of events, then switches to inference-only mode. You can override this at runtime:</p>
-<pre><code class="language-bash"># Check what the component is currently doing
-detectmate-client --url &lt;http_host:http_port&gt; training-get-state
+<div class="highlight"><pre><span></span><code><span class="c1"># Check what the component is currently doing</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>training-get-state
 
-# Freeze the model, stop training immediately
-detectmate-client --url &lt;http_host:http_port&gt; training-set-state stop_training
+<span class="c1"># Freeze the model, stop training immediately</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>training-set-state<span class="w"> </span>stop_training
 
-# Resume training, eep updating past the configured event limit
-detectmate-client --url &lt;http_host:http_port&gt; training-set-state keep_training
+<span class="c1"># Resume training, eep updating past the configured event limit</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>training-set-state<span class="w"> </span>keep_training
 
-# Force the configure phase on or off
-detectmate-client --url &lt;http_host:http_port&gt; training-set-state keep_configuring
-detectmate-client --url &lt;http_host:http_port&gt; training-set-state stop_configuring
-</code></pre>
+<span class="c1"># Force the configure phase on or off</span>
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>training-set-state<span class="w"> </span>keep_configuring
+detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>training-set-state<span class="w"> </span>stop_configuring
+</code></pre></div>
 <p>Valid values for <code>training-set-state</code> are <code>keep_training</code>, <code>stop_training</code>, <code>keep_configuring</code>, and <code>stop_configuring</code>. Any other value is rejected before the request is sent.</p>
               
             </div>

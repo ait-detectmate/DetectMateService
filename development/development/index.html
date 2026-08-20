@@ -127,22 +127,22 @@
 </div>
 <h2 id="setup-a-development-environment">Setup a development environment</h2>
 <p>For development we recommend using <a href="https://docs.astral.sh/uv/">uv</a>. You can install all optional dependencies:</p>
-<pre><code class="language-bash">uv sync --dev
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--dev
+</code></pre></div>
 <p><em>Please note that this step is not necessary. <code>uv run --dev</code> will automatically download all dependencies.</em></p>
 <h2 id="use-prek-to-run-code-checks">Use prek to run code checks</h2>
 <p>Every code contributer must use <a href="https://github.com/j178/prek"><code>prek</code></a> to run basic checks at commit time.
 <code>prek</code> is configured via the existing <code>.pre-commit-config.yaml</code>
 and can be installed as part of the <code>dev</code> extras. To ensure pre-commit hooks run before each commit, run:</p>
-<pre><code class="language-bash">uv run prek install
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>prek<span class="w"> </span>install
+</code></pre></div>
 <p>To run the checks manually, you can execute:</p>
-<pre><code class="language-bash">uv run prek run -a
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>prek<span class="w"> </span>run<span class="w"> </span>-a
+</code></pre></div>
 <h2 id="add-tests-and-run-pytest">Add tests and run pytest</h2>
 <p>In oder to run the tests run the following command:</p>
-<pre><code class="language-bash">uv run --dev pytest
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--dev<span class="w"> </span>pytest
+</code></pre></div>
 <h2 id="hot-reloading-the-docker-compose-stack">Hot-reloading the Docker Compose stack</h2>
 <p><code>docker-compose.hotreload.yml</code> is an overlay for the stack from
 <a href="../docker-compose/">Docker Compose reference</a>: it bind-mounts <code>./src</code> into
@@ -152,8 +152,8 @@ transitive dependency of <code>uvicorn[standard]</code>), which restarts the pro
 whenever a <code>.py</code> file under <code>src/</code> changes. <code>uv sync</code> already installs
 <code>detectmateservice</code> in editable mode, the restarted process picks up
 edits immediately without a rebuild.</p>
-<pre><code class="language-bash">docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
-</code></pre>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.yml<span class="w"> </span>-f<span class="w"> </span>docker-compose.hotreload.yml<span class="w"> </span>up<span class="w"> </span>--build
+</code></pre></div>
 <p>Restarting resets in-memory state (e.g. <code>NewValueDetector</code>'s learned
 values) unless persistence with <code>auto_load</code> is configured — see
 <a href="../configuration/#persistency-endpoints">Persistency Endpoints</a>.</p>
@@ -163,19 +163,19 @@ installs <code>detectmatelibrary</code> from a local source checkout instead of 
 for the <code>detector</code> service. Copy it to <code>docker-compose.library-source.yml</code>
 (gitignored, so your local path never ends up in version control) and point
 the volume at your checkout:</p>
-<pre><code class="language-bash">cp docker-compose.library-source.yml.example docker-compose.library-source.yml
-# edit the volume path in docker-compose.library-source.yml, then:
-docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --build
-</code></pre>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>docker-compose.library-source.yml.example<span class="w"> </span>docker-compose.library-source.yml
+<span class="c1"># edit the volume path in docker-compose.library-source.yml, then:</span>
+docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.yml<span class="w"> </span>-f<span class="w"> </span>docker-compose.library-source.yml<span class="w"> </span>up<span class="w"> </span>--build
+</code></pre></div>
 <h2 id="tls-between-parser-and-detector">TLS between parser and detector</h2>
 <p><code>docker-compose.tls.yml</code> is an overlay that switches the parser → detector
 link from IPC to <code>tls+tcp</code>, leaving the rest of the stack unchanged. Generate
 a throwaway CA + server certificate once before first use:</p>
-<pre><code class="language-bash">bash scripts/gen_tls_certs.sh
-</code></pre>
+<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>scripts/gen_tls_certs.sh
+</code></pre></div>
 <p>Then start the stack with the overlay applied:</p>
-<pre><code class="language-bash">docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
-</code></pre>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.yml<span class="w"> </span>-f<span class="w"> </span>docker-compose.tls.yml<span class="w"> </span>up<span class="w"> </span>--build
+</code></pre></div>
 <p>See the comments in <code>docker-compose.tls.yml</code> for how to verify the
 connection is actually encrypted with <code>openssl s_client</code>.</p>
 <h2 id="updating-the-detectmatelibrary-version">Updating the DetectMateLibrary version</h2>

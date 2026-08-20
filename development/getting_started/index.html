@@ -111,15 +111,15 @@
 <p>In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.</p>
 <h2 id="preparation">Preparation</h2>
 <p>We will setup the DetectMate on a fresh installation of Ubuntu Noble:</p>
-<pre><code>alice@ubuntu2404:~$ lsb_release -a
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~$ lsb_release -a
 No LSB modules are available.
 Distributor ID: Ubuntu
 Description:    Ubuntu 24.04.4 LTS
 Release:    24.04
 Codename:   noble
-</code></pre>
+</code></pre></div>
 <p>In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:</p>
-<pre><code>alice@ubuntu2404:~$ sudo apt update &amp;&amp; sudo apt install nginx -y
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~$ sudo apt update &amp;&amp; sudo apt install nginx -y
 Hit:1 http://at.archive.ubuntu.com/ubuntu noble InRelease
 Hit:2 http://at.archive.ubuntu.com/ubuntu noble-updates InRelease
 Hit:3 http://at.archive.ubuntu.com/ubuntu noble-backports InRelease
@@ -127,7 +127,7 @@ Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
-9 packages can be upgraded. Run 'apt list --upgradable' to see them.
+9 packages can be upgraded. Run &#39;apt list --upgradable&#39; to see them.
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
@@ -171,9 +171,9 @@ No user sessions are running outdated binaries.
 No VM guests are running outdated hypervisor (qemu) binaries on this host.
 
 alice@ubuntu2404:~$
-</code></pre>
+</code></pre></div>
 <p>We can try to send HTTP-requests to our local Nginx:</p>
-<pre><code>alice@ubuntu2404:~$ curl http://localhost
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~$ curl http://localhost
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
@@ -198,20 +198,20 @@ Commercial support is available at
 &lt;/body&gt;
 &lt;/html&gt;
 alice@ubuntu2404:~$
-</code></pre>
+</code></pre></div>
 <p>Now we should have at least one line in /var/log/nginx/access.log:</p>
-<pre><code>alice@ubuntu2404:~$ sudo cat /var/log/nginx/access.log
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~$ sudo cat /var/log/nginx/access.log
 ::1 - - [18/Mar/2026:11:43:30 +0000] &quot;GET / HTTP/1.1&quot; 200 615 &quot;-&quot; &quot;curl/8.5.0&quot;
-</code></pre>
+</code></pre></div>
 <p>Since we have a working webserver, we can now move on to deploy the logdata anomaly pipeline.</p>
 <h2 id="deploying-the-pipeline">Deploying the Pipeline</h2>
 <p>We need Docker and Docker Compose for the deployment. A comprehensive tutorial about how to install Docker can be found at https://docs.docker.com/engine/install/ubuntu/</p>
 <p>In this section, we will focus solely on the installation commands.</p>
 <p>First run the following command to uninstall all conflicting packages:</p>
-<pre><code>sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
-</code></pre>
+<div class="highlight"><pre><span></span><code>sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+</code></pre></div>
 <p>Now set up Docker's apt repository:</p>
-<pre><code># Add Docker's official GPG key:
+<div class="highlight"><pre><span></span><code># Add Docker&#39;s official GPG key:
 sudo apt update
 sudo apt install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -228,17 +228,17 @@ Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
 sudo apt update
-</code></pre>
+</code></pre></div>
 <p>Install docker and docker compose:</p>
-<pre><code>sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-</code></pre>
+<div class="highlight"><pre><span></span><code>sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+</code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Since we did not add our user to the docker group, we have to use sudo for docker compose!</p>
 </div>
 <p>With Docker compose working, we will now download the DetectmateService repository using <code>git</code>:</p>
-<pre><code>alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
-Cloning into 'DetectMateService'...
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
+Cloning into &#39;DetectMateService&#39;...
 remote: Enumerating objects: 2303, done.
 remote: Counting objects: 100% (372/372), done.
 remote: Compressing objects: 100% (227/227), done.
@@ -246,9 +246,9 @@ remote: Total 2303 (delta 171), reused 171 (delta 131), pack-reused 1931 (from 3
 Receiving objects: 100% (2303/2303), 3.97 MiB | 9.12 MiB/s, done.
 Resolving deltas: 100% (1229/1229), done.
 alice@ubuntu2404:~$ cd DetectMateService/
-</code></pre>
+</code></pre></div>
 <p>Let's start the default pipeline, just to test it:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
 [+] up 7/7
  ✔ Container detectmateservice-fluentout-1      Started                                                                                                                                                                                 
  ✔ Container prometheus                         Started                                                                                                                                                                                 s
@@ -258,9 +258,9 @@ alice@ubuntu2404:~$ cd DetectMateService/
  ✔ Container detectmateservice-parser-1         Started                                                                                                                                                                                  
  ✔ Container detectmateservice-fluentin-1       Started                                                                                                                                                                                  
 alice@ubuntu2404:~/DetectMateService$
-</code></pre>
+</code></pre></div>
 <p>To check the status of the containers, we can use <code>docker compose ps</code>:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
 NAME                                 IMAGE                              COMMAND                  SERVICE          CREATED         STATUS         PORTS
 detectmateservice-detector-1         detectmateservice-detector         &quot;uv run detectmate -…&quot;   detector         4 minutes ago   Up 3 minutes   0.0.0.0:8002-&gt;8000/tcp, [::]:8002-&gt;8000/tcp
 detectmateservice-detector-rule-1    detectmateservice-detector-rule    &quot;uv run detectmate -…&quot;   detector-rule    4 minutes ago   Up 3 minutes   0.0.0.0:8003-&gt;8000/tcp, [::]:8003-&gt;8000/tcp
@@ -269,10 +269,10 @@ detectmateservice-fluentout-1        detectmateservice-fluentout        &quot;ti
 detectmateservice-parser-1           detectmateservice-parser           &quot;uv run detectmate -…&quot;   parser           4 minutes ago   Up 3 minutes   0.0.0.0:8001-&gt;8000/tcp, [::]:8001-&gt;8000/tcp
 grafana                              grafana/grafana:latest             &quot;/run.sh&quot;                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000-&gt;3000/tcp, [::]:3000-&gt;3000/tcp
 prometheus                           prom/prometheus:latest             &quot;/bin/prometheus --c…&quot;   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
-</code></pre>
+</code></pre></div>
 <p>Notice that the pipeline has <strong>two</strong> detector services running side by side: <code>detector</code> (running <code>NewValueDetector</code>) and <code>detector-rule</code> (running <code>RuleDetector</code>). The <code>parser</code> sends every parsed log line to both, and <code>fluentout</code> writes each detector's alerts to its own output file (<code>output.%Y%m%d</code> and <code>output-rule.%Y%m%d</code>).</p>
 <p>For now, we will shutdown all containers:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
 [+] down 9/9
  ✔ Container grafana                             Removed                                                                                                                                                                              
  ✔ Container detectmateservice-fluentin-1        Removed                                                                                                                                                                               
@@ -284,158 +284,156 @@ prometheus                           prom/prometheus:latest             &quot;/b
  ✔ Volume detectmateservice_grafana_data         Removed                                                                                                                                                                               
  ✔ Network detectmateservice_default             Removed                                                                                                                                                                               
  ✔ Volume detectmateservice_prometheus_data Removed
-</code></pre>
+</code></pre></div>
 <p>We have finally all requirements installed and have a boilerplate template for docker compose that starts an initial pipeline. In the next sections we will reconfigure that 
 pipeline so that we can read the <code>access.log</code> and generate anomalies.</p>
 <h2 id="mount-the-accesslog">Mount the access.log</h2>
 <p>The preconfigured pipeline reads logs from <code>container/fluentlogs/some.log</code>. In order to be able to read the nginx access.log file, we need to mount <code>/var/log/nginx</code> into the fluentin container
 and modify the fluentd config so that it reads access.log instead.</p>
-<p>Initially we edit the <code>docker-compose.yml</code> and change only the line 11 to use <code>/var/log/nginx</code>:</p>
-<pre><code># version: &quot;3&quot;
+<p>Initially we edit the <code>docker-compose.yml</code> and change only the <code>fluentin</code> volume mount to use <code>/var/log/nginx</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># version: &quot;3&quot;</span>
 
-services:
-    fluentin:
-      #image: dm-fluentd:latest
-      build:
-        context: .
-        dockerfile: container/Dockerfile_fluentd
-      volumes:
-        - ./container/fluentin:/fluentd/etc
-        - '/var/log/nginx:/fluentd/log'
-        - ./container/run:/run
-      depends_on:
-        - parser
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fluentin</span><span class="p">:</span>
+<span class="w">    </span><span class="c1">#image: dm-fluentd:latest</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">container/Dockerfile_fluentd</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/fluentin:/fluentd/etc</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;/var/log/nginx:/fluentd/log&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parser</span>
+<span class="w">  </span><span class="nt">parser</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">LIBRARY_EXTRAS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${LIBRARY_EXTRAS:-full}</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/config:/config</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/logs:/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8001:8000&quot;</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector-rule</span>
 
-    parser:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-      command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
-      ports:
-        - &quot;8001:8000&quot;
-      depends_on:
-        - detector
-        - detector-rule
+<span class="w">  </span><span class="nt">detector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">LIBRARY_EXTRAS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${LIBRARY_EXTRAS:-full}</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/config:/config</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/logs:/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/state:/state</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8002:8000&quot;</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluentout</span>
 
-    detector:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-        - ./container/state:/state
-      command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
-      ports:
-        - &quot;8002:8000&quot;
-      depends_on:
-        - fluentout
+<span class="w">  </span><span class="nt">detector-rule</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">LIBRARY_EXTRAS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${LIBRARY_EXTRAS:-full}</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/config:/config</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/logs:/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8003:8000&quot;</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fluentout</span>
 
-    detector-rule:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-      command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
-      ports:
-        - &quot;8003:8000&quot;
-      depends_on:
-        - fluentout
+<span class="w">  </span><span class="nt">fluentout</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># image: dm-fluentd:latest</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">container/Dockerfile_fluentd</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/fluentout:/fluentd/etc</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/fluentlogs:/fluentd/log</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
 
-    fluentout:
-      # image: dm-fluentd:latest
-      build:
-        context: .
-        dockerfile: container/Dockerfile_fluentd
-      volumes:
-        - ./container/fluentout:/fluentd/etc
-        - ./container/fluentlogs:/fluentd/log
-        - ./container/run:/run
+<span class="w">  </span><span class="nt">prometheus</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prom/prometheus:latest</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/prometheus.yml:/etc/prometheus/prometheus.yml</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus_data:/prometheus</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;--config.file=/etc/prometheus/prometheus.yml&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;--storage.tsdb.path=/prometheus&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;--web.console.libraries=/etc/prometheus/console_libraries&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;--web.console.templates=/etc/prometheus/consoles&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;--web.enable-lifecycle&#39;</span>
+<span class="w">    </span><span class="nt">expose</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9090</span>
 
-    prometheus:
-      image: prom/prometheus:latest
-      container_name: prometheus
-      restart: unless-stopped
-      volumes:
-        - ./container/prometheus.yml:/etc/prometheus/prometheus.yml
-        - prometheus_data:/prometheus
-      command:
-        - '--config.file=/etc/prometheus/prometheus.yml'
-        - '--storage.tsdb.path=/prometheus'
-        - '--web.console.libraries=/etc/prometheus/console_libraries'
-        - '--web.console.templates=/etc/prometheus/consoles'
-        - '--web.enable-lifecycle'
-      expose:
-        - 9090
+<span class="w">  </span><span class="nt">grafana</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grafana/grafana:latest</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grafana</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;3000:3000&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GF_SECURITY_ADMIN_PASSWORD=admin</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prometheus</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/grafana/dashboards:/var/lib/grafana/dashboards</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grafana_data:/var/lib/grafana</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">#    kafka</span><span class="p p-Indicator">:</span>
+<span class="w">        </span><span class="c1">#      image: apache/kafka-native</span>
+<span class="w">        </span><span class="c1">#      ports:</span>
+<span class="w">        </span><span class="c1">#        - &quot;9092:9092&quot;</span>
+<span class="w">        </span><span class="c1">#      environment:</span>
+<span class="w">        </span><span class="c1">#        KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093</span>
+<span class="w">        </span><span class="c1">#        KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9093,HOST://kafka:9092</span>
+<span class="w">        </span><span class="c1">#        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT</span>
+<span class="w">        </span><span class="c1">#</span>
+<span class="w">        </span><span class="c1">#        # Settings required for KRaft mode</span>
+<span class="w">        </span><span class="c1">#        KAFKA_NODE_ID: 1</span>
+<span class="w">        </span><span class="c1">#        KAFKA_PROCESS_ROLES: broker,controller</span>
+<span class="w">        </span><span class="c1">#        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER</span>
+<span class="w">        </span><span class="c1">#        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091</span>
+<span class="w">        </span><span class="c1">#</span>
+<span class="w">        </span><span class="c1">#        # Listener to use for broker-to-broker communication</span>
+<span class="w">        </span><span class="c1">#        KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER</span>
+<span class="w">        </span><span class="c1">#</span>
+<span class="w">        </span><span class="c1">#        # Required for a single node cluster</span>
+<span class="w">        </span><span class="c1">#        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1</span>
 
-    grafana:
-      image: grafana/grafana:latest
-      container_name: grafana
-      ports:
-        - &quot;3000:3000&quot;
-      environment:
-        - GF_SECURITY_ADMIN_PASSWORD=admin
-      depends_on:
-        - prometheus
-      volumes:
-        - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
-        - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
-        - grafana_data:/var/lib/grafana
-
-          #    kafka:
-          #      image: apache/kafka-native
-          #      ports:
-          #        - &quot;9092:9092&quot;
-          #      environment:
-          #        KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
-          #        KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9093,HOST://kafka:9092
-          #        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
-          #
-          #        # Settings required for KRaft mode
-          #        KAFKA_NODE_ID: 1
-          #        KAFKA_PROCESS_ROLES: broker,controller
-          #        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          #        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
-          #
-          #        # Listener to use for broker-to-broker communication
-          #        KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
-          #
-          #        # Required for a single node cluster
-          #        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-volumes:
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-</code></pre>
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">prometheus_data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">  </span><span class="nt">grafana_data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+</code></pre></div>
 <p>Now that the <code>access.logs</code> are available in the container, we have to point fluentd to read that file. We need to edit the file <code>container/fluentin/fluent.conf</code> and replace <code>path /fluentd/log/some.log</code> with <code>path /fluentd/log/access.log</code>:</p>
-<pre><code>&lt;source&gt;
+<div class="highlight"><pre><span></span><code>&lt;source&gt;
   @type tail
   @id input_tail
   &lt;parse&gt;
     @type none
   &lt;/parse&gt;
-  path /fluentd/log/access.log
+  path /fluentd/log/some.log
   path_key logSource
 
   tag nng.*
 &lt;/source&gt;
 
 &lt;match nng.**&gt;
-  @type nng
+  @type nng_out
   uri ipc:///run/parser.engine.ipc
   &lt;inject&gt;
     hostname_key hostname
@@ -449,63 +447,69 @@ volumes:
     @type detectmate
   &lt;/format&gt;
 &lt;/match&gt;
-</code></pre>
+</code></pre></div>
 <p>The Nginx access.log will be mounted into the <code>fluentin</code> container and fluentd is using the correct file. We can finally look into the DetectMate config and
 generate anomalies.</p>
 <h2 id="detectmate-config">DetectMate Config</h2>
 <p>The log pipeline uses three DetectMate services: <code>parser</code>, <code>detector</code> and <code>detector-rule</code>. The parser splits the log line into meaningful tokens, which the two detectors then use to identify anomalies, each with a different strategy. We need to configure the parser and both detectors. Since the detectors need to know which tokens they receive from the parser so they can look for anomalies, all three configurations are closely related.</p>
 <h3 id="parser">Parser</h3>
 <p>The Nginx log line we previously created has a very specific format:</p>
-<pre><code>::1 - - [18/Mar/2026:11:43:30 +0000] &quot;GET / HTTP/1.1&quot; 200 615 &quot;-&quot; &quot;curl/8.5.0&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code>::1 - - [18/Mar/2026:11:43:30 +0000] &quot;GET / HTTP/1.1&quot; 200 615 &quot;-&quot; &quot;curl/8.5.0&quot;
+</code></pre></div>
 <p>This format can be described like that:</p>
-<pre><code>&lt;IP&gt; - - [&lt;Time&gt;] &quot;&lt;Method&gt; &lt;URL&gt; &lt;Protocol&gt;&quot; &lt;Status&gt; &lt;Bytes&gt; &quot;&lt;Referer&gt;&quot; &quot;&lt;UserAgent&gt;&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code>&lt;IP&gt; - - [&lt;Time&gt;] &quot;&lt;Method&gt; &lt;URL&gt; &lt;Protocol&gt;&quot; &lt;Status&gt; &lt;Bytes&gt; &quot;&lt;Referer&gt;&quot; &quot;&lt;UserAgent&gt;&quot;
+</code></pre></div>
 <p>DetectMate includes a matcher_parser that can split such a log line. The configuration for
 the parser is in <code>container/config/parser_config.yaml</code>:</p>
-<pre><code>parsers:
-  MatcherParser:
-    method_type: matcher_parser
-    auto_config: false
-    log_format: '&lt;IP&gt; - - [&lt;Time&gt;] &quot;&lt;Method&gt; &lt;URL&gt; &lt;Protocol&gt;&quot; &lt;Status&gt; &lt;Bytes&gt; &quot;&lt;Referer&gt;&quot; &quot;&lt;UserAgent&gt;&quot;'
-    time_format: null
-    params:
-      remove_spaces: false
-      remove_punctuation: false
-      lowercase: false
-      path_templates: /config/templates.txt
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">parsers</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">MatcherParser</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">matcher_parser</span>
+<span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">log_format</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;IP&gt;</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">[&lt;Time&gt;]</span><span class="nv"> </span><span class="s">&quot;&lt;Method&gt;</span><span class="nv"> </span><span class="s">&lt;URL&gt;</span><span class="nv"> </span><span class="s">&lt;Protocol&gt;&quot;</span><span class="nv"> </span><span class="s">&lt;Status&gt;</span><span class="nv"> </span><span class="s">&lt;Bytes&gt;</span><span class="nv"> </span><span class="s">&quot;&lt;Referer&gt;&quot;</span><span class="nv"> </span><span class="s">&quot;&lt;UserAgent&gt;&quot;&#39;</span>
+<span class="w">    </span><span class="nt">time_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">remove_spaces</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">remove_punctuation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">lowercase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">path_templates</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/config/templates.txt</span><span class="w">  </span><span class="c1"># empty file because there are no templates necessary for apache access logs</span>
+</code></pre></div>
 <p><code>container/config/templates.txt</code> contains a single wildcard template that matches any well-formed access-log line:</p>
-<pre><code>&lt;*&gt; - - [&lt;*&gt;] &quot;&lt;*&gt; &lt;*&gt; &lt;*&gt;&quot; &lt;*&gt; &lt;*&gt; &quot;&lt;*&gt;&quot; &quot;&lt;*&gt;&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code>&lt;*&gt; - - [&lt;*&gt;] &quot;&lt;*&gt; &lt;*&gt; &lt;*&gt;&quot; &lt;*&gt; &lt;*&gt; &quot;&lt;*&gt;&quot; &quot;&lt;*&gt;&quot;
+</code></pre></div>
 <p>This means every normal Nginx request parses successfully. We will rely on this later: a log line that does <strong>not</strong> match this template is exactly what the rule-based detector's <code>TemplateNotFound</code> rule reacts to. We don't need to modify the parser configuration otherwise, since it is already compatible with the nginx access.log format. We can now continue with the configuration of the detectors.</p>
 <h3 id="detector">Detector</h3>
 <p>The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values during training. As soon as the detector switches from training mode to detection mode, all values not found in the trained model are flagged as anomalies. DetectMate ships with a <code>new_value_detector</code> that can do exactly that. The config <code>container/config/detector_config.yaml</code> looks as follows:</p>
-<pre><code>detectors:
-  NewValueDetector:
-   method_type: new_value_detector
-   data_use_training: 2
-   auto_config: false
-   global:  # define global instance for new_value_detector similar to &quot;events&quot;
-     global_instance:  # define instance name
-       header_variables:  # another level to have the same structure as &quot;events&quot;
-         - pos: URL
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
+<span class="w">   </span><span class="nt">data_use_training</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">   </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">   </span><span class="nt">global</span><span class="p">:</span><span class="w">  </span><span class="c1"># define global instance for new_value_detector similar to &quot;events&quot;</span>
+<span class="w">     </span><span class="nt">global_instance</span><span class="p">:</span><span class="w">  </span><span class="c1"># define instance name</span>
+<span class="w">       </span><span class="nt">header_variables</span><span class="p">:</span><span class="w">  </span><span class="c1"># another level to have the same structure as &quot;events&quot;</span>
+<span class="w">         </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">URL</span>
+<span class="w">   </span><span class="nt">persist</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/state</span><span class="w">  </span><span class="c1"># absolute path inside the container; mounted from $PWD/container/state via docker-compose.yml</span>
+<span class="w">     </span><span class="nt">interval_seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span>
+<span class="w">     </span><span class="nt">auto_load</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
 <p>Here, the <code>URL</code> token from the parsed data is monitored (<code>- pos: URL</code>), and the first two log lines are used for training (<code>data_use_training: 2</code>). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.</p>
 <h3 id="rule-based-detector">Rule-Based Detector</h3>
 <p>Next to the <code>NewValueDetector</code>, the pipeline also runs a second detector, <code>detector-rule</code>, using the <code>rule_detector</code> method. Unlike <code>NewValueDetector</code>, it needs no training: it evaluates a fixed list of simple rules against every log line, such as "no template was found by the parser" or "the log text contains a keyword like 'error' or 'exception'". Its configuration lives in <code>container/config/detector_rule_config.yaml</code>:</p>
-<pre><code>detectors:
-  RuleDetector:
-   method_type: rule_detector
-   auto_config: false
-   rules:
-     - rule: &quot;R003 - CheckForExceptions&quot;
-     - rule: &quot;R004 - ErrorLevelFound&quot;
-</code></pre>
-<p>By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
+<p><div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">RuleDetector</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rule_detector</span>
+<span class="w">   </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">   </span><span class="c1"># Rules run independently against every log line (no training needed).</span>
+<span class="w">   </span><span class="nt">rules</span><span class="p">:</span>
+<span class="w">     </span><span class="c1"># - rule: &quot;R001 - TemplateNotFound&quot;       # alerts if the parser couldn&#39;t match the line to any template in templates.txt</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;R003</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">CheckForExceptions&quot;</span><span class="w">     </span><span class="c1"># alerts if the log text contains &quot;exception&quot;, &quot;fail&quot;, &quot;error&quot; or &quot;raise&quot;</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;R004</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">ErrorLevelFound&quot;</span><span class="w">        </span><span class="c1"># alerts if a parsed &quot;Level&quot; field equals &quot;error&quot; (not produced by this Nginx setup)</span>
+</code></pre></div>
+By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
 With the config above only <code>R003</code> and <code>R004</code> are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a <code>Level</code> field). At the very end of this tutorial, we will enable the <code>R001 - TemplateNotFound</code> rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.</p>
 <p>Now let's start the pipeline using <code>sudo docker compose up -d</code> and send two valid log lines with two different status values:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
 [+] up 7/7
  ✔ Network detectmateservice_default            Created                                                                                                                                                                      
  ✔ Container prometheus                         Started                                                                                                                                                                        
@@ -525,10 +529,10 @@ detectmateservice-parser-1           detectmateservice-parser           &quot;uv
 grafana                              grafana/grafana:latest             &quot;/run.sh&quot;                grafana          7 seconds ago   Up 5 seconds   0.0.0.0:3000-&gt;3000/tcp, [::]:3000-&gt;3000/tcp
 prometheus                           prom/prometheus:latest             &quot;/bin/prometheus --c…&quot;   prometheus       8 seconds ago   Up 6 seconds   9090/tcp
 alice@ubuntu2404:~/DetectMateService$
-</code></pre>
+</code></pre></div>
 <p><strong>Wait a couple of minutes until parser and detector containers are up and running.</strong> You can check by executing <code>sudo docker compose logs parser</code>, <code>sudo docker compose logs detector</code> or <code>sudo docker compose logs detector-rule</code>.
 When the containers are ready, the output of the component will show <code>Uvicorn running on</code> or any HTTP-requests for the <code>/metrics</code> endpoint:</p>
-<pre><code>parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
+<div class="highlight"><pre><span></span><code>parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
 parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP Admin active at 0.0.0.0:8000
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: Auto-starting engine...
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: engine started
@@ -538,9 +542,9 @@ parser-1  | INFO:     Application startup complete.
 parser-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 parser-1  | INFO:     172.18.0.2:43378 - &quot;GET /metrics HTTP/1.1&quot; 200 OK
 parser-1  | INFO:     172.18.0.2:39840 - &quot;GET /metrics HTTP/1.1&quot; 200 OK
-</code></pre>
+</code></pre></div>
 <p>Now generate two <code>access.log</code> lines:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/hello
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/hello
 &lt;html&gt;
 &lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
 &lt;body&gt;
@@ -557,9 +561,9 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 &lt;/body&gt;
 &lt;/html&gt;
 alice@ubuntu2404:~/DetectMateService$
-</code></pre>
+</code></pre></div>
 <p>We now trained with the two values <code>hello</code> and <code>world</code>. This means, as soon as we query any other url than <code>/hello</code> or <code>/world</code> we should receive an anomaly. Anomalies get logged in <code>container/fluentlogs/output.%Y%m%d</code>. With <code>ls container/fluentlogs/output.%Y%m%d</code> find the filename <code>output.&lt;date&gt;.log</code> and have a look:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 &lt;html&gt;
 &lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
 &lt;body&gt;
@@ -568,35 +572,35 @@ alice@ubuntu2404:~/DetectMateService$
 &lt;/body&gt;
 &lt;/html&gt;
 alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/output.20260318.log
-2026-03-18T15:39:43+00:00   nng.input   {&quot;__version__&quot;:&quot;1.0.0&quot;,&quot;detectorID&quot;:&quot;NewValueDetector&quot;,&quot;detectorType&quot;:&quot;new_value_detector&quot;,&quot;alertID&quot;:&quot;10&quot;,&quot;detectionTimestamp&quot;:1773848383,&quot;logIDs&quot;:[&quot;e5d922c8-19e1-47d1-842b-7bbabecb384d&quot;],&quot;score&quot;:1.0,&quot;extractedTimestamps&quot;:[1773848383],&quot;description&quot;:&quot;NewValueDetector detects values not encountered in training as anomalies.&quot;,&quot;receivedTimestamp&quot;:1773848383,&quot;alertsObtain&quot;:{&quot;Global - URL&quot;:&quot;Unknown value: '/foobar'&quot;}}
+2026-03-18T15:39:43+00:00   nng.input   {&quot;__version__&quot;:&quot;1.0.0&quot;,&quot;detectorID&quot;:&quot;NewValueDetector&quot;,&quot;detectorType&quot;:&quot;new_value_detector&quot;,&quot;alertID&quot;:&quot;10&quot;,&quot;detectionTimestamp&quot;:1773848383,&quot;logIDs&quot;:[&quot;e5d922c8-19e1-47d1-842b-7bbabecb384d&quot;],&quot;score&quot;:1.0,&quot;extractedTimestamps&quot;:[1773848383],&quot;description&quot;:&quot;NewValueDetector detects values not encountered in training as anomalies.&quot;,&quot;receivedTimestamp&quot;:1773848383,&quot;alertsObtain&quot;:{&quot;Global - URL&quot;:&quot;Unknown value: &#39;/foobar&#39;&quot;}}
 alice@ubuntu2404:~/DetectMateService$
-</code></pre>
+</code></pre></div>
 <p>Great! We detected our first anomaly.</p>
 <p>If you check <code>container/fluentlogs/output-rule.%Y%m%d</code> at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.</p>
 <h2 id="triggering-the-rule-based-detector">Triggering the Rule-Based Detector</h2>
 <p>So far, <code>detector-rule</code> has been running quietly next to <code>detector</code>, since none of our requests matched any of its enabled rules. To see it raise an alert, we'll enable the <code>R001 - TemplateNotFound</code> rule and then generate a log line that the parser cannot match against the template in <code>container/config/templates.txt</code>.</p>
 <p>Edit <code>container/config/detector_rule_config.yaml</code> and add the rule "R001 - TemplateNotFound":</p>
-<pre><code>detectors:
-  RuleDetector:
-   method_type: rule_detector
-   auto_config: false
-   rules:
-     - rule: &quot;R001 - TemplateNotFound&quot;
-     - rule: &quot;R003 - CheckForExceptions&quot;
-     - rule: &quot;R004 - ErrorLevelFound&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">RuleDetector</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rule_detector</span>
+<span class="w">   </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">   </span><span class="nt">rules</span><span class="p">:</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;R001</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">TemplateNotFound&quot;</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;R003</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">CheckForExceptions&quot;</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;R004</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">ErrorLevelFound&quot;</span>
+</code></pre></div>
 <p>Restart just the <code>detector-rule</code> service to pick up the change:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
 [+] Restarting 1/1
  ✔ Container detectmateservice-detector-rule-1  Started
-</code></pre>
+</code></pre></div>
 <p>Now append a contrived log line to <code>/var/log/nginx/access.log</code> that doesn't match the Nginx access log template at all, for example a line without the expected quotes and brackets:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
-</code></pre>
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ echo &#39;this line does not match the configured nginx log format at all&#39; | sudo tee -a /var/log/nginx/access.log
+</code></pre></div>
 <p>Since this line can't be matched against <code>&lt;*&gt; - - [&lt;*&gt;] "&lt;*&gt; &lt;*&gt; &lt;*&gt;" &lt;*&gt; &lt;*&gt; "&lt;*&gt;" "&lt;*&gt;"</code>, the parser assigns it <code>EventID: -1</code>, which is exactly what the <code>TemplateNotFound</code> rule checks for. Have a look at <code>container/fluentlogs/output-rule.%Y%m%d</code>:</p>
-<pre><code>alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
+<div class="highlight"><pre><span></span><code>alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
 2026-07-13T12:03:55+00:00   nng.*   {&quot;__version__&quot;:&quot;1.0.0&quot;,&quot;detectorID&quot;:&quot;RuleDetector&quot;,&quot;detectorType&quot;:&quot;rule_detector&quot;,&quot;alertID&quot;:&quot;10&quot;,&quot;detectionTimestamp&quot;:1783944235,&quot;logIDs&quot;:[&quot;5269c4a0-304c-431d-809b-ae34a15aa68b&quot;],&quot;score&quot;:1.0,&quot;extractedTimestamps&quot;:[0],&quot;description&quot;:&quot;&quot;,&quot;receivedTimestamp&quot;:1783944235,&quot;alertsObtain&quot;:{&quot;R001 - TemplateNotFound&quot;:&quot;No template found by parser&quot;}}
-</code></pre>
+</code></pre></div>
 <p>The rule-based detector caught it: <code>"R001 - TemplateNotFound":"No template found by parser"</code>. Unlike <code>NewValueDetector</code>, it needed no training data at all — it was ready to alert from the very first log line.</p>
 <h2 id="grafana-ui">Grafana UI</h2>
 <p>The Grafana UI is accessible at http://localhost:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics".

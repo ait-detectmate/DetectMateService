@@ -158,12 +158,12 @@ workflow (<code>recreate-development-branch.yml</code>) automatically recreates 
 </ul>
 <h3 id="4-bump-the-version-number">4. Bump the version number</h3>
 <p>Create a new branch from <code>main</code> and update the version string in <code>src/service/metadata.py</code>:</p>
-<pre><code class="language-python">__version__ = '0.X.Y'  # set to the new release version
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.X.Y&#39;</span>  <span class="c1"># set to the new release version</span>
+</code></pre></div>
 <p>The version here must match the tag you will create in step 5 (e.g. version <code>0.4.0</code> corresponds to tag <code>v0.4.0</code>).</p>
 <p>Also make sure <code>uv.lock</code> is up to date:</p>
-<pre><code class="language-bash">uv lock
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>lock
+</code></pre></div>
 <p>Commit any changes, push the branch, and open a pull request against <code>main</code>. Once CI passes, merge it.</p>
 <h3 id="5-create-a-github-release">5. Create a GitHub release</h3>
 <p>Go to the <a href="https://github.com/ait-detectmate/DetectMateService/releases">Releases page</a> and click <strong>Draft a new release</strong>.</p>
@@ -189,11 +189,11 @@ listens for the branch deletion and pushes a new <code>development</code> branch
 Check the <a href="https://github.com/ait-detectmate/DetectMateService/actions">Actions tab</a> to confirm
 it ran successfully.</p>
 <p>If the workflow fails or you need to do it manually:</p>
-<pre><code class="language-bash">git checkout main
-git pull
-git checkout -b development
-git push -u origin development
-</code></pre>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>main
+git<span class="w"> </span>pull
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>development
+git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>development
+</code></pre></div>
 <p>OR use the github UI to create a new development branch branching from the now-updated <code>main</code></p>
 <p>The <code>development</code> branch is now ready for the next iteration of work.</p>
               

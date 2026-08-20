@@ -184,8 +184,8 @@
 </table>
 <h2 id="corecomponent">CoreComponent</h2>
 <p><strong>Import location:</strong> <code>src/service/core.py</code>, <code>src/service/features/component_loader.py</code></p>
-<pre><code class="language-python">from detectmatelibrary.common.core import CoreComponent
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreComponent</span>
+</code></pre></div>
 <h3 id="usage-points">Usage Points</h3>
 <h4 id="1-component-loading-component_loaderpy">1. Component Loading (<code>component_loader.py</code>)</h4>
 <p>The <code>ComponentLoader</code> dynamically imports component classes and validates they inherit from <code>CoreComponent</code>:</p>
@@ -193,18 +193,18 @@
 <li><strong>Instantiation</strong>: Components are instantiated with an optional config parameter</li>
 <li><strong>Type checking</strong>: <code>isinstance(instance, CoreComponent)</code> validates the loaded class</li>
 </ul>
-<pre><code class="language-python">instance = component_class(config=config)
-if not isinstance(instance, CoreComponent):
-    raise TypeError(...)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">instance</span> <span class="o">=</span> <span class="n">component_class</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">CoreComponent</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
 <h4 id="2-processor-adapter-corepy">2. Processor Adapter (<code>core.py</code>)</h4>
 <p>The <code>LibraryComponentProcessor</code> wraps a <code>CoreComponent</code> to use it as the service's message processor:</p>
 <ul>
 <li><strong>process() invocation</strong>: The service calls <code>component.process(raw_message)</code> for each incoming message</li>
 <li><strong>Return handling</strong>: <code>bytes</code> output is forwarded; <code>None</code> skips the message</li>
 </ul>
-<pre><code class="language-python">result = self.component.process(raw_message)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">raw_message</span><span class="p">)</span>
+</code></pre></div>
 <h3 id="what-the-service-expects-from-corecomponent">What the Service Expects from CoreComponent</h3>
 <!-- TODO: Link to DetectMateLibrary CoreComponent documentation -->
 
@@ -215,17 +215,17 @@ if not isinstance(instance, CoreComponent):
 </ul>
 <h2 id="coreconfig">CoreConfig</h2>
 <p><strong>Import location:</strong> <code>src/service/core.py</code>, <code>src/service/features/config_loader.py</code>, <code>src/service/features/config_manager.py</code></p>
-<pre><code class="language-python">from detectmatelibrary.common.core import CoreConfig
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreConfig</span>
+</code></pre></div>
 <h3 id="usage-points_1">Usage Points</h3>
 <h4 id="1-config-class-loading-config_loaderpy">1. Config Class Loading (<code>config_loader.py</code>)</h4>
 <p>The <code>ConfigClassLoader</code> dynamically imports config classes and validates they inherit from <code>CoreConfig</code>:</p>
 <ul>
 <li><strong>Subclass checking</strong>: <code>issubclass(config_class, CoreConfig)</code> validates the class hierarchy</li>
 </ul>
-<pre><code class="language-python">if not issubclass(config_class, CoreConfig):
-    raise TypeError(...)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">config_class</span><span class="p">,</span> <span class="n">CoreConfig</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
 <h4 id="2-schema-for-configmanager-config_managerpy">2. Schema for ConfigManager (<code>config_manager.py</code>)</h4>
 <p>The <code>ConfigManager</code> uses <code>CoreConfig</code> subclasses as Pydantic schemas for validation:</p>
 <ul>
@@ -233,12 +233,12 @@ if not isinstance(instance, CoreComponent):
 <li><strong>Validation</strong>: <code>self.schema.model_validate(data)</code> validates incoming config data</li>
 <li><strong>Serialization</strong>: <code>model_dump()</code> converts config to dict for YAML storage</li>
 </ul>
-<pre><code class="language-python"># Validation
-self._configs = self.schema.model_validate(new_configs)
+<div class="highlight"><pre><span></span><code><span class="c1"># Validation</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">new_configs</span><span class="p">)</span>
 
-# Serialization
-data = self._configs.model_dump()
-</code></pre>
+<span class="c1"># Serialization</span>
+<span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+</code></pre></div>
 <h4 id="3-service-initialization-corepy">3. Service Initialization (<code>core.py</code>)</h4>
 <p>The <code>Service.get_config_schema()</code> method returns the appropriate <code>CoreConfig</code> subclass for the component.</p>
 <h3 id="what-the-service-expects-from-coreconfig">What the Service Expects from CoreConfig</h3>
@@ -252,8 +252,8 @@ data = self._configs.model_dump()
 </ul>
 <h2 id="protobuf-schemas">Protobuf Schemas</h2>
 <p><strong>Import location:</strong> Integration tests only (<code>tests/library_integration/</code>)</p>
-<pre><code class="language-python">from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogSchema</span><span class="p">,</span> <span class="n">ParserSchema</span><span class="p">,</span> <span class="n">DetectorSchema</span>
+</code></pre></div>
 <h3 id="usage-points_2">Usage Points</h3>
 <p>The schemas are used in integration tests to verify correct data flow between pipeline stages:</p>
 <ul>
@@ -262,11 +262,11 @@ data = self._configs.model_dump()
 <li><strong>DetectorSchema</strong>: Serialized output from Detector components</li>
 </ul>
 <h3 id="data-flow">Data Flow</h3>
-<pre><code>Reader                    Parser                     Detector
+<div class="highlight"><pre><span></span><code>Reader                    Parser                     Detector
    |                         |                          |
    v                         v                          v
 LogSchema bytes  ---&gt;  ParserSchema bytes  ---&gt;  DetectorSchema bytes
-</code></pre>
+</code></pre></div>
 <h3 id="what-the-service-expects-from-schemas">What the Service Expects from Schemas</h3>
 <!-- TODO: Link to DetectMateLibrary schema documentation -->
 

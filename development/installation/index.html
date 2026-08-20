@@ -120,24 +120,24 @@
               
                 <h1 id="installation">Installation</h1>
 <p>First, clone DetectMateService and navigate into the repository:</p>
-<pre><code class="language-bash">git clone https://github.com/ait-detectmate/DetectMateService.git
-cd DetectMateService
-</code></pre>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ait-detectmate/DetectMateService.git
+<span class="nb">cd</span><span class="w"> </span>DetectMateService
+</code></pre></div>
 <h2 id="setup-with-uv-recommended">Setup with uv (recommended)</h2>
 <p>We recommend using <a href="https://github.com/astral-sh/uv">uv</a> to manage the environment
 and dependencies.</p>
 <h3 id="1-download-the-dependencies">1. Download the dependencies</h3>
-<pre><code class="language-bash">uv sync
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync
+</code></pre></div>
 <h2 id="alternative-setup-with-pip">Alternative setup with pip</h2>
 <p>If you prefer plain <code>pip</code>, you can set things up like this instead:</p>
-<pre><code class="language-bash"># Create a virtual environment
-python -m venv .venv
-# Activate it
-source .venv/bin/activate
-# Install the project in editable mode with dev dependencies
-pip install .
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a virtual environment</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<span class="c1"># Activate it</span>
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<span class="c1"># Install the project in editable mode with dev dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>.
+</code></pre></div>
 <h2 id="optional-library-components-extras">Optional library components (extras)</h2>
 <p><a href="https://github.com/ait-detectmate/DetectMateLibrary">DetectMateLibrary</a> ships some
 components (e.g. LLM-backed detectors, dataframe-based persistency backends) as
@@ -176,25 +176,25 @@ configured components actually need:</p>
 </tbody>
 </table>
 <p>Install only what you need:</p>
-<pre><code class="language-bash">uv sync --extra llm
-# or with pip
-pip install &quot;.[llm]&quot;
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>llm
+<span class="c1"># or with pip</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;.[llm]&quot;</span>
+</code></pre></div>
 <p>Or install everything:</p>
-<pre><code class="language-bash">uv sync --extra full
-</code></pre>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>full
+</code></pre></div>
 <p><code>uv sync --dev</code> (used for local development, see <a href="../development/">development.md</a>)
 already installs the <code>full</code> extra via the <code>dev</code> dependency group, so
 contributors get every optional component out of the box.</p>
 <h3 id="extras-in-docker">Extras in Docker</h3>
 <p><code>Dockerfile</code> and <code>Dockerfile-dev</code> take a <code>LIBRARY_EXTRAS</code> build arg (comma-separated
 extras, default <code>full</code>) that controls which extras get installed in the image:</p>
-<pre><code class="language-bash">docker build --build-arg LIBRARY_EXTRAS=llm,dataframes -t detectmate .
-</code></pre>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>build<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">LIBRARY_EXTRAS</span><span class="o">=</span>llm,dataframes<span class="w"> </span>-t<span class="w"> </span>detectmate<span class="w"> </span>.
+</code></pre></div>
 <p>With <code>docker compose</code>, set the <code>LIBRARY_EXTRAS</code> env var before building (it defaults
 to <code>full</code> if unset):</p>
-<pre><code class="language-bash">LIBRARY_EXTRAS=llm docker compose build parser detector
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nv">LIBRARY_EXTRAS</span><span class="o">=</span>llm<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>build<span class="w"> </span>parser<span class="w"> </span>detector
+</code></pre></div>
               
             </div>
           </div><footer>

@@ -119,14 +119,14 @@
 <p>Every DetectMate service exposes a Prometheus-compatible metrics endpoint on its HTTP server. Prometheus can scrape this endpoint to collect operational metrics, and tools like Grafana can visualize them.</p>
 <h2 id="metrics-endpoint">Metrics endpoint</h2>
 <p>The metrics endpoint is available at:</p>
-<pre><code>http://&lt;http_host&gt;:&lt;http_port&gt;/metrics
-</code></pre>
+<div class="highlight"><pre><span></span><code>http://&lt;http_host&gt;:&lt;http_port&gt;/metrics
+</code></pre></div>
 <p>With default settings this is <code>http://127.0.0.1:8000/metrics</code>. You can fetch it directly with curl:</p>
-<pre><code class="language-bash">curl http://127.0.0.1:8000/metrics
-</code></pre>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>http://127.0.0.1:8000/metrics
+</code></pre></div>
 <p>Or use the DetectMate client CLI:</p>
-<pre><code class="language-bash">detectmate-client --url http://127.0.0.1:8000 metrics
-</code></pre>
+<div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span>http://127.0.0.1:8000<span class="w"> </span>metrics
+</code></pre></div>
 <h2 id="available-metrics">Available metrics</h2>
 <p>All metrics are labeled with <code>component_type</code> and <code>component_id</code>, so a single Prometheus instance can distinguish between multiple DetectMate services.</p>
 <table>
@@ -207,36 +207,36 @@
 </div>
 <h2 id="connecting-a-standalone-prometheus">Connecting a standalone Prometheus</h2>
 <p>If you run DetectMate outside of Docker Compose, add a scrape job to your <code>prometheus.yml</code>:</p>
-<pre><code class="language-yaml">global:
-  scrape_interval: 15s
+<div class="highlight"><pre><span></span><code><span class="nt">global</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15s</span>
 
-scrape_configs:
-  - job_name: 'detectmate'
-    static_configs:
-      - targets:
-          - '127.0.0.1:8000'
-</code></pre>
+<span class="nt">scrape_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;detectmate&#39;</span>
+<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;127.0.0.1:8000&#39;</span>
+</code></pre></div>
 <p>If you run multiple services, list each one under <code>targets</code>:</p>
-<pre><code class="language-yaml">scrape_configs:
-  - job_name: 'detectmate'
-    static_configs:
-      - targets:
-          - '127.0.0.1:8001'  # parser
-          - '127.0.0.1:8002'  # detector
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;detectmate&#39;</span>
+<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;127.0.0.1:8001&#39;</span><span class="w">  </span><span class="c1"># parser</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;127.0.0.1:8002&#39;</span><span class="w">  </span><span class="c1"># detector</span>
+</code></pre></div>
 <h2 id="docker-compose-setup">Docker Compose setup</h2>
-<p>The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at <code>container/prometheus.yml</code> is pre-configured to scrape the <code>parser</code> and <code>detector</code> services:</p>
-<pre><code class="language-yaml">global:
-  scrape_interval: 15s
+<p>The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at <code>container/prometheus.yml</code> is pre-configured to scrape the <code>parser</code>, <code>detector</code>, and <code>detector-rule</code> services:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">global</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15s</span><span class="w">  </span><span class="c1"># Frequency of metric scraping</span>
 
-scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['parser:8000', 'detector:8000']
-</code></pre>
+<span class="nt">scrape_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;prometheus&#39;</span>
+<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;parser:8000&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;detector:8000&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;detector-rule:8000&#39;</span><span class="p p-Indicator">]</span>
+</code></pre></div>
 <p>Prometheus is accessible at <code>http://localhost:9090</code> after starting the stack with:</p>
-<pre><code class="language-bash">docker compose up
-</code></pre>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up
+</code></pre></div>
 <p>See the <a href="../docker-compose/">Docker Compose reference</a> for details on the full stack setup.</p>
 <h2 id="visualizing-metrics-with-grafana">Visualizing metrics with Grafana</h2>
 <p>The Docker Compose stack includes a Grafana instance pre-configured with Prometheus as a datasource. Access it at <code>http://localhost:3000</code> (default credentials: <code>admin</code> / <code>admin</code>).</p>
