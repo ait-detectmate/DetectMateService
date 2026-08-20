@@ -53,24 +53,7 @@ This means:
 You can provide a YAML file containing the service settings. Below is an example `settings.yaml`:
 
 ```yaml
-component_name: "my-detector"
-log_level: "DEBUG"
-log_dir: "./logs"
-
-# Manager Interface
-http_host: 127.0.0.1
-http_port: 8000
-
-# Engine Interface (Data Channel)
-engine_addr: "ipc:///tmp/detectmate.engine.ipc"
-engine_autostart: true
-
-# Output Destinations (where processed data is sent)
-out_addr:
-  - "tcp://127.0.0.1:5000"
-  - "ipc:///tmp/output.ipc"
-
-out_dial_timeout: 1000
+--8<-- "docs/examples/configuration/settings.yaml"
 ```
 
 
@@ -95,24 +78,7 @@ Example detector_config.yaml
 
 
 ```yaml
-detectors:                 # Category Level
-  NewValueDetector:        # Class Name Level
-    auto_config: false
-    method_type: new_value_detector
-    params:                # Implementation Specific Level
-    events:
-        1:
-            test:
-                params: {}
-                variables:
-                    - pos: 0
-                      name: var1
-                      params:
-                          threshold: 0.5
-                header_variables:
-                    - pos: level
-                      params: {}
-
+--8<-- "docs/examples/configuration/detector_config.yaml"
 ```
 
 ### What goes in a the config file
@@ -248,15 +214,7 @@ The `state` field reflects what the component did with the most recently process
 Persistency for detector components is enabled through the `persist` block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.
 
 ```yaml
-detectors:
-  NewValueDetector:
-    method_type: new_value_detector
-    persist:
-      path: ./state          # Directory to store state files (supports fsspec URLs)
-      interval_seconds: 300  # Save every 5 minutes (default)
-      events_until_save: 1000  # Also save after every 1000 ingested events (optional)
-      auto_load: true        # Restore previous state on startup (default: false)
-      storage_options: {}    # Extra options passed to fsspec (e.g. S3 credentials)
+--8<-- "docs/examples/configuration/detector_persist_config.yaml"
 ```
 
 | Field | Default | Description |
