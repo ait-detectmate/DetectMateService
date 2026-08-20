@@ -27,7 +27,11 @@ engine_addr: ipc:///tmp/detectmate.engine.ipc
 
 ### 2. Create component configuration
 
-Create `detector-config.yaml`:
+Create `detector-config.yaml`. The nesting (category and class name) is the same for every
+component, but the other fields depend on the component's config class and differ
+per component. Check the individual component's page in the
+[DetectMateLibrary documentation](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/)
+and [Component configuration](configuration.md#component-configuration):
 
 ```yaml
 detectors:                 # Category Level

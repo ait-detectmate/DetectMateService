@@ -115,6 +115,28 @@ detectors:                 # Category Level
 
 ```
 
+### What goes in a the config file
+
+Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
+same for every component. What is valid *inside* is defined by the component's configuration
+class (`<ComponentClass>Config`, see
+[Config class resolution](interfaces.md#config-class-resolution)). There is no single config
+file that fits all components: a `NewValueDetector` takes different fields than a `MatcherParser`, etc.
+To find the fields a component accepts:
+
+- **Library documentation**: each method has its own page, e.g.
+  [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/).
+  See [Detectors](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/) and
+  [Parsers](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/) for the full list,
+  and [Detectors Configuration](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration)
+  for how the library interprets the values.
+- **The config class itself**: the fields, types and defaults of `<ComponentClass>Config` in the
+  library source are the authoritative list.
+- **Let the service generate one**: point `config_file` at a path that does not exist yet and the
+  service writes a default file derived from the component's config class on startup. It is a
+  scaffold, not a working config! Values it cannot infer are written as `<PLACEHOLDER>` and have
+  to be filled in.
+
 You can read more about Components in the [Using a Library Component](library.md) section.
 
 
