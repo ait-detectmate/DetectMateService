@@ -238,170 +238,16 @@ pipeline so that we can read the `access.log` and generate anomalies.
 The preconfigured pipeline reads logs from `container/fluentlogs/some.log`. In order to be able to read the nginx access.log file, we need to mount `/var/log/nginx` into the fluentin container
 and modify the fluentd config so that it reads access.log instead.
 
-Initially we edit the `docker-compose.yml` and change only the line 11 to use `/var/log/nginx`:
+Initially we edit the `docker-compose.yml` and change only the `fluentin` volume mount to use `/var/log/nginx`:
 
-```
-# version: "3"
-
-services:
-    fluentin:
-      #image: dm-fluentd:latest
-      build:
-        context: .
-        dockerfile: container/Dockerfile_fluentd
-      volumes:
-        - ./container/fluentin:/fluentd/etc
-        - '/var/log/nginx:/fluentd/log'
-        - ./container/run:/run
-      depends_on:
-        - parser
-
-    parser:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-      command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
-      ports:
-        - "8001:8000"
-      depends_on:
-        - detector
-        - detector-rule
-
-    detector:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-        - ./container/state:/state
-      command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
-      ports:
-        - "8002:8000"
-      depends_on:
-        - fluentout
-
-    detector-rule:
-      build:
-        context: .
-        args:
-          LIBRARY_EXTRAS: ${LIBRARY_EXTRAS:-full}
-      volumes:
-        - ./container/config:/config
-        - ./container/logs:/logs
-        - ./container/run:/run
-      command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
-      ports:
-        - "8003:8000"
-      depends_on:
-        - fluentout
-
-    fluentout:
-      # image: dm-fluentd:latest
-      build:
-        context: .
-        dockerfile: container/Dockerfile_fluentd
-      volumes:
-        - ./container/fluentout:/fluentd/etc
-        - ./container/fluentlogs:/fluentd/log
-        - ./container/run:/run
-
-    prometheus:
-      image: prom/prometheus:latest
-      container_name: prometheus
-      restart: unless-stopped
-      volumes:
-        - ./container/prometheus.yml:/etc/prometheus/prometheus.yml
-        - prometheus_data:/prometheus
-      command:
-        - '--config.file=/etc/prometheus/prometheus.yml'
-        - '--storage.tsdb.path=/prometheus'
-        - '--web.console.libraries=/etc/prometheus/console_libraries'
-        - '--web.console.templates=/etc/prometheus/consoles'
-        - '--web.enable-lifecycle'
-      expose:
-        - 9090
-
-    grafana:
-      image: grafana/grafana:latest
-      container_name: grafana
-      ports:
-        - "3000:3000"
-      environment:
-        - GF_SECURITY_ADMIN_PASSWORD=admin
-      depends_on:
-        - prometheus
-      volumes:
-        - ./container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
-        - ./container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-        - ./container/grafana/dashboards:/var/lib/grafana/dashboards
-        - grafana_data:/var/lib/grafana
-
-          #    kafka:
-          #      image: apache/kafka-native
-          #      ports:
-          #        - "9092:9092"
-          #      environment:
-          #        KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
-          #        KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9093,HOST://kafka:9092
-          #        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
-          #
-          #        # Settings required for KRaft mode
-          #        KAFKA_NODE_ID: 1
-          #        KAFKA_PROCESS_ROLES: broker,controller
-          #        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          #        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
-          #
-          #        # Listener to use for broker-to-broker communication
-          #        KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
-          #
-          #        # Required for a single node cluster
-          #        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-volumes:
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
+```yaml
+--8<-- "docker-compose.yml"
 ```
 
 Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
 ```
-<source>
-  @type tail
-  @id input_tail
-  <parse>
-    @type none
-  </parse>
-  path /fluentd/log/access.log
-  path_key logSource
-
-  tag nng.*
-</source>
-
-<match nng.**>
-  @type nng
-  uri ipc:///run/parser.engine.ipc
-  <inject>
-    hostname_key hostname
-    # overwrite hostname:
-    # hostname somehost
-  </inject>
-  <buffer>
-    flush_mode immediate
-  </buffer>
-  <format>
-    @type detectmate
-  </format>
-</match>
+--8<-- "container/fluentin/fluent.conf:tutorial"
 ```
 
 The Nginx access.log will be mounted into the `fluentin` container and fluentd is using the correct file. We can finally look into the DetectMate config and
@@ -428,24 +274,14 @@ This format can be described like that:
 DetectMate includes a matcher_parser that can split such a log line. The configuration for
 the parser is in `container/config/parser_config.yaml`:
 
-```
-parsers:
-  MatcherParser:
-    method_type: matcher_parser
-    auto_config: false
-    log_format: '<IP> - - [<Time>] "<Method> <URL> <Protocol>" <Status> <Bytes> "<Referer>" "<UserAgent>"'
-    time_format: null
-    params:
-      remove_spaces: false
-      remove_punctuation: false
-      lowercase: false
-      path_templates: /config/templates.txt
+```yaml
+--8<-- "container/config/parser_config.yaml"
 ```
 
 `container/config/templates.txt` contains a single wildcard template that matches any well-formed access-log line:
 
 ```
-<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"
+--8<-- "container/config/templates.txt"
 ```
 
 This means every normal Nginx request parses successfully. We will rely on this later: a log line that does **not** match this template is exactly what the rule-based detector's `TemplateNotFound` rule reacts to. We don't need to modify the parser configuration otherwise, since it is already compatible with the nginx access.log format. We can now continue with the configuration of the detectors.
@@ -454,16 +290,8 @@ This means every normal Nginx request parses successfully. We will rely on this 
 
 The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values during training. As soon as the detector switches from training mode to detection mode, all values not found in the trained model are flagged as anomalies. DetectMate ships with a `new_value_detector` that can do exactly that. The config `container/config/detector_config.yaml` looks as follows:
 
-```
-detectors:
-  NewValueDetector:
-   method_type: new_value_detector
-   data_use_training: 2
-   auto_config: false
-   global:  # define global instance for new_value_detector similar to "events"
-     global_instance:  # define instance name
-       header_variables:  # another level to have the same structure as "events"
-         - pos: URL
+```yaml
+--8<-- "container/config/detector_config.yaml"
 ```
 
 Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the first two log lines are used for training (`data_use_training: 2`). Any subsequent log lines will be evaluated for anomalies and compared against the values seen during training on the first two log lines.
@@ -472,14 +300,8 @@ Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the 
 
 Next to the `NewValueDetector`, the pipeline also runs a second detector, `detector-rule`, using the `rule_detector` method. Unlike `NewValueDetector`, it needs no training: it evaluates a fixed list of simple rules against every log line, such as "no template was found by the parser" or "the log text contains a keyword like 'error' or 'exception'". Its configuration lives in `container/config/detector_rule_config.yaml`:
 
-```
-detectors:
-  RuleDetector:
-   method_type: rule_detector
-   auto_config: false
-   rules:
-     - rule: "R003 - CheckForExceptions"
-     - rule: "R004 - ErrorLevelFound"
+```yaml
+--8<-- "container/config/detector_rule_config.yaml"
 ```
 By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
 With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
@@ -575,15 +397,8 @@ So far, `detector-rule` has been running quietly next to `detector`, since none 
 
 Edit `container/config/detector_rule_config.yaml` and add the rule "R001 - TemplateNotFound":
 
-```
-detectors:
-  RuleDetector:
-   method_type: rule_detector
-   auto_config: false
-   rules:
-     - rule: "R001 - TemplateNotFound"
-     - rule: "R003 - CheckForExceptions"
-     - rule: "R004 - ErrorLevelFound"
+```yaml
+--8<-- "docs/examples/getting_started/detector_rule_config_r001.yaml"
 ```
 
 Restart just the `detector-rule` service to pick up the change:
