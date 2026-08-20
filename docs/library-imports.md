@@ -145,8 +145,7 @@ The service uses a two-step import resolution, so short paths like `detectors.Ra
 | `ComponentLoader` | `component_type` | 1. path as-is → 2. `detectmatelibrary.{path}` |
 | `ConfigClassLoader` | `component_config_class` | 1. `detectmatelibrary.{path}` → 2. path as-is |
 
-`component_type` may also be given as a bare class name, which `ComponentResolver` looks up by searching the library. See [Component Loading](interfaces.md#component-loading) for both forms and their trade-offs.
-
+`component_type` may also be given as a bare class name, see [Component Loading](interfaces.md#component-loading).
 ## File Reference
 
 | Service File | Library Imports | Purpose |
