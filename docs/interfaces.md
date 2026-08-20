@@ -64,13 +64,14 @@ class MyComponentConfig(CoreConfig):
 
 ### Configuration Flow
 
-1. Service loads config from YAML file via `ConfigManager`
-2. Schema identification: The service calls `get_config_schema()`, which uses `ConfigClassLoader` to dynamically import and verify the configuration class.
+1. Resolution: `ComponentResolver` expands the `component_type` from settings to a fully qualified path and derives the matching config class from it (see [Component Loading](#component-loading)). An explicit `component_config_class` takes precedence.
+2. Service loads config from YAML file via `ConfigManager`
+3. Schema identification: The service calls `get_config_schema()`, which uses `ConfigClassLoader` to dynamically import and verify the configuration class.
  - Validation: It ensures the config class is a subclass of `CoreConfig`.
-3. Component Instantiation: The service identifies the `component_type` from settings. It uses `ComponentLoader` to dynamically load the class.
+4. Component Instantiation: The service uses `ComponentLoader` to dynamically load the resolved component class.
  - Validation: It ensures the component class is an instance of `CoreComponent`
-4. Config from `ConfigManager` is passed to component constructor
-5. The Library processes and validates the configuration internally
+5. Config from `ConfigManager` is passed to component constructor
+6. The Library processes and validates the configuration internally
  - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it raises an AutoConfigError.
 
  - Type Checking: It ensures the method_type matches the expected component type (via `check_type`).
@@ -80,41 +81,72 @@ class MyComponentConfig(CoreConfig):
  - Keyword Cleaning: If a parameter key starts with `all_`, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).
 
   - Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant `params` key.
-6. Processor Adaptation: The service wraps the `CoreComponent` in a `LibraryComponentProcessor` (an adapter) to make it compatible with the `Engine` loop.
-7. At runtime, `reconfigure` command can update configs dynamically
+7. Processor Adaptation: The service wraps the `CoreComponent` in a `LibraryComponentProcessor` (an adapter) to make it compatible with the `Engine` loop.
+8. At runtime, `reconfigure` command can update configs dynamically
 
 ## Component Loading
 
-Components are loaded dynamically by `ComponentLoader`. Specify components using a dot-separated path:
+The `component_type` setting tells the service which class to load. It accepts two forms: a short class name or a dotted path.
 
-### Path Format
+### Short class name
 
+```yaml
+component_type: RandomDetector
 ```
-module.ClassName
+
+A value without a dot is treated as a class name. `ComponentResolver` walks every submodule of `detectmatelibrary` and takes the first one that exports a `CoreComponent` subclass with that name, expanding it to a fully qualified path (`detectmatelibrary.detectors.RandomDetector`).
+
+Convenient for library components, with three caveats:
+
+- **Library only.** Classes in your own package are never found. You get `ImportError: Could not find a component named '...' anywhere under 'detectmatelibrary'. Use the full dotted path.`
+- **First match wins.** If two modules export a class with the same name, resolution order decides which one you get.
+- **Import failures are swallowed.** A module that cannot be imported (typically because an optional extra is missing (see [Optional library components](installation.md#optional-library-components-extras)) ) is skipped, so the component is reported as *not found* instead of naming the missing dependency.
+
+### Dotted path
+
+```yaml
+component_type: detectors.random_detector.RandomDetector
 ```
 
-Examples:
-- `detectors.RandomDetector`
-- `parsers.JsonParser`
-- `readers.FileReader`
+A value containing a dot is treated as `module.ClassName` and used as written, with no search. Use this form for custom components, and whenever you want real import errors instead of "not found":
 
-### Resolution Order
+- `detectors.random_detector.RandomDetector` - library component, `detectmatelibrary.` prefix is optional
+- `detectmatelibrary.detectors.random_detector.RandomDetector` - fully qualified library component
+- `mypackage.detectors.CustomDetector` - component from an external package
 
-1. **DetectMateLibrary-relative** (tried first): `detectmatelibrary.{path}`
-   - `detectors.RandomDetector` → `detectmatelibrary.detectors.RandomDetector`
-2. **Absolute import** (fallback): `{path}` as-is
-   - `mypackage.detectors.CustomDetector` → `mypackage.detectors.CustomDetector`
+> **Note:** The resolved path becomes the `component_type` label on every Prometheus metric, and the two forms resolve to different strings. Use one form consistently across a deployment so dashboards do not split them into two series.
 
-This allows you to use library components with short paths while still supporting custom components from external packages.
+### Import resolution order
+
+Both loaders accept library-relative and absolute paths, but they try them in opposite order. This only makes a difference when the same module path is importable both ways:
+
+| Loader | Resolves | Order |
+|--------|----------|-------|
+| `ComponentLoader` | `component_type` | 1. path as-is → 2. `detectmatelibrary.{path}` |
+| `ConfigClassLoader` | `component_config_class` | 1. `detectmatelibrary.{path}` → 2. path as-is |
+
+### Config class resolution
+
+Once the component is resolved, `ComponentResolver` looks for `<ClassName>Config` in the **same module** and uses it as the configuration schema:`RandomDetector` → `RandomDetectorConfig`. Every component in DetectMateLibrary follows this convention, so `component_config_class` normally does not need to be set!
+
+**Set it explicitly only when the convention does not hold:**
+
+- the config class has a different name or lives in a different module than the component (in case of custom components)
+- the service runs as `component_type: core` (no component to derive a schema from)
+
+> **Warning:** If no `<ClassName>Config` is found and `component_config_class` is not set, the resolver falls back to `CoreConfig`. 
 
 ### Service Settings
 
 In your service settings YAML, specify:
 
 ```yaml
-component_type: detectors.MyDetector          # Component class path
-component_config_class: detectors.MyDetectorConfig  # Config class path
-config_file: detector-config.yaml             # Path to component config
+component_type: detectors.MyDetector   # Component class path or class name
+config_file: detector-config.yaml      # Path to component config
+# Optional:
+# component_config_class: mypackage.configs.MyDetectorSettings
+#   Only needed if the config class is not <ComponentClass>Config
+#   in the component's own module.
 ```
 
 ## Data Flow Schemas
@@ -208,7 +240,6 @@ class RandomDetector(CoreDetector):
 ```yaml
 component_name: random-detector
 component_type: detectors.random_detector.RandomDetector
-component_config_class: detectors.random_detector.RandomDetectorConfig
 config_file: random-config.yaml
 log_level: INFO
 http_host: 127.0.0.1
