@@ -10,9 +10,9 @@ These settings control the service infrastructure.
 
 | Setting                       | Env Variable                             | Default                            | Description                                                                                               |
 | :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
-| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | A human-readable name for the service instance.                                                           |
-| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component; computed automatically if not provided.                              |
-| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Python import path for the component class (e.g., `detectors.MyDetector`).                                |
+| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
+| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly.     |
+| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
 | `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Python import path of the configuration class used by the component (e.g., `detectors.MyDetectorConfig`). |
 | `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
 | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
@@ -29,6 +29,23 @@ These settings control the service infrastructure.
 | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
 | `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs).                                                       |
 | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+
+
+### Naming components
+
+`component_name` can be chosen freely, but it is **not** used as a
+display label anywhere. Logs, metrics and log file names all use `component_id`, `component_name` is only used to seed it.
+
+```python
+component_id = uuid5(NAMESPACE_URL, f"detectmate/{component_type}/{component_name}").hex
+```
+
+This means:
+
+- **Names must be unique per instance.** 
+- **Without a name, uniqueness comes from the address.** Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
+- **Changing `component_type` or `component_name`changes the id**
+- **`component_id` can be set explicitly** if you need to control it directly
 
 
 ### YAML files
