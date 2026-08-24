@@ -2,183 +2,32 @@
 
 DetectMate enables the creation of log analysis pipelines to analyze log data streams and detect violations or anomalies. It can be run from the console or embedded in Python programs as a library. Designed to operate analyses with limited resources and the lowest possible permissions, DetectMate is suitable for use on production servers. In practice, log analysis involves distinct steps that are central to its operation.
 
-Logfile analysis consists of two main steps: first, parsing log lines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed. 
-
-The following diagram illustrates a typical log analysis pipeline:
-
-![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
+Logfile analysis consists of two main steps: first, parsing log lines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed.
 
 Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectmateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
 
+For easy reproduction of the getting started example, we created the scripts/getting_started.sh [getting_started.sh](../scripts/getting_started.sh) script.
+This script guides the user through each of the following steps:
+- Check OS release (lsb_release -a)
+- Install NGINX and create first log line (sudo apt update && sudo apt install nginx -y && curl http://localhost)
+- Install Docker, if not already installed (https://docs.docker.com/engine/install/ubuntu/)
+- Clone DetectMateService into /tmp/DetectMateService (cd /tmp && git clone https://github.com/ait-detectmate/DetectMateService.git && cd DetectMateService)
+- Deploy default pipeline for testing
+- Mount previously created access.log into the [docker-compose.yml](../docker-compose.yml).
+- Create DetectMate configs and start docker compose.
+- Generate two log lines for training and one log line to produce an anomaly.
+- Provide first look at the Grafana UI.
+
+Use `./scripts/getting_started.sh` to get started with DetectMate.
+
+Using `-y` you can skip all continue questions.
+
+This script is tested for Ubuntu 24.04, however, it should also work on newer versions.
+Use at your own risk.
+
 ## The Objective
 
-In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
-
-## Preparation
-
-We will setup the DetectMate on a fresh installation of Ubuntu Noble:
-
-```
-alice@ubuntu2404:~$ lsb_release -a
-No LSB modules are available.
-Distributor ID:	Ubuntu
-Description:	Ubuntu 24.04.4 LTS
-Release:	24.04
-Codename:	noble
-```
-
-In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:
-
-```
-alice@ubuntu2404:~$ sudo apt update && sudo apt install nginx -y
-Hit:1 http://at.archive.ubuntu.com/ubuntu noble InRelease
-Hit:2 http://at.archive.ubuntu.com/ubuntu noble-updates InRelease
-Hit:3 http://at.archive.ubuntu.com/ubuntu noble-backports InRelease
-Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-9 packages can be upgraded. Run 'apt list --upgradable' to see them.
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-The following additional packages will be installed:
-  nginx-common
-Suggested packages:
-  fcgiwrap nginx-doc ssl-cert
-The following NEW packages will be installed:
-  nginx nginx-common
-0 upgraded, 2 newly installed, 0 to remove and 9 not upgraded.
-Need to get 565 kB of archives.
-After this operation, 1,596 kB of additional disk space will be used.
-Get:1 http://at.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx-common all 1.24.0-2ubuntu7.6 [43.5 kB]
-Get:2 http://at.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx amd64 1.24.0-2ubuntu7.6 [521 kB]
-Fetched 565 kB in 0s (2,816 kB/s)
-Preconfiguring packages ...
-Selecting previously unselected package nginx-common.
-(Reading database ... 87543 files and directories currently installed.)
-Preparing to unpack .../nginx-common_1.24.0-2ubuntu7.6_all.deb ...
-Unpacking nginx-common (1.24.0-2ubuntu7.6) ...
-Selecting previously unselected package nginx.
-Preparing to unpack .../nginx_1.24.0-2ubuntu7.6_amd64.deb ...
-Unpacking nginx (1.24.0-2ubuntu7.6) ...
-Setting up nginx-common (1.24.0-2ubuntu7.6) ...
-Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr/lib/systemd/system/nginx.service.
-Setting up nginx (1.24.0-2ubuntu7.6) ...
- * Upgrading binary nginx                                                                                                                                                                                                        [ OK ]
-Processing triggers for man-db (2.12.0-4build2) ...
-Processing triggers for ufw (0.36.2-6) ...
-Scanning processes...
-Scanning linux images...
-
-Running kernel seems to be up-to-date.
-
-No services need to be restarted.
-
-No containers need to be restarted.
-
-No user sessions are running outdated binaries.
-
-No VM guests are running outdated hypervisor (qemu) binaries on this host.
-
-alice@ubuntu2404:~$
-```
-
-We can try to send HTTP-requests to our local Nginx:
-
-```
-alice@ubuntu2404:~$ curl http://localhost
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-html { color-scheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-alice@ubuntu2404:~$
-```
-
-Now we should have at least one line in /var/log/nginx/access.log:
-
-```
-alice@ubuntu2404:~$ sudo cat /var/log/nginx/access.log
-::1 - - [18/Mar/2026:11:43:30 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/8.5.0"
-```
-
-Since we have a working webserver, we can now move on to deploy the logdata anomaly pipeline.
-
-## Deploying the Pipeline
-
-We need Docker and Docker Compose for the deployment. A comprehensive tutorial about how to install Docker can be found at https://docs.docker.com/engine/install/ubuntu/
-
-In this section, we will focus solely on the installation commands.
-
-First run the following command to uninstall all conflicting packages:
-
-```
-sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
-```
-
-Now set up Docker's apt repository:
-
-```
-# Add Docker's official GPG key:
-sudo apt update
-sudo apt install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
-Types: deb
-URIs: https://download.docker.com/linux/ubuntu
-Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
-Components: stable
-Signed-By: /etc/apt/keyrings/docker.asc
-EOF
-
-sudo apt update
-```
-
-Install docker and docker compose:
-
-```
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-!!! note
-    Since we did not add our user to the docker group, we have to use sudo for docker compose!
-
-With Docker compose working, we will now download the DetectmateService repository using `git`:
-
-```
-alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
-Cloning into 'DetectMateService'...
-remote: Enumerating objects: 2303, done.
-remote: Counting objects: 100% (372/372), done.
-remote: Compressing objects: 100% (227/227), done.
-remote: Total 2303 (delta 171), reused 171 (delta 131), pack-reused 1931 (from 3)
-Receiving objects: 100% (2303/2303), 3.97 MiB | 9.12 MiB/s, done.
-Resolving deltas: 100% (1229/1229), done.
-alice@ubuntu2404:~$ cd DetectMateService/
-```
+In this tutorial, we will set up a log data analysis pipeline that reads nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
 
 
 Let's start the default pipeline, just to test it:
