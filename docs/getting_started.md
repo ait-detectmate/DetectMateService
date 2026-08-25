@@ -12,7 +12,7 @@ This script guides the user through each of the following steps:
 - Install NGINX and create first log line (sudo apt update && sudo apt install nginx -y && curl http://localhost)
 - Install Docker, if not already installed (https://docs.docker.com/engine/install/ubuntu/)
 - Clone DetectMateService into /tmp/DetectMateService (cd /tmp && git clone https://github.com/ait-detectmate/DetectMateService.git && cd DetectMateService)
-- Deploy default pipeline for testing
+- Deploy default pipeline for testing (sudo docker compose up -d, sudo docker compose ps, sudo docker compose down -v)
 - Mount previously created access.log into the [docker-compose.yml](../docker-compose.yml).
 - Create DetectMate configs and start docker compose.
 - Generate two log lines for training and one log line to produce an anomaly.
@@ -25,82 +25,13 @@ Using `-y` you can skip all continue questions.
 This script is tested for Ubuntu 24.04, however, it should also work on newer versions.
 Use at your own risk.
 
+Example outputs for an unsupported system (Linux Mint) can be found [here](examples/getting_started/getting-started-output.txt).
+
 ## The Objective
 
 In this tutorial, we will set up a log data analysis pipeline that reads nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
 
 
-Let's start the default pipeline, just to test it:
-
-```
-alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
-[+] up 7/7
- ✔ Container detectmateservice-fluentout-1      Started                                                                                                                                                                                 
- ✔ Container prometheus                         Started                                                                                                                                                                                 s
- ✔ Container grafana                            Started                                                                                                                                                                                 s
- ✔ Container detectmateservice-detector-1       Started                                                                                                                                                                                 s
- ✔ Container detectmateservice-detector-rule-1  Started                                                                                                                                                                                 s
- ✔ Container detectmateservice-parser-1         Started                                                                                                                                                                                  
- ✔ Container detectmateservice-fluentin-1       Started                                                                                                                                                                                  
-alice@ubuntu2404:~/DetectMateService$
-```
-
-To check the status of the containers, we can use `docker compose ps`:
-
-```
-alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
-NAME                                 IMAGE                              COMMAND                  SERVICE          CREATED         STATUS         PORTS
-detectmateservice-detector-1         detectmateservice-detector         "uv run detectmate -…"   detector         4 minutes ago   Up 3 minutes   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
-detectmateservice-detector-rule-1    detectmateservice-detector-rule    "uv run detectmate -…"   detector-rule    4 minutes ago   Up 3 minutes   0.0.0.0:8003->8000/tcp, [::]:8003->8000/tcp
-detectmateservice-fluentin-1         detectmateservice-fluentin         "tini -- /bin/entryp…"   fluentin         4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
-detectmateservice-fluentout-1        detectmateservice-fluentout        "tini -- /bin/entryp…"   fluentout        4 minutes ago   Up 3 minutes   5140/tcp, 24224/tcp
-detectmateservice-parser-1           detectmateservice-parser           "uv run detectmate -…"   parser           4 minutes ago   Up 3 minutes   0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp
-grafana                              grafana/grafana:latest             "/run.sh"                grafana          4 minutes ago   Up 3 minutes   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
-prometheus                           prom/prometheus:latest             "/bin/prometheus --c…"   prometheus       4 minutes ago   Up 3 minutes   9090/tcp
-```
-
-Notice that the pipeline has **two** detector services running side by side: `detector` (running `NewValueDetector`) and `detector-rule` (running `RuleDetector`). The `parser` sends every parsed log line to both, and `fluentout` writes each detector's alerts to its own output file (`output.%Y%m%d` and `output-rule.%Y%m%d`).
-
-
-For now, we will shutdown all containers:
-
-```
-alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
-[+] down 9/9
- ✔ Container grafana                             Removed                                                                                                                                                                              
- ✔ Container detectmateservice-fluentin-1        Removed                                                                                                                                                                               
- ✔ Container prometheus                          Removed                                                                                                                                                                               
- ✔ Container detectmateservice-parser-1          Removed                                                                                                                                                                               
- ✔ Container detectmateservice-detector-1        Removed                                                                                                                                                                               
- ✔ Container detectmateservice-detector-rule-1   Removed                                                                                                                                                                               
- ✔ Container detectmateservice-fluentout-1       Removed                                                                                                                                                                              
- ✔ Volume detectmateservice_grafana_data         Removed                                                                                                                                                                               
- ✔ Network detectmateservice_default             Removed                                                                                                                                                                               
- ✔ Volume detectmateservice_prometheus_data Removed
-```
-
-We have finally all requirements installed and have a boilerplate template for docker compose that starts an initial pipeline. In the next sections we will reconfigure that 
-pipeline so that we can read the `access.log` and generate anomalies.
-
-## Mount the access.log
-
-The preconfigured pipeline reads logs from `container/fluentlogs/some.log`. In order to be able to read the nginx access.log file, we need to mount `/var/log/nginx` into the fluentin container
-and modify the fluentd config so that it reads access.log instead.
-
-Initially we edit the `docker-compose.yml` and change only the `fluentin` volume mount to use `/var/log/nginx`:
-
-```yaml
---8<-- "docker-compose.yml"
-```
-
-Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
-
-```
---8<-- "container/fluentin/fluent.conf:tutorial"
-```
-
-The Nginx access.log will be mounted into the `fluentin` container and fluentd is using the correct file. We can finally look into the DetectMate config and
-generate anomalies.
 
 ## DetectMate Config
 
