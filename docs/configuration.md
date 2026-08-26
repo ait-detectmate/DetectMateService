@@ -90,12 +90,10 @@ class (`<ComponentClass>Config`, see
 file that fits all components: a `NewValueDetector` takes different fields than a `MatcherParser`, etc.
 To find the fields a component accepts:
 
-- **Library documentation**: each method has its own page, e.g.
-  [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/).
-  See [Detectors](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/) and
-  [Parsers](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/) for the full list,
-  and [Detectors Configuration](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration)
-  for how the library interprets the values.
+- **Library documentation**: every parser and detector has its own page listing the fields it
+  accepts, see [Library component reference](#library-component-reference) below.
+  [Detectors Configuration](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration)
+  explains how the library interprets the values.
 - **The config class itself**: the fields, types and defaults of `<ComponentClass>Config` in the
   library source are the authoritative list.
 - **Let the service generate one**: point `config_file` at a path that does not exist yet and the
@@ -104,6 +102,46 @@ To find the fields a component accepts:
   to be filled in.
 
 You can read more about Components in the [Using a Library Component](library.md) section.
+
+### Library component reference
+
+Every parser and detector the library documents and the fields in its
+config file. Each page also names the class to put in `component_type`. 
+Some components ship only with an [optional extra](installation.md#optional-library-components-extras).
+
+**Parsers**
+
+<!-- Start parsers -->
+| Parser |
+|---|
+| [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
+| [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
+| [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
+| [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
+<!-- End parsers -->
+
+**Detectors**
+
+<!-- Start detectors -->
+| Detector |
+|---|
+| [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
+| [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
+| [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
+| [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
+| [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
+| [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
+| [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
+| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
+| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
+| [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
+| [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
+| [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
+| [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
+<!-- End detectors -->
+
+> These tables are auto-generated from the library documentation.
+
 
 
 ## HTTP Admin Interface
