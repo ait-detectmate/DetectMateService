@@ -6,14 +6,17 @@ theme:
 
 nav:
   - Home: index.md
-  - Getting Started:
+  - Tutorial: tutorial.md
+  - User Guide:
     - Installation: installation.md
     - Configuration: configuration.md
     - Usage:
-      - Quick Start: usage.md
+      - Running the Service: usage.md
       - Using a Library Component: library.md
       - Monitoring with Prometheus: prometheus.md
-    - Contribution: contribution.md
+    - Docker Compose Reference: docker-compose.md
+  - Contributing:
+    - Git Workflow: contribution.md
     - Development:
       - Overview: development.md
       - Library Imports: library-imports.md

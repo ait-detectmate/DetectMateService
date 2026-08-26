@@ -105,5 +105,23 @@ version of their own.
 1. Update the single `detectmatelibrary==X.Y.Z` pin in `pyproject.toml`.
 2. Run `uv lock` to regenerate `uv.lock`.
 3. Run `uv sync --extra full && uv run --dev pytest` to confirm every extra still resolves and installs correctly.
+4. Run `uv run python scripts/gen_component_links.py` so the component tables in the docs match the new version.
+
+## Regenerating the component tables
+
+The parser and detector tables in [Component configuration](configuration.md#library-component-reference)
+are generated, not written by hand:
+
+```bash
+uv run python scripts/gen_component_links.py           # rewrite the tables
+uv run python scripts/gen_component_links.py --check    # exit 1 if they are out of date
+```
+
+The entries are whatever the published DetectMateLibrary documentation lists under its
+`parsers/` and `detectors/` sections, read from its `sitemap.xml`, and each one is named by
+the headline of its page. A component that gets a page in the library therefore appears here
+on the next run without anyone editing markdown. The script only rewrites the text between
+the `<!-- Start detectors -->` / `<!-- End detectors -->` markers. The docs workflow runs it
+before publishing, so the published tables stay current even between library bumps.
 
 

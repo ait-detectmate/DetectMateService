@@ -10,10 +10,10 @@ These settings control the service infrastructure.
 
 | Setting                       | Env Variable                             | Default                            | Description                                                                                               |
 | :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
-| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | A human-readable name for the service instance.                                                           |
-| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component; computed automatically if not provided.                              |
-| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Python import path for the component class (e.g., `detectors.MyDetector`).                                |
-| `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Python import path of the configuration class used by the component (e.g., `detectors.MyDetectorConfig`). |
+| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
+| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly.     |
+| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
+| `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
 | `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
 | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
 | `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
@@ -29,6 +29,23 @@ These settings control the service infrastructure.
 | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
 | `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs).                                                       |
 | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+
+
+### Naming components
+
+`component_name` can be chosen freely, but it is **not** used as a
+display label anywhere. Logs, metrics and log file names all use `component_id`, `component_name` is only used to seed it.
+
+```python
+component_id = uuid5(NAMESPACE_URL, f"detectmate/{component_type}/{component_name}").hex
+```
+
+This means:
+
+- **Names must be unique per instance.** 
+- **Without a name, uniqueness comes from the address.** Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
+- **Changing `component_type` or `component_name`changes the id**
+- **`component_id` can be set explicitly** if you need to control it directly
 
 
 ### YAML files
@@ -64,7 +81,67 @@ Example detector_config.yaml
 --8<-- "docs/examples/configuration/detector_config.yaml"
 ```
 
+### What goes in a the config file
+
+Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
+same for every component. What is valid *inside* is defined by the component's configuration
+class (`<ComponentClass>Config`, see
+[Config class resolution](interfaces.md#config-class-resolution)). There is no single config
+file that fits all components: a `NewValueDetector` takes different fields than a `MatcherParser`, etc.
+To find the fields a component accepts:
+
+- **Library documentation**: every parser and detector has its own page listing the fields it
+  accepts, see [Library component reference](#library-component-reference) below.
+  [Detectors Configuration](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration)
+  explains how the library interprets the values.
+- **The config class itself**: the fields, types and defaults of `<ComponentClass>Config` in the
+  library source are the authoritative list.
+- **Let the service generate one**: point `config_file` at a path that does not exist yet and the
+  service writes a default file derived from the component's config class on startup. It is a
+  scaffold, not a working config! Values it cannot infer are written as `<PLACEHOLDER>` and have
+  to be filled in.
+
 You can read more about Components in the [Using a Library Component](library.md) section.
+
+### Library component reference
+
+Every parser and detector the library documents and the fields in its
+config file. Each page also names the class to put in `component_type`. 
+Some components ship only with an [optional extra](installation.md#optional-library-components-extras).
+
+**Parsers**
+
+<!-- Start parsers -->
+| Parser |
+|---|
+| [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
+| [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
+| [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
+| [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
+<!-- End parsers -->
+
+**Detectors**
+
+<!-- Start detectors -->
+| Detector |
+|---|
+| [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
+| [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
+| [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
+| [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
+| [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
+| [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
+| [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
+| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
+| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
+| [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
+| [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
+| [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
+| [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
+<!-- End detectors -->
+
+> These tables are auto-generated from the library documentation.
+
 
 
 ## HTTP Admin Interface
