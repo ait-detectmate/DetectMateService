@@ -47,19 +47,6 @@ if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
   exit 0
 fi
 sudo apt update && sudo apt install nginx -y
-sudo nginx -t
-sudo systemctl status nginx --no-pager -l
-sudo journalctl -u nginx.service --no-pager -n 100
-sudo ss -ltnp | grep ':80'
-sudo nginx
-sudo ss -ltnup
-systemctl list-units --type=service --state=running
-cat /etc/nginx/sites-enabled/default
-cat /etc/nginx/nginx.conf
-sudo grep -R -n "49193" /etc/nginx/conf.d /etc/nginx/sites-enabled 2>/dev/null
-sudo find /etc/nginx -type f -maxdepth 3 -print
-
-
 sudo touch /var/log/nginx/access.log
 sudo mv /var/log/nginx/access.log /var/log/nginx/access.log.bac
 sudo touch /var/log/nginx/access.log
