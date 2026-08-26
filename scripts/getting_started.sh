@@ -53,7 +53,6 @@ systemctl list-units --type=service --state=running
 cat /etc/nginx/sites-enabled/default
 cat /etc/nginx/nginx.conf
 
-
 sudo touch /var/log/nginx/access.log
 sudo mv /var/log/nginx/access.log /var/log/nginx/access.log.bac
 sudo touch /var/log/nginx/access.log
