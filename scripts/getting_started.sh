@@ -1,5 +1,7 @@
 #!/bin/bash
 
+year=$(date +%Y)
+
 AUTO_YES=false
 if [[ "$1" == "-y" ]]; then
     AUTO_YES=true
@@ -349,7 +351,7 @@ sleep 1
 echo
 echo "Great! We detected our first anomaly."
 echo
-file=$(echo /tmp/DetectMateService/container/fluentlogs/output.2026*.log)
+file=$(echo /tmp/DetectMateService/container/fluentlogs/output.$year*.log)
 echo "cat $file"
 cat "$file"
 echo
@@ -357,8 +359,62 @@ echo "If you check container/fluentlogs/output-rule.%Y%m%d at this point, you'll
 echo
 echo "Triggering the Rule-Based Detector"
 echo
+echo "So far, detector-rule has been running quietly next to detector, since none of our requests matched any of its enabled rules. To see it raise an alert, we'll enable the R001 - TemplateNotFound rule and then generate a log line that the parser cannot match against the template in container/config/templates.txt."
+echo "Edit container/config/detector_rule_config.yaml and add the rule \"R001 - TemplateNotFound\":"
+echo
+echo "sed -i '/R001 - TemplateNotFound/s/# - rule/- rule/' container/config/detector_rule_config.yaml"
+sed -i '/R001 - TemplateNotFound/s/# - rule/- rule/' container/config/detector_rule_config.yaml
+echo
+echo "cat container/config/detector_rule_config.yaml"
+cat container/config/detector_rule_config.yaml
+echo
+echo "Now we will restart just the detector-rule service to pick up the change."
+echo
+if $AUTO_YES; then
+  answer="y"
+else
+  read -p "Continue? [y/n] " answer
+  echo
+fi
+if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+  echo "Aborted."
+  exit 0
+fi
 
+echo "sudo docker compose restart detector-rule"
+sudo docker compose restart detector-rule
+restart_time=$(date --iso-8601=seconds)
 
+while true; do
+  echo "Waiting for service to boot up.."
+  sleep 5
+  sudo docker compose logs --since "$restart_time" detector-rule | grep "INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)" > /dev/null
+  if [ $? -ne 0 ]; then continue; fi
+  sleep 60
+  echo "Services started up successfully."
+  echo
+  break
+done
+
+echo "Now append a contrived log line to /var/log/nginx/access.log that doesn't match the Nginx access log template at all, for example a line without the expected quotes and brackets."
+echo "echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log"
+echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
+sleep 1
+echo
+echo "Since this line can't be matched against <*> - - [<*>] \"<*> <*> <*>\" <*> <*> \"<*>\" \"<*>\", the parser assigns it EventID: -1, which is exactly what the TemplateNotFound rule checks for. Have a look at container/fluentlogs/output-rule.%Y%m%d."
+echo
+file=$(echo /tmp/DetectMateService/container/fluentlogs/output-rule.$year*.log)
+echo "cat $file"
+cat "$file"
+echo
+echo "The rule-based detector caught it: \"R001 - TemplateNotFound\":\"No template found by parser\". Unlike NewValueDetector, it needed no training data at all — it was ready to alert from the very first log line."
+echo
+echo "Grafana UI"
+echo
+echo 'The Grafana UI is accessible at http://localhost:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics". Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Processing rate and Engine state.'
+echo
+echo "This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two different DetectMate detectors, using a parser for the Nginx access log format, and how this is then used to flag anomalies."
+echo
 
 echo "Shutdown all containers."
 if $AUTO_YES; then
@@ -379,4 +435,18 @@ echo
 sudo rm /var/log/nginx/access.log
 sudo mv /var/log/nginx/access.log.bac /var/log/nginx/access.log
 
-
+echo "Remove temporary stuff from docker using 'sudo docker container prune -f', 'sudo docker image prune -f', and 'docker system prune -f'."
+echo
+if $AUTO_YES; then
+  answer="y"
+else
+  read -p "Continue? [y/n] " answer
+  echo
+fi
+if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+  echo "Aborted."
+  exit 0
+fi
+sudo docker container prune -f
+sudo docker image prune -f
+sudo docker system prune -f
