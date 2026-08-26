@@ -64,19 +64,19 @@ class MyComponentConfig(CoreConfig):
 
 ### Configuration Flow
 
-1. Resolution: `ComponentResolver` expands the `component_type` from settings to a fully qualified path and derives the matching config class from it (see [Component Loading](#component-loading)). An explicit `component_config_class` takes precedence.
-2. Service loads config from YAML file via `ConfigManager`
-3. Schema identification: The service calls `get_config_schema()`, which uses `ConfigClassLoader` to dynamically import and verify the configuration class.
+1. Resolution: `ComponentResolver` expands the `component_type` from settings to a fully qualified path and derives the matching config class from it (see [Component Loading](#component-loading)). An explicit `component_config_class` is optional and takes precedence.
+2. Service loads config from YAML file.
+3. Schema identification: The service calls dynamically imports and verify the configuration class.
  - Validation: It ensures the config class is a subclass of `CoreConfig`.
-4. Component Instantiation: The service uses `ComponentLoader` to dynamically load the resolved component class.
+4. Component Instantiation: The service uses to dynamically loads the resolved component class.
  - Validation: It ensures the component class is an instance of `CoreComponent`
 5. Config from `ConfigManager` is passed to component constructor
 6. The Library processes and validates the configuration internally
  - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it raises an AutoConfigError.
 
- - Type Checking: It ensures the method_type matches the expected component type (via `check_type`).
+ - Type Checking: It ensures the method_type matches the expected component type.
 
- - Formatting (`apply_format`): It iterates through the params dictionary. For every parameter, it applies a specific format.
+ - Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.
 
  - Keyword Cleaning: If a parameter key starts with `all_`, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).
 
@@ -86,7 +86,7 @@ class MyComponentConfig(CoreConfig):
 
 ## Component Loading
 
-The `component_type` setting tells the service which class to load. It accepts two forms: a short class name or a dotted path.
+The `component_type` setting tells the service which class to load. You can use two forms: short class name or dotted path.
 
 ### Short class name
 
@@ -96,11 +96,11 @@ component_type: RandomDetector
 
 A value without a dot is treated as a class name. `ComponentResolver` walks every submodule of `detectmatelibrary` and takes the first one that exports a `CoreComponent` subclass with that name, expanding it to a fully qualified path (`detectmatelibrary.detectors.RandomDetector`).
 
-Convenient for library components, with three caveats:
+Convenient for library components, but note:
 
 - **Library only.** Classes in your own package are never found. You get `ImportError: Could not find a component named '...' anywhere under 'detectmatelibrary'. Use the full dotted path.`
-- **First match wins.** If two modules export a class with the same name, resolution order decides which one you get.
-- **Import failures are swallowed.** A module that cannot be imported (typically because an optional extra is missing (see [Optional library components](installation.md#optional-library-components-extras)) ) is skipped, so the component is reported as *not found* instead of naming the missing dependency.
+- **First match wins.** If two modules export a class of the same name, resolution order determines which one you get.
+
 
 ### Dotted path
 
@@ -108,7 +108,7 @@ Convenient for library components, with three caveats:
 component_type: detectors.random_detector.RandomDetector
 ```
 
-A value containing a dot is treated as `module.ClassName` and used as written, with no search. Use this form for custom components, and whenever you want real import errors instead of "not found":
+A value containing a dot is treated as `module.ClassName` and used as written, without search. Use this form for custom components, and whenever you want real import errors instead of "not found":
 
 - `detectors.random_detector.RandomDetector` - library component, `detectmatelibrary.` prefix is optional
 - `detectmatelibrary.detectors.random_detector.RandomDetector` - fully qualified library component
@@ -118,7 +118,7 @@ A value containing a dot is treated as `module.ClassName` and used as written, w
 
 ### Import resolution order
 
-Both loaders accept library-relative and absolute paths, but they try them in opposite order. This only makes a difference when the same module path is importable both ways:
+Both loaders accept library-relative and absolute paths.
 
 | Loader | Resolves | Order |
 |--------|----------|-------|
