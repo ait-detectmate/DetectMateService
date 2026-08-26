@@ -64,6 +64,7 @@ sudo touch /var/log/nginx/access.log
 sudo mv /var/log/nginx/access.log /var/log/nginx/access.log.bac
 sudo touch /var/log/nginx/access.log
 sudo systemctl restart nginx.service > /dev/null
+sudo systemctl restart blacksmith-cache-proxy.service > /dev/null  # for GitHub Actions
 
 echo
 echo "Send HTTP-request to our local nginx (curl http://localhost)."
