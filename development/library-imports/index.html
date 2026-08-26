@@ -44,15 +44,19 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
-              <ul class="current">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
                 </li>
@@ -60,7 +64,12 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" >Development</a>
     <ul class="current">
@@ -126,7 +135,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Contributing</li>
           <li class="breadcrumb-item">Development</li>
       <li class="breadcrumb-item active">Library Imports</li>
     <li class="wy-breadcrumbs-aside">
@@ -206,13 +215,14 @@
 <div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">raw_message</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="what-the-service-expects-from-corecomponent">What the Service Expects from CoreComponent</h3>
-<!-- TODO: Link to DetectMateLibrary CoreComponent documentation -->
-
 <ul>
 <li>Constructor accepts optional <code>config</code> parameter</li>
 <li><code>process(data: bytes) -&gt; bytes | None</code> method handles message processing</li>
 <li>See <a href="../interfaces/">Library Interface Contract</a> for the full interface specification</li>
 </ul>
+<p>Library-side documentation: <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/overall_architecture/#components-architecture">Components architecture</a>
+for the class hierarchy, and <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/create_components/">Create new component</a>
+for writing one.</p>
 <h2 id="coreconfig">CoreConfig</h2>
 <p><strong>Import location:</strong> <code>src/service/core.py</code>, <code>src/service/features/config_loader.py</code>, <code>src/service/features/config_manager.py</code></p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreConfig</span>
@@ -242,14 +252,15 @@
 <h4 id="3-service-initialization-corepy">3. Service Initialization (<code>core.py</code>)</h4>
 <p>The <code>Service.get_config_schema()</code> method returns the appropriate <code>CoreConfig</code> subclass for the component.</p>
 <h3 id="what-the-service-expects-from-coreconfig">What the Service Expects from CoreConfig</h3>
-<!-- TODO: Link to DetectMateLibrary CoreConfig documentation -->
-
 <ul>
 <li>Must be a Pydantic <code>BaseModel</code> subclass</li>
 <li>Must support <code>model_validate(data)</code> for validation</li>
 <li>Must support <code>model_dump()</code> for serialization</li>
 <li>See <a href="../interfaces/">Library Interface Contract</a> for the full interface specification</li>
 </ul>
+<p>Library-side documentation: <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/overall_architecture/#components-architecture">Components architecture</a>
+for the config class pattern, and <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration">Detectors — Configuration</a>
+for how the library interprets the config contents.</p>
 <h2 id="protobuf-schemas">Protobuf Schemas</h2>
 <p><strong>Import location:</strong> Integration tests only (<code>tests/library_integration/</code>)</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogSchema</span><span class="p">,</span> <span class="n">ParserSchema</span><span class="p">,</span> <span class="n">DetectorSchema</span>
@@ -268,19 +279,36 @@
 LogSchema bytes  ---&gt;  ParserSchema bytes  ---&gt;  DetectorSchema bytes
 </code></pre></div>
 <h3 id="what-the-service-expects-from-schemas">What the Service Expects from Schemas</h3>
-<!-- TODO: Link to DetectMateLibrary schema documentation -->
-
 <ul>
 <li>Protobuf message classes with <code>SerializeToString()</code> and <code>ParseFromString()</code> methods</li>
 <li>Consistent structure for pipeline interoperability</li>
 </ul>
+<p>Library-side documentation: <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/#schema-clases">Schemas</a>
+for the <code>LogSchema</code> / <code>ParserSchema</code> / <code>DetectorSchema</code> field definitions.</p>
 <h2 id="import-resolution">Import Resolution</h2>
-<p>The service uses a two-step import resolution for library components:</p>
-<ol>
-<li><strong>DetectMateLibrary-relative</strong> (tried first): Prepends <code>detectmatelibrary.</code> to the path</li>
-<li><strong>Absolute import</strong> (fallback): Uses the path as-is</li>
-</ol>
-<p>This allows short paths like <code>detectors.RandomDetector</code> to resolve to <code>detectmatelibrary.detectors.RandomDetector</code>, while still supporting custom components from external packages.</p>
+<p>The service uses a two-step import resolution, so short paths like <code>detectors.RandomDetector</code> resolve to <code>detectmatelibrary.detectors.RandomDetector</code> while custom components from external packages still work. The two loaders try the two prefixes in opposite order:</p>
+<table>
+<thead>
+<tr>
+<th>Loader</th>
+<th>Resolves</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ComponentLoader</code></td>
+<td><code>component_type</code></td>
+<td>1. path as-is → 2. <code>detectmatelibrary.{path}</code></td>
+</tr>
+<tr>
+<td><code>ConfigClassLoader</code></td>
+<td><code>component_config_class</code></td>
+<td>1. <code>detectmatelibrary.{path}</code> → 2. path as-is</td>
+</tr>
+</tbody>
+</table>
+<p><code>component_type</code> may also be given as a bare class name, see <a href="../interfaces/#component-loading">Component Loading</a>.</p>
 <h2 id="file-reference">File Reference</h2>
 <table>
 <thead>

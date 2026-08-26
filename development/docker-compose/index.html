@@ -44,15 +44,19 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
                 </li>
@@ -60,7 +64,84 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Docker Compose Reference</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#fluentin">Fluentin</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-image">Building the image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes">Volumes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#depends">Depends</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#parser">Parser</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-image_1">Building the image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_1">Volumes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ports">Ports</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#depends_1">Depends</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detector">Detector</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-image_2">Building the image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_2">Volumes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ports_1">Ports</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#depends_2">Depends</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detector-rule-based">Detector (Rule-Based)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-image_3">Building the image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_3">Volumes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ports_2">Ports</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#depends_3">Depends</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fluentout">Fluentout</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-image_4">Building the image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_4">Volumes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#prometheus">Prometheus</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_5">Volumes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ports_3">Ports</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grafana">Grafana</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#volumes_6">Volumes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#kafka">Kafka</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Development</a>
     <ul>
@@ -92,6 +173,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
       <li class="breadcrumb-item active">Docker Compose Reference</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -148,7 +230,7 @@
 <h3 id="depends_1">Depends</h3>
 <p>This service depends on the <code>detector</code> and <code>detector-rule</code> services, because they create the socket files to establish communication. </p>
 <h2 id="detector">Detector</h2>
-<p>The detector service listens for parsed logs received from the <code>parser</code> service on a <a href="https://nng.nanomsg.org/">Nano Message socket</a>. It expects the data in the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">ParserSchema format used by DetectMate</a> and sends anomalies using the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">DetectorSchema</a> to another Nano Message socket provided by the <code>fluentout</code> service. This is the <code>NewValueDetector</code>, which needs training data before it can flag anomalies (see the <a href="../getting_started/">Getting Started</a> tutorial).</p>
+<p>The detector service listens for parsed logs received from the <code>parser</code> service on a <a href="https://nng.nanomsg.org/">Nano Message socket</a>. It expects the data in the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">ParserSchema format used by DetectMate</a> and sends anomalies using the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">DetectorSchema</a> to another Nano Message socket provided by the <code>fluentout</code> service. This is the <code>NewValueDetector</code>, which needs training data before it can flag anomalies (see the <a href="../tutorial/">tutorial</a>).</p>
 <h3 id="building-the-image_2">Building the image</h3>
 <p>Docker compose builds the <code>detectmate</code> image using the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> in the root of the DetectMate repository. This image is the same for <code>parser</code>, <code>detector</code> and <code>detector-rule</code>.</p>
 <h3 id="volumes_2">Volumes</h3>
@@ -172,7 +254,7 @@
 <h3 id="depends_2">Depends</h3>
 <p>This service depends on the <code>fluentout</code> service, because <code>fluentout</code> creates the socket file to establish communication. </p>
 <h2 id="detector-rule-based">Detector (Rule-Based)</h2>
-<p>The <code>detector-rule</code> service is a second detector that listens for the same parsed logs as <code>detector</code>, on its own socket. It runs the <code>RuleDetector</code>, which evaluates a fixed list of simple rules (e.g. "the parser found no matching template", "the log text contains a keyword like 'error'") against every log line instead of learning from training data. See the <a href="../getting_started/">Getting Started</a> tutorial for a walkthrough that triggers one of its rules.</p>
+<p>The <code>detector-rule</code> service is a second detector that listens for the same parsed logs as <code>detector</code>, on its own socket. It runs the <code>RuleDetector</code>, which evaluates a fixed list of simple rules (e.g. "the parser found no matching template", "the log text contains a keyword like 'error'") against every log line instead of learning from training data. See the <a href="../tutorial/">tutorial</a> for a walkthrough that triggers one of its rules.</p>
 <h3 id="building-the-image_3">Building the image</h3>
 <p>Docker compose builds the <code>detectmate</code> image using the same <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> used for <code>parser</code> and <code>detector</code>.</p>
 <h3 id="volumes_3">Volumes</h3>
@@ -242,6 +324,10 @@
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../prometheus/" class="btn btn-neutral float-left" title="Monitoring with Prometheus"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../contribution/" class="btn btn-neutral float-right" title="Git Workflow">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -263,6 +349,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
+      <span><a href="../prometheus/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../contribution/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

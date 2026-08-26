@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/development/getting_started/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/development/tutorial/" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Getting Started - DetectMate Service</title>
+    <title>Tutorial - DetectMate Service</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,9 +13,9 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Getting Started";
-        var mkdocs_page_input_path = "getting_started.md";
-        var mkdocs_page_url = "/DetectMateService/development/getting_started/";
+        var mkdocs_page_name = "Tutorial";
+        var mkdocs_page_input_path = "tutorial.md";
+        var mkdocs_page_url = "/DetectMateService/development/tutorial/";
       </script>
     
     <!--[if lt IE 9]>
@@ -44,7 +44,35 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Tutorial</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#the-objective">The Objective</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#preparation">Preparation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deploying-the-pipeline">Deploying the Pipeline</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mount-the-accesslog">Mount the access.log</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detectmate-config">DetectMate Config</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#parser">Parser</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#detector">Detector</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#rule-based-detector">Rule-Based Detector</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#triggering-the-rule-based-detector">Triggering the Rule-Based Detector</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grafana-ui">Grafana UI</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
@@ -52,7 +80,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
                 </li>
@@ -60,7 +88,12 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Development</a>
     <ul>
@@ -92,7 +125,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="breadcrumb-item active">Tutorial</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -101,7 +134,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="getting-started">Getting Started</h1>
+                <h1 id="tutorial-detecting-anomalies-in-nginx-logs">Tutorial: Detecting Anomalies in Nginx Logs</h1>
+<div class="admonition note">
+<p class="admonition-title">What this tutorial is</p>
+<p>A complete, end-to-end walkthrough: you start from a fresh Ubuntu machine and finish with a
+running log analysis pipeline that flags anomalous Nginx requests. It uses the Docker Compose
+setup shipped with this repository, so you do not have to configure the individual services
+yourself. You can follow it top to bottom, every command and its expected output is shown.</p>
+<p><strong>You need:</strong> a machine (or VM) you can install packages on, and roughly an hour.
+No prior DetectMate knowledge is assumed.</p>
+</div>
 <p>DetectMate enables the creation of log analysis pipelines to analyze log data streams and detect violations or anomalies. It can be run from the console or embedded in Python programs as a library. Designed to operate analyses with limited resources and the lowest possible permissions, DetectMate is suitable for use on production servers. In practice, log analysis involves distinct steps that are central to its operation.</p>
 <p>Logfile analysis consists of two main steps: first, parsing log lines, and second, detecting anomalies within those parsed lines. In modern systems, multiple applications process logs at various stages, creating a flow from raw log ingestion to final anomaly detection, and most likely even across different network nodes. This requires a highly configurable system to maintain the flexibility to create suitable log pipelines. DetectMate, therefore, uses a microservice architecture that allows connecting all components together as needed. </p>
 <p>The following diagram illustrates a typical log analysis pipeline:</p>
@@ -609,6 +651,10 @@ Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Pro
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../installation/" class="btn btn-neutral float-right" title="Installation">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -630,6 +676,10 @@ Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Pro
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

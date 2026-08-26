@@ -44,15 +44,19 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
-              <ul class="current">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
                 </li>
@@ -60,7 +64,12 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" >Development</a>
     <ul class="current">
@@ -86,9 +95,13 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#component-loading">Component Loading</a>
         <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#path-format">Path Format</a>
+    <li class="toctree-l4"><a class="reference internal" href="#short-class-name">Short class name</a>
     </li>
-    <li class="toctree-l4"><a class="reference internal" href="#resolution-order">Resolution Order</a>
+    <li class="toctree-l4"><a class="reference internal" href="#dotted-path">Dotted path</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#import-resolution-order">Import resolution order</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#config-class-resolution">Config class resolution</a>
     </li>
     <li class="toctree-l4"><a class="reference internal" href="#service-settings">Service Settings</a>
     </li>
@@ -134,7 +147,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">Contributing</li>
           <li class="breadcrumb-item">Development</li>
       <li class="breadcrumb-item active">Interfaces</li>
     <li class="wy-breadcrumbs-aside">
@@ -201,10 +214,11 @@
 </ul>
 <h3 id="configuration-flow">Configuration Flow</h3>
 <ol>
-<li>Service loads config from YAML file via <code>ConfigManager</code></li>
-<li>Schema identification: The service calls <code>get_config_schema()</code>, which uses <code>ConfigClassLoader</code> to dynamically import and verify the configuration class.</li>
+<li>Resolution: <code>ComponentResolver</code> expands the <code>component_type</code> from settings to a fully qualified path and derives the matching config class from it (see <a href="#component-loading">Component Loading</a>). An explicit <code>component_config_class</code> is optional and takes precedence.</li>
+<li>Service loads config from YAML file.</li>
+<li>Schema identification: The service calls dynamically imports and verify the configuration class.</li>
 <li>Validation: It ensures the config class is a subclass of <code>CoreConfig</code>.</li>
-<li>Component Instantiation: The service identifies the <code>component_type</code> from settings. It uses <code>ComponentLoader</code> to dynamically load the class.</li>
+<li>Component Instantiation: The service uses to dynamically loads the resolved component class.</li>
 <li>Validation: It ensures the component class is an instance of <code>CoreComponent</code></li>
 <li>Config from <code>ConfigManager</code> is passed to component constructor</li>
 <li>The Library processes and validates the configuration internally</li>
@@ -212,10 +226,10 @@
 <p>Validation: The library checks if <code>auto_config</code> is enabled. If disabled and no <code>params</code> exist, it raises an AutoConfigError.</p>
 </li>
 <li>
-<p>Type Checking: It ensures the method_type matches the expected component type (via <code>check_type</code>).</p>
+<p>Type Checking: It ensures the method_type matches the expected component type.</p>
 </li>
 <li>
-<p>Formatting (<code>apply_format</code>): It iterates through the params dictionary. For every parameter, it applies a specific format.</p>
+<p>Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.</p>
 </li>
 <li>
 <p>Keyword Cleaning: If a parameter key starts with <code>all_</code>, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).</p>
@@ -227,27 +241,69 @@
 <li>At runtime, <code>reconfigure</code> command can update configs dynamically</li>
 </ol>
 <h2 id="component-loading">Component Loading</h2>
-<p>Components are loaded dynamically by <code>ComponentLoader</code>. Specify components using a dot-separated path:</p>
-<h3 id="path-format">Path Format</h3>
-<div class="highlight"><pre><span></span><code>module.ClassName
+<p>The <code>component_type</code> setting tells the service which class to load. You can use two forms: short class name or dotted path.</p>
+<h3 id="short-class-name">Short class name</h3>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RandomDetector</span>
 </code></pre></div>
-<p>Examples:
-- <code>detectors.RandomDetector</code>
-- <code>parsers.JsonParser</code>
-- <code>readers.FileReader</code></p>
-<h3 id="resolution-order">Resolution Order</h3>
-<ol>
-<li><strong>DetectMateLibrary-relative</strong> (tried first): <code>detectmatelibrary.{path}</code></li>
-<li><code>detectors.RandomDetector</code> → <code>detectmatelibrary.detectors.RandomDetector</code></li>
-<li><strong>Absolute import</strong> (fallback): <code>{path}</code> as-is</li>
-<li><code>mypackage.detectors.CustomDetector</code> → <code>mypackage.detectors.CustomDetector</code></li>
-</ol>
-<p>This allows you to use library components with short paths while still supporting custom components from external packages.</p>
+<p>A value without a dot is treated as a class name. <code>ComponentResolver</code> walks every submodule of <code>detectmatelibrary</code> and takes the first one that exports a <code>CoreComponent</code> subclass with that name, expanding it to a fully qualified path (<code>detectmatelibrary.detectors.RandomDetector</code>).</p>
+<p>Convenient for library components, but note:</p>
+<ul>
+<li><strong>Library only.</strong> Classes in your own package are never found. You get <code>ImportError: Could not find a component named '...' anywhere under 'detectmatelibrary'. Use the full dotted path.</code></li>
+<li><strong>First match wins.</strong> If two modules export a class of the same name, resolution order determines which one you get.</li>
+</ul>
+<h3 id="dotted-path">Dotted path</h3>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.random_detector.RandomDetector</span>
+</code></pre></div>
+<p>A value containing a dot is treated as <code>module.ClassName</code> and used as written, without search. Use this form for custom components, and whenever you want real import errors instead of "not found":</p>
+<ul>
+<li><code>detectors.random_detector.RandomDetector</code> - library component, <code>detectmatelibrary.</code> prefix is optional</li>
+<li><code>detectmatelibrary.detectors.random_detector.RandomDetector</code> - fully qualified library component</li>
+<li><code>mypackage.detectors.CustomDetector</code> - component from an external package</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> The resolved path becomes the <code>component_type</code> label on every Prometheus metric, and the two forms resolve to different strings. Use one form consistently across a deployment so dashboards do not split them into two series.</p>
+</blockquote>
+<h3 id="import-resolution-order">Import resolution order</h3>
+<p>Both loaders accept library-relative and absolute paths.</p>
+<table>
+<thead>
+<tr>
+<th>Loader</th>
+<th>Resolves</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ComponentLoader</code></td>
+<td><code>component_type</code></td>
+<td>1. path as-is → 2. <code>detectmatelibrary.{path}</code></td>
+</tr>
+<tr>
+<td><code>ConfigClassLoader</code></td>
+<td><code>component_config_class</code></td>
+<td>1. <code>detectmatelibrary.{path}</code> → 2. path as-is</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config-class-resolution">Config class resolution</h3>
+<p>Once the component is resolved, <code>ComponentResolver</code> looks for <code>&lt;ClassName&gt;Config</code> in the <strong>same module</strong> and uses it as the configuration schema:<code>RandomDetector</code> → <code>RandomDetectorConfig</code>. Every component in DetectMateLibrary follows this convention, so <code>component_config_class</code> normally does not need to be set!</p>
+<p><strong>Set it explicitly only when the convention does not hold:</strong></p>
+<ul>
+<li>the config class has a different name or lives in a different module than the component (in case of custom components)</li>
+<li>the service runs as <code>component_type: core</code> (no component to derive a schema from)</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> If no <code>&lt;ClassName&gt;Config</code> is found and <code>component_config_class</code> is not set, the resolver falls back to <code>CoreConfig</code>. </p>
+</blockquote>
 <h3 id="service-settings">Service Settings</h3>
 <p>In your service settings YAML, specify:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.MyDetector</span><span class="w">          </span><span class="c1"># Component class path</span>
-<span class="nt">component_config_class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.MyDetectorConfig</span><span class="w">  </span><span class="c1"># Config class path</span>
-<span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector-config.yaml</span><span class="w">             </span><span class="c1"># Path to component config</span>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.MyDetector</span><span class="w">   </span><span class="c1"># Component class path or class name</span>
+<span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector-config.yaml</span><span class="w">      </span><span class="c1"># Path to component config</span>
+<span class="c1"># Optional:</span>
+<span class="c1"># component_config_class: mypackage.configs.MyDetectorSettings</span>
+<span class="c1">#   Only needed if the config class is not &lt;ComponentClass&gt;Config</span>
+<span class="c1">#   in the component&#39;s own module.</span>
 </code></pre></div>
 <h2 id="data-flow-schemas">Data Flow Schemas</h2>
 <p>Components in the processing pipeline use protobuf schemas for structured data exchange:</p>
@@ -350,7 +406,6 @@
 <h3 id="2-service-settings-settingsyaml">2. Service Settings (<code>settings.yaml</code>)</h3>
 <div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-detector</span>
 <span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.random_detector.RandomDetector</span>
-<span class="nt">component_config_class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.random_detector.RandomDetectorConfig</span>
 <span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-config.yaml</span>
 <span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span>
 <span class="nt">http_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>

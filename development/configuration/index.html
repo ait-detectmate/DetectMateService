@@ -44,7 +44,11 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
@@ -52,6 +56,8 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#service-settings">Service settings</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#naming-components">Naming components</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#yaml-files">YAML files</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment variables</a>
@@ -59,6 +65,12 @@
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#component-configuration">Component configuration</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#what-goes-in-a-the-config-file">What goes in a the config file</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#library-component-reference">Library component reference</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#http-admin-interface">HTTP Admin Interface</a>
         <ul>
@@ -88,7 +100,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
                 </li>
@@ -96,7 +108,12 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Contribution</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Development</a>
     <ul>
@@ -128,7 +145,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Getting Started</li>
+          <li class="breadcrumb-item">User Guide</li>
       <li class="breadcrumb-item active">Configuration</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -157,25 +174,25 @@
 <td style="text-align: left;"><code>component_name</code></td>
 <td style="text-align: left;"><code>DETECTMATE_COMPONENT_NAME</code></td>
 <td style="text-align: left;"><code>None</code></td>
-<td style="text-align: left;">A human-readable name for the service instance.</td>
+<td style="text-align: left;">Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for <code>component_id</code>, see <a href="#naming-components">Naming components</a>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>component_id</code></td>
 <td style="text-align: left;"><code>DETECTMATE_COMPONENT_ID</code></td>
 <td style="text-align: left;"><code>None</code> (computed)</td>
-<td style="text-align: left;">Unique identifier for the component; computed automatically if not provided.</td>
+<td style="text-align: left;">Unique identifier for the component, used as a metric label and in log file names. Derived from <code>component_type</code> and <code>component_name</code> if not set explicitly.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>component_type</code></td>
 <td style="text-align: left;"><code>DETECTMATE_COMPONENT_TYPE</code></td>
 <td style="text-align: left;"><code>core</code></td>
-<td style="text-align: left;">Python import path for the component class (e.g., <code>detectors.MyDetector</code>).</td>
+<td style="text-align: left;">Component class to load: a class name (<code>RandomDetector</code>) or a dotted import path (<code>detectors.MyDetector</code>). <code>core</code> runs the service without a library component. See <a href="../interfaces/#component-loading">Component Loading</a>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>component_config_class</code></td>
 <td style="text-align: left;"><code>DETECTMATE_COMPONENT_CONFIG_CLASS</code></td>
 <td style="text-align: left;"><code>None</code></td>
-<td style="text-align: left;">Python import path of the configuration class used by the component (e.g., <code>detectors.MyDetectorConfig</code>).</td>
+<td style="text-align: left;">Optional. Import path of the component's configuration class. Derived automatically as <code>&lt;ComponentClass&gt;Config</code> from the component's own module; set it only when that convention does not hold. See <a href="../interfaces/#config-class-resolution">Config class resolution</a>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>log_level</code></td>
@@ -269,6 +286,18 @@
 </tr>
 </tbody>
 </table>
+<h3 id="naming-components">Naming components</h3>
+<p><code>component_name</code> can be chosen freely, but it is <strong>not</strong> used as a
+display label anywhere. Logs, metrics and log file names all use <code>component_id</code>, <code>component_name</code> is only used to seed it.</p>
+<div class="highlight"><pre><span></span><code><span class="n">component_id</span> <span class="o">=</span> <span class="n">uuid5</span><span class="p">(</span><span class="n">NAMESPACE_URL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;detectmate/</span><span class="si">{</span><span class="n">component_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span>
+</code></pre></div>
+<p>This means:</p>
+<ul>
+<li><strong>Names must be unique per instance.</strong> </li>
+<li><strong>Without a name, uniqueness comes from the address.</strong> Two components of the same type sharing one <code>engine_addr</code> collide. Set <code>component_name</code> when you run more than one instance.</li>
+<li><strong>Changing <code>component_type</code> or <code>component_name</code>changes the id</strong></li>
+<li><strong><code>component_id</code> can be set explicitly</strong> if you need to control it directly</li>
+</ul>
 <h3 id="yaml-files">YAML files</h3>
 <p>You can provide a YAML file containing the service settings. Below is an example <code>settings.yaml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-detector&quot;</span>
@@ -320,7 +349,110 @@ Example detector_config.yaml</p>
 <span class="w">                    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
 <span class="w">                      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </code></pre></div>
+<h3 id="what-goes-in-a-the-config-file">What goes in a the config file</h3>
+<p>Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
+same for every component. What is valid <em>inside</em> is defined by the component's configuration
+class (<code>&lt;ComponentClass&gt;Config</code>, see
+<a href="../interfaces/#config-class-resolution">Config class resolution</a>). There is no single config
+file that fits all components: a <code>NewValueDetector</code> takes different fields than a <code>MatcherParser</code>, etc.
+To find the fields a component accepts:</p>
+<ul>
+<li><strong>Library documentation</strong>: every parser and detector has its own page listing the fields it
+  accepts, see <a href="#library-component-reference">Library component reference</a> below.
+  <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration">Detectors Configuration</a>
+  explains how the library interprets the values.</li>
+<li><strong>The config class itself</strong>: the fields, types and defaults of <code>&lt;ComponentClass&gt;Config</code> in the
+  library source are the authoritative list.</li>
+<li><strong>Let the service generate one</strong>: point <code>config_file</code> at a path that does not exist yet and the
+  service writes a default file derived from the component's config class on startup. It is a
+  scaffold, not a working config! Values it cannot infer are written as <code>&lt;PLACEHOLDER&gt;</code> and have
+  to be filled in.</li>
+</ul>
 <p>You can read more about Components in the <a href="../library/">Using a Library Component</a> section.</p>
+<h3 id="library-component-reference">Library component reference</h3>
+<p>Every parser and detector the library documents and the fields in its
+config file. Each page also names the class to put in <code>component_type</code>. 
+Some components ship only with an <a href="../installation/#optional-library-components-extras">optional extra</a>.</p>
+<p><strong>Parsers</strong></p>
+<!-- Start parsers -->
+<table>
+<thead>
+<tr>
+<th>Parser</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/">JSON Parser</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/">LogBatcher Parser</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/">Template matcher</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/">Template Tree Matcher</a></td>
+</tr>
+</tbody>
+</table>
+<!-- End parsers -->
+
+<p><strong>Detectors</strong></p>
+<!-- Start detectors -->
+<table>
+<thead>
+<tr>
+<th>Detector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/">Bigram Frequency Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/">Combo Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/">Deeplog Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/">ECVC Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/">Event Sequence Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/">LogBert Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/">New Event Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/">New Value Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/">New Value Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/">Random Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/">Rule-based Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/">SCVS Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/">Value Range Detector</a></td>
+</tr>
+</tbody>
+</table>
+<!-- End detectors -->
+
+<blockquote>
+<p>These tables are auto-generated from the library documentation.</p>
+</blockquote>
 <h2 id="http-admin-interface">HTTP Admin Interface</h2>
 <p>The service provides a REST API for runtime management and monitoring.</p>
 <h3 id="core-endpoints">Core Endpoints</h3>
@@ -593,7 +725,7 @@ Example detector_config.yaml</p>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../usage/" class="btn btn-neutral float-right" title="Quick Start">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../usage/" class="btn btn-neutral float-right" title="Running the Service">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>

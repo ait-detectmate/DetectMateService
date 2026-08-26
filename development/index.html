@@ -45,9 +45,15 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#key-features">Key features</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting started</a>
+    <li class="toctree-l2"><a class="reference internal" href="#where-to-start">Where to start</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#run-the-tutorial">Run the tutorial</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a>
+    <li class="toctree-l3"><a class="reference internal" href="#user-guide-set-up-your-own-service">User guide: Set up your own service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#reference-and-development">Reference and development</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#contribution">Contribution</a>
     </li>
@@ -56,7 +62,11 @@
     </ul>
                 </li>
               </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="installation/">Installation</a>
                   </li>
@@ -64,7 +74,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Usage</a>
     <ul>
-                <li class="toctree-l2"><a class="reference internal" href="usage/">Quick Start</a>
+                <li class="toctree-l2"><a class="reference internal" href="usage/">Running the Service</a>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="library/">Using a Library Component</a>
                 </li>
@@ -72,7 +82,12 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="contribution/">Contribution</a>
+                  <li class="toctree-l1"><a class="reference internal" href="docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="contribution/">Git Workflow</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" >Development</a>
     <ul>
@@ -127,14 +142,36 @@ building distributed detection and processing services.</p>
 <li><strong>Service management</strong>: built-in CLI for starting, stopping, and monitoring the service.</li>
 <li><strong>Scalable</strong>: run multiple independent service instances.</li>
 </ul>
-<h2 id="getting-started">Getting started</h2>
-<p>Check out the <a href="installation/">Installation</a> guide to set up the service, and then proceed to
-<a href="configuration/">Configuration</a> and <a href="usage/">Usage</a> to learn how to run it.</p>
-<p>For a list of imports from the DetectMateLinbrary in the Service and their usage <a href="library-imports/">Library Imports</a>.
-For library developers implementing custom components, see the <a href="interfaces/">Library Interface Contract</a>.</p>
-<p>Please have a look to the <a href="getting_started/">Getting Started Tutorial</a> to see how it works.</p>
-<h2 id="docker">Docker</h2>
-<p>Docker Compose can be used to set up a full log data analysis pipeline. A complete configuration reference can be found in the <a href="docker-compose/">Docker Compose reference</a>.</p>
+<h2 id="where-to-start">Where to start</h2>
+<p>The documentation has two different entry points: the <strong>tutorial</strong>, which builds a complete example log analysis
+pipeline from Docker containers so you can see the whole system work, and the <strong>user guide</strong>,
+which walks you through installing and configuring a single DetectMate service of your own.
+Pick the one that matches what you want to do.</p>
+<h3 id="run-the-tutorial">Run the tutorial</h3>
+<p><strong><a href="tutorial/">Tutorial: Detecting Anomalies in Nginx Logs</a></strong> is the recommended starting point if
+you are new to DetectMate. It is a <em>guided walkthrough</em> that takes you from a fresh Ubuntu machine to a
+complete log analysis pipeline: Nginx produces access logs, Fluentd ingests them, a
+DetectMate parser structures them, detectors flag anomalies, and the results are displayed in
+Grafana. By the end you will have triggered real anomalies yourself and seen them come out the other side.</p>
+<p>It assumes no prior knowledge of DetectMate and takes roughly an hour.</p>
+<h3 id="user-guide-set-up-your-own-service">User guide: Set up your own service</h3>
+<p>The user guide is the <em>conventional, reference documentation</em>:
+If you are past the tutorial, or want to run a single DetectMate service instead
+of a whole pipeline, read these in order:</p>
+<ol>
+<li><a href="installation/">Installation</a>: install the service and its optional extras.</li>
+<li><a href="configuration/">Configuration</a> : service settings and component configuration files.</li>
+<li><a href="usage/">Usage</a>: the <code>detectmate</code> CLI: starting, stopping, and inspecting a service.</li>
+<li><a href="library/">Using a Library Component</a>: run a detector or parser from DetectMateLibrary.</li>
+<li><a href="prometheus/">Monitoring with Prometheus</a>: metrics and scrape configuration.</li>
+</ol>
+<h3 id="reference-and-development">Reference and development</h3>
+<ul>
+<li><a href="docker-compose/">Docker Compose reference</a>: every service in the shipped Compose file, and how
+  they are connected. The reference companion to the tutorial.</li>
+<li><a href="library-imports/">Library Imports</a>: which parts of DetectMateLibrary the service uses, and why.</li>
+<li><a href="interfaces/">Library Interface Contract</a>: for library developers implementing custom components.</li>
+</ul>
 <h2 id="contribution">Contribution</h2>
 <p>We're happily taking patches and other contributions. Please see the following links for how to get started:</p>
 <ul>
@@ -147,7 +184,7 @@ For library developers implementing custom components, see the <a href="interfac
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="installation/" class="btn btn-neutral float-right" title="Installation">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="tutorial/" class="btn btn-neutral float-right" title="Tutorial">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -171,7 +208,7 @@ For library developers implementing custom components, see the <a href="interfac
     
     
     
-      <span><a href="installation/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="tutorial/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
@@ -192,5 +229,5 @@ For library developers implementing custom components, see the <a href="interfac
 
 <!--
 MkDocs version : 1.6.1
-Build Date UTC : 2026-08-20 14:10:58.381591+00:00
+Build Date UTC : 2026-08-26 14:22:04.970722+00:00
 -->
