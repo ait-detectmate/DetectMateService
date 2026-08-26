@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: uv pip install -e .[dev]
 
+      - name: Refresh library component tables
+        # pulls the component list from the published DetectMateLibrary docs
+        # if unreachable the committed tables are published unchanged
+        continue-on-error: true
+        run: uv run python scripts/gen_component_links.py
+
       - name: Configure Git user
         run: |
           git config --global user.name "${{ github.actor }}"
