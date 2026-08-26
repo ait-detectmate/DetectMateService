@@ -48,6 +48,8 @@ sudo systemctl status nginx --no-pager -l
 sudo journalctl -u nginx.service --no-pager -n 100
 sudo ss -ltnp | grep ':80'
 sudo nginx
+sudo ss -ltnup
+systemctl list-units --type=service --state=running
 
 
 sudo touch /var/log/nginx/access.log
