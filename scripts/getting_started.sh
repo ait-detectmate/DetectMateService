@@ -49,9 +49,9 @@ sudo touch /var/log/nginx/access.log
 sudo systemctl restart nginx.service > /dev/null
 
 echo
-echo "Send HTTP-request to our local nginx (curl http://localhost)."
+echo "Send HTTP-request to our local nginx (curl http://127.0.0.1)."
 echo
-curl http://localhost
+curl http://127.0.0.1
 echo
 
 echo "Now we should have at least one line in /var/log/nginx/access.log."
@@ -334,20 +334,20 @@ if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
   echo "Aborted."
   exit 0
 fi
-echo "Now generate two access.log lines using curl http://localhost/hello and curl http://localhost/world."
+echo "Now generate two access.log lines using curl http://127.0.0.1/hello and curl http://127.0.0.1/world."
 echo
-echo "curl http://localhost/hello"
-curl http://localhost/hello
+echo "curl http://127.0.0.1/hello"
+curl http://127.0.0.1/hello
 sleep 1
 echo
-echo "curl http://localhost/world"
-curl http://localhost/world
+echo "curl http://127.0.0.1/world"
+curl http://127.0.0.1/world
 sleep 1
 echo
 echo "We now trained with the two values hello and world. This means, as soon as we query any other url than /hello or /world we should receive an anomaly. Anomalies get logged in container/fluentlogs/output.%Y%m%d. With ls container/fluentlogs/output.%Y%m%d find the filename output.<date>.log and have a look:"
 echo
-echo "Create Anomaly using curl http://localhost/foobar."
-curl http://localhost/foobar
+echo "Create Anomaly using curl http://127.0.0.1/foobar."
+curl http://127.0.0.1/foobar
 sleep 1
 echo
 echo "Great! We detected our first anomaly."
@@ -414,7 +414,7 @@ echo "The rule-based detector caught it: \"R001 - TemplateNotFound\":\"No templa
 echo
 echo "Grafana UI"
 echo
-echo 'The Grafana UI is accessible at http://localhost:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics". Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Processing rate and Engine state.'
+echo 'The Grafana UI is accessible at http://127.0.0.1:3000 (default login credentials in this demo are admin/admin) and the raw Prometheus metrics can be explored under "Drilldown" → "Metrics". Under "Dashboards" is a basic Dashboard with graphs for Throughput, Latency, Processing rate and Engine state.'
 echo
 echo "This was a very basic example, but it shows how to easily deploy a full log data anomaly pipeline, including two different DetectMate detectors, using a parser for the Nginx access log format, and how this is then used to flag anomalies."
 echo
