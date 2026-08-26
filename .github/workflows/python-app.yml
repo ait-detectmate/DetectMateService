@@ -57,3 +57,9 @@ jobs:
         
     - name: Test with pytest
       run: uv run --dev pytest -s -n 4
+
+    - name: Test getting-started.sh script
+      if: github.event_name == 'push'
+      run: |
+        echo "Testing getting-started.sh script"
+        ./scripts/getting_started.sh -y

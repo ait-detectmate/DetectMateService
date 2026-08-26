@@ -1,5 +1,6 @@
 #!/bin/bash
 
+exit_code=0
 year=$(date +%Y)
 
 AUTO_YES=false
@@ -354,6 +355,7 @@ echo
 file=$(echo /tmp/DetectMateService/container/fluentlogs/output.$year*.log)
 echo "cat $file"
 cat "$file"
+exit_code=$((exit_code || $?))
 echo
 echo "If you check container/fluentlogs/output-rule.%Y%m%d at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next part."
 echo
@@ -406,6 +408,7 @@ echo
 file=$(echo /tmp/DetectMateService/container/fluentlogs/output-rule.$year*.log)
 echo "cat $file"
 cat "$file"
+exit_code=$((exit_code || $?))
 echo
 echo "The rule-based detector caught it: \"R001 - TemplateNotFound\":\"No template found by parser\". Unlike NewValueDetector, it needed no training data at all — it was ready to alert from the very first log line."
 echo
@@ -450,3 +453,5 @@ fi
 sudo docker container prune -f
 sudo docker image prune -f
 sudo docker system prune -f
+
+exit $exit_code
