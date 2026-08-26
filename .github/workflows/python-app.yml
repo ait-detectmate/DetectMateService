@@ -61,4 +61,4 @@ jobs:
     - name: Test getting-started.sh script
       run: |
         echo "Testing getting-started.sh script"
-        ./scripts/getting_started.sh -y
+        ./scripts/getting_started.sh -y 49193

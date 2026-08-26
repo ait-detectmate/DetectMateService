@@ -7,6 +7,10 @@ AUTO_YES=false
 if [[ "$1" == "-y" ]]; then
     AUTO_YES=true
 fi
+PORT=80
+if [[ "$2" != "" ]]; then
+  PORT=$2
+fi
 
 release=$(lsb_release -a)
 if [[ "$(lsb_release -is)" != "Ubuntu" ||
@@ -64,7 +68,7 @@ sudo systemctl restart nginx.service > /dev/null
 echo
 echo "Send HTTP-request to our local nginx (curl http://localhost)."
 echo
-curl http://localhost
+curl http://localhost:$PORT
 echo
 
 echo "Now we should have at least one line in /var/log/nginx/access.log."
@@ -350,17 +354,17 @@ fi
 echo "Now generate two access.log lines using curl http://localhost/hello and curl http://localhost/world."
 echo
 echo "curl http://localhost/hello"
-curl http://localhost/hello
+curl http://localhost:$PORT/hello
 sleep 1
 echo
 echo "curl http://localhost/world"
-curl http://localhost/world
+curl http://localhost:$PORT/world
 sleep 1
 echo
 echo "We now trained with the two values hello and world. This means, as soon as we query any other url than /hello or /world we should receive an anomaly. Anomalies get logged in container/fluentlogs/output.%Y%m%d. With ls container/fluentlogs/output.%Y%m%d find the filename output.<date>.log and have a look:"
 echo
 echo "Create Anomaly using curl http://localhost/foobar."
-curl http://localhost/foobar
+curl http://localhost:$PORT/foobar
 sleep 1
 echo
 echo "Great! We detected our first anomaly."
