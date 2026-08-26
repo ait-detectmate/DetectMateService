@@ -1,4 +1,15 @@
-# Getting Started
+# Tutorial: Detecting Anomalies in Nginx Logs
+
+!!! note "What this tutorial is"
+
+    A complete, end-to-end walkthrough: you start from a fresh Ubuntu machine and finish with a
+    running log analysis pipeline that flags anomalous Nginx requests. It uses the Docker Compose
+    setup shipped with this repository, so you do not have to configure the individual services
+    yourself. You can follow it top to bottom, every command and its expected output is shown.
+
+    **You need:** a machine (or VM) you can install packages on, and roughly an hour.
+    No prior DetectMate knowledge is assumed.
+
 
 DetectMate enables the creation of log analysis pipelines to analyze log data streams and detect violations or anomalies. It can be run from the console or embedded in Python programs as a library. Designed to operate analyses with limited resources and the lowest possible permissions, DetectMate is suitable for use on production servers. In practice, log analysis involves distinct steps that are central to its operation.
 
@@ -398,7 +409,7 @@ So far, `detector-rule` has been running quietly next to `detector`, since none 
 Edit `container/config/detector_rule_config.yaml` and add the rule "R001 - TemplateNotFound":
 
 ```yaml
---8<-- "docs/examples/getting_started/detector_rule_config_r001.yaml"
+--8<-- "docs/examples/tutorial/detector_rule_config_r001.yaml"
 ```
 
 Restart just the `detector-rule` service to pick up the change:
