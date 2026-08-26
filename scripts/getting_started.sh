@@ -45,6 +45,8 @@ fi
 sudo apt update && sudo apt install nginx -y
 sudo nginx -t
 sudo systemctl status nginx --no-pager -l
+sudo journalctl -u nginx.service --no-pager -n 100
+sudo ss -ltnp | grep ':80'
 
 
 sudo touch /var/log/nginx/access.log
