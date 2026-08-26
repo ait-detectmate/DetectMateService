@@ -50,6 +50,7 @@ sudo ss -ltnp | grep ':80'
 sudo nginx
 sudo ss -ltnup
 systemctl list-units --type=service --state=running
+cat /etc/nginx/sites-enabled/default
 
 
 sudo touch /var/log/nginx/access.log
