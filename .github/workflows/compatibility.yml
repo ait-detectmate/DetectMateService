@@ -34,9 +34,9 @@ jobs:
           - python-version: "3.14"
             os: blacksmith-6vcpu-macos-latest
             experimental: false
-          - python-version: "3.15"
-            os: blacksmith-2vcpu-ubuntu-2404
-            experimental: true
+          #- python-version: "3.15"
+          #  os: blacksmith-2vcpu-ubuntu-2404
+          #  experimental: true
 
     steps:
       - name: Checkout
