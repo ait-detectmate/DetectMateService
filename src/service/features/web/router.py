@@ -8,18 +8,14 @@ from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
 from service.features.engine import EngineState
+from service.features.web.auth import require_api_key, get_service
 
-router = APIRouter(prefix="/admin")
+router = APIRouter(prefix="/admin", dependencies=[Depends(require_api_key)])
 
 
 class ReconfigPayload(BaseModel):
     config: Dict[str, Any]
     persist: bool = False
-
-
-def get_service() -> Any:
-    # This gets overridden by the server setup in server.py
-    raise NotImplementedError
 
 
 @router.post("/start")  # type: ignore[misc]
