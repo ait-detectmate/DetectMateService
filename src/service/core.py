@@ -204,6 +204,12 @@ class Service(Engine, ABC):
                 # Default passthrough behavior for core services without components
                 return raw_message
 
+    def _warn_if_admin_api_unauthenticated(self) -> None:
+        if self.settings.http_api_key is None:
+            self.log.warning(
+                "HTTP Admin API is unauthenticated. Set DETECTMATE_HTTP_API_KEY to require a key."
+            )
+
     # public API
     def setup_io(self) -> None:
         """Hook for loading models, etc."""
@@ -215,6 +221,7 @@ class Service(Engine, ABC):
             # 1. Start Web Server (Admin API)
             if self.web_server:
                 self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+                self._warn_if_admin_api_unauthenticated()
                 self.web_server.start()
 
             # 2. Engine Start logic
