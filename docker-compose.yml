@@ -22,6 +22,8 @@ services:
       - ./container/logs:/logs
       - ./container/run:/run
     command: uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml
+    environment:
+      - DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}
     ports:
       - "8001:8000"
     depends_on:
@@ -39,6 +41,8 @@ services:
       - ./container/run:/run
       - ./container/state:/state
     command: uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml
+    environment:
+      - DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}
     ports:
       - "8002:8000"
     depends_on:
@@ -54,6 +58,8 @@ services:
       - ./container/logs:/logs
       - ./container/run:/run
     command: uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml
+    environment:
+      - DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}
     ports:
       - "8003:8000"
     depends_on:

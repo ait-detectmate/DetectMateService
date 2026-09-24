@@ -20,6 +20,7 @@ These settings control the service infrastructure.
 | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
 | `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         
 | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
+| `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/admin/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
 | `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
 | `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
 | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
@@ -147,6 +148,34 @@ Some components ship only with an [optional extra](installation.md#optional-libr
 ## HTTP Admin Interface
 
 The service provides a REST API for runtime management and monitoring.
+
+### Authentication
+
+When `http_api_key` is set, every `/admin/*` route requires the key in the `X-Auth-Token` header. A missing or wrong key returns `401 {"detail": "Invalid authentication credentials"}`. `/metrics`, `/docs`, `/redoc` and `/openapi.json` never require a key.
+
+If no key is set, the admin API is open and the service logs a warning at startup.
+
+Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:
+
+```bash
+export DETECTMATE_HTTP_API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+detectmate --settings settings.yaml
+```
+
+Call the API with the header:
+
+```bash
+curl -H "X-Auth-Token: $DETECTMATE_HTTP_API_KEY" http://127.0.0.1:8000/admin/status
+detectmate-client --api-key "$DETECTMATE_HTTP_API_KEY" status   # or set DETECTMATE_API_KEY
+```
+
+In the Swagger UI (`/docs`), click **Authorize** and enter the key.
+
+With Docker Compose, put `DETECTMATE_HTTP_API_KEY=<key>` in a `.env` file next to `docker-compose.yml`. `.env` is gitignored. The same key is then used by the parser and both detectors.
+
+To rotate the key, change it and restart the service.
+
+The key is sent in cleartext over plain HTTP. Either keep `http_host` on loopback or a private network, or put a TLS-terminating reverse proxy in front of the service.
 
 ### Core Endpoints
 
