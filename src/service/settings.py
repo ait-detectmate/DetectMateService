@@ -79,8 +79,8 @@ class ServiceSettings(BaseSettings):
     # HTTP server (FastAPI) settings
     http_host: str = "127.0.0.1"
     http_port: int = 8000
-    # Shared key required in the X-Auth-Token header for /admin/* routes.
-    # None disables authentication. Prefer setting it via DETECTMATE_HTTP_API_KEY.
+    # Key required in the X-Auth-Token header for admin routes.
+    # None disables authentication. Set it via DETECTMATE_HTTP_API_KEY.
     http_api_key: Optional[SecretStr] = None
 
     model_config = SettingsConfigDict(
@@ -94,7 +94,7 @@ class ServiceSettings(BaseSettings):
     @field_validator("http_api_key", mode="before")
     @classmethod
     def _empty_api_key_is_none(cls, v: Any) -> Any:
-        """Treat an empty key (e.g. an unset compose variable) as 'no auth'."""
+        """Treat an empty key (unset compose variable) as 'no auth'."""
         if isinstance(v, str) and not v.strip():
             return None
         return v

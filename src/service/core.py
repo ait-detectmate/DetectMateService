@@ -394,11 +394,8 @@ class Service(Engine, ABC):
 
     def _create_status_report(self, running: bool) -> Dict[str, Any]:
         """Create a status report dictionary with settings and configs."""
-        # Convert Path objects in settings to strings for JSON serialization
-        settings_dict = self.settings.model_dump()
-        for key, value in settings_dict.items():
-            if isinstance(value, Path):
-                settings_dict[key] = str(value)
+        # JSON mode turns Paths into strings and masks SecretStr values (http_api_key)
+        settings_dict = self.settings.model_dump(mode="json")
 
         # Handle configs
         if self.config_manager:

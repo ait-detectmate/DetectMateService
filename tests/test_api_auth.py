@@ -13,10 +13,13 @@ API_KEY = "s3cret-test-key"
 
 
 def make_client(api_key=None):
-    svc = MagicMock()
-    svc.settings = ServiceSettings(http_api_key=api_key)
-    svc._create_status_report.side_effect = lambda running: {"settings": svc.settings.model_dump()}
-    return TestClient(WebServer(svc).app), svc
+    service = MagicMock()
+    service.settings = ServiceSettings(http_api_key=api_key)
+    service.component_type, service.component_id, service.config_manager = "test", "test", None
+    service._create_status_report.side_effect = (
+        lambda running: Service._create_status_report(service, running)
+    )
+    return TestClient(WebServer(service).app), service
 
 
 @pytest.mark.parametrize("configured_key,headers,expected", [
@@ -43,9 +46,13 @@ def test_public_routes_need_no_key(path):
 
 
 def test_status_does_not_leak_key():
-    client, _ = make_client(API_KEY)
+    client, service = make_client(API_KEY)
     resp = client.get("/admin/status", headers={"X-Auth-Token": API_KEY})
     assert API_KEY not in resp.text
+    # Service.status() json.dumps the report itself, without FastAPI's encoder
+    report = Service.status(service)
+    assert API_KEY not in report
+    assert '"http_api_key": "**********"' in report
 
 
 @pytest.mark.parametrize("env_value,expected", [(API_KEY, API_KEY), ("", None)])
