@@ -90,6 +90,13 @@ def _get_saver(service: Any) -> Any:
     return saver
 
 
+def _require_persistency(component: Any) -> None:
+    """Raise HTTPException 404 if the component has no persistency
+    configured."""
+    if getattr(component, "persistency", None) is None:
+        raise HTTPException(status_code=404, detail="Persistency not configured for this component")
+
+
 @router.post("/persistency/save")  # type: ignore[misc]
 async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Force an immediate flush of in-memory state to storage."""
@@ -123,6 +130,7 @@ async def admin_persistency_status(service: Any = Depends(get_service)) -> Dict[
 async def admin_persistency_export(service: Any = Depends(get_service)) -> StreamingResponse:
     """Stream the current learned state as a zip archive."""
     component = _get_component(service)
+    _require_persistency(component)
     data = component.export_state()
     if data is None:
         raise HTTPException(status_code=404, detail="Persistency not configured for this component")
@@ -140,12 +148,13 @@ async def admin_persistency_import(
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     """Restore learned state from an uploaded zip archive."""
+    component = _get_component(service)
+    _require_persistency(component)
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
             detail="Stop the engine before importing state (/admin/stop)",
         )
-    component = _get_component(service)
     data = await file.read()
     if not zipfile.is_zipfile(io.BytesIO(data)):
         raise HTTPException(status_code=422, detail="Uploaded file is not a valid zip archive")

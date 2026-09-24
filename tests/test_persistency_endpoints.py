@@ -2,10 +2,12 @@ import io
 import zipfile
 
 import pytest
-from unittest.mock import MagicMock
+import requests
+from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from service.client import DetectMateClient
 from service.features.web.router import router, get_service
 from service.features.engine import EngineState
 from detectmatelibrary.utils.persistency import PersistencyLoadError
@@ -164,6 +166,13 @@ class TestPersistencyExport:
         assert resp.status_code == 404
         assert "Persistency not configured" in resp.json()["detail"]
 
+    def test_export_no_persistency_attribute(self, client, service_with_saver):
+        service_with_saver.library_component.persistency = None
+        resp = client.get("/admin/persistency/export")
+        assert resp.status_code == 404
+        assert resp.json()["detail"] == "Persistency not configured for this component"
+        service_with_saver.library_component.export_state.assert_not_called()
+
     def test_export_no_library_component(self, app):
         svc = MagicMock()
         svc.library_component = None
@@ -237,3 +246,30 @@ class TestPersistencyImport:
         resp = c.post("/admin/persistency/import", files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 404
         app.dependency_overrides.clear()
+
+    @pytest.mark.parametrize("engine_state, payload", [
+        (EngineState.STOPPED, _make_zip({"metadata.json": b"{}"})),
+        (EngineState.RUNNING, _make_zip({"metadata.json": b"{}"})),  # 404 wins over 409
+        (EngineState.STOPPED, b"not a zip"),                         # 404 wins over 422
+    ])
+    def test_import_no_persistency_configured(self, client, service_with_saver, engine_state, payload):
+        service_with_saver._state = engine_state
+        service_with_saver.library_component.persistency = None
+        resp = client.post("/admin/persistency/import",
+                           files={"file": ("state.zip", payload, "application/zip")})
+        assert resp.status_code == 404
+        assert resp.json()["detail"] == "Persistency not configured for this component"
+        service_with_saver.library_component.import_state.assert_not_called()
+
+
+# ---------- CLI client ----------
+
+def test_client_import_exits_on_404(tmp_path, capsys):
+    state = tmp_path / "state.zip"
+    state.write_bytes(b"")
+    response = requests.Response()
+    response.status_code = 404
+    response._content = b'{"detail": "Persistency not configured for this component"}'
+    with patch("service.client.requests.post", return_value=response), pytest.raises(SystemExit):
+        DetectMateClient("localhost:8000").persistency_import(str(state))
+    assert "Persistency not configured" in capsys.readouterr().out
