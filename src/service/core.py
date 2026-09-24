@@ -237,6 +237,16 @@ class Service(Engine, ABC):
             # locked transition, not to callers racing against it).
             self.stop()
 
+    def _on_state_change(self, new_state: EngineState) -> None:
+        """Keep the prometheus engine_running metric in sync with every engine
+        state transition, including an unexpected loop-thread exit."""
+        if new_state == EngineState.STOPPING:
+            return
+        engine_running.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).state("running" if new_state == EngineState.RUNNING else "stopped")
+
     def start(self) -> str:
         """Expose engine start as a command."""
         try:
@@ -250,10 +260,6 @@ class Service(Engine, ABC):
                 component_type=self.component_type,
                 component_id=self.component_id
             ).inc()
-            engine_running.labels(
-                component_type=self.component_type,
-                component_id=self.component_id
-            ).state('running')
 
         self.log.info(msg)
         return msg
@@ -264,10 +270,6 @@ class Service(Engine, ABC):
         try:
             msg = Engine.stop(self)
             if msg == "engine stopped":
-                engine_running.labels(
-                    component_type=self.component_type,
-                    component_id=self.component_id
-                ).state('stopped')
                 self.log.info("Engine stopped successfully")
             else:
                 self.log.info(msg)
