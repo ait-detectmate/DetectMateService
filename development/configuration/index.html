@@ -74,6 +74,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#http-admin-interface">HTTP Admin Interface</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#authentication">Authentication</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#core-endpoints">Core Endpoints</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#persistency-endpoints">Persistency Endpoints</a>
@@ -231,6 +233,12 @@
 <td style="text-align: left;">Port for the HTTP server.</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>http_api_key</code></td>
+<td style="text-align: left;"><code>DETECTMATE_HTTP_API_KEY</code></td>
+<td style="text-align: left;">unset</td>
+<td style="text-align: left;">Key required in the <code>X-Auth-Token</code> header for all <code>/admin/*</code> routes. Unset or empty disables authentication. See <a href="#authentication">Authentication</a>.</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>manager_recv_timeout</code></td>
 <td style="text-align: left;"><code>DETECTMATE_MANAGER_RECV_TIMEOUT</code></td>
 <td style="text-align: left;"><code>100</code></td>
@@ -386,7 +394,7 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/auto_parser/">Auto Parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/drain_parser/">Drain parser</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/drain_parser/">Drain Parser</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/">JSON Parser</a></td>
@@ -395,7 +403,7 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/">LogBatcher Parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/">Template matcher</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/">Template Matcher</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/">Template Tree Matcher</a></td>
@@ -420,10 +428,7 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/">Charset Detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/">Combo Detector</a></td>
-</tr>
-<tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/">Deeplog Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/">DeepLog Detector</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/">ECVC Detector</a></td>
@@ -432,10 +437,13 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/">Event Sequence Detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/">LogBert Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/">LogBERT Detector</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/">New Event Detector</a></td>
+</tr>
+<tr>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/">New Value Combo Detector</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/">New Value Detector</a></td>
@@ -444,7 +452,7 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/">Random Detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/">Rule-based Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/">Rule Detector</a></td>
 </tr>
 <tr>
 <td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/">SCVS Detector</a></td>
@@ -461,6 +469,21 @@ Some components ship only with an <a href="../installation/#optional-library-com
 </blockquote>
 <h2 id="http-admin-interface">HTTP Admin Interface</h2>
 <p>The service provides a REST API for runtime management and monitoring.</p>
+<h3 id="authentication">Authentication</h3>
+<p>When <code>http_api_key</code> is set, every <code>/admin/*</code> route requires the key in the <code>X-Auth-Token</code> header. A missing or wrong key returns <code>401 {"detail": "Invalid authentication credentials"}</code>. <code>/metrics</code>, <code>/docs</code>, <code>/redoc</code> and <code>/openapi.json</code> never require a key.</p>
+<p>If no key is set, the admin API is open and the service logs a warning at startup.</p>
+<p>Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_HTTP_API_KEY</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import secrets; print(secrets.token_urlsafe(32))&quot;</span><span class="k">)</span>
+detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml
+</code></pre></div>
+<p>Call the API with the header:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>http://127.0.0.1:8000/admin/status
+detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>status<span class="w">   </span><span class="c1"># or set DETECTMATE_API_KEY</span>
+</code></pre></div>
+<p>In the Swagger UI (<code>/docs</code>), click <strong>Authorize</strong> and enter the key.</p>
+<p>With Docker Compose, put <code>DETECTMATE_HTTP_API_KEY=&lt;key&gt;</code> in a <code>.env</code> file next to <code>docker-compose.yml</code>. <code>.env</code> is gitignored. The same key is then used by the parser and both detectors.</p>
+<p>To rotate the key, change it and restart the service.</p>
+<p>The key is sent in cleartext over plain HTTP. Either keep <code>http_host</code> on loopback or a private network, or put a TLS-terminating reverse proxy in front of the service.</p>
 <h3 id="core-endpoints">Core Endpoints</h3>
 <table>
 <thead>

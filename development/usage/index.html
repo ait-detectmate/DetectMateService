@@ -196,6 +196,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 <p>The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:</p>
 <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/start
 </code></pre></div>
+<p>If the service has an API key configured, add <code>-H "X-Auth-Token: &lt;key&gt;"</code> to every <code>/admin</code> request. See <a href="../configuration/#authentication">Authentication</a>.</p>
 <p>This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.</p>
 <p>The same behaviour can also be configured persistently via the settings file or environment variable - see <a href="../configuration/#service-settings"><code>engine_autostart</code></a>.</p>
 <h2 id="checking-status">Checking status</h2>

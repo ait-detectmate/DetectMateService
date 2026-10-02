@@ -357,6 +357,8 @@ and modify the fluentd config so that it reads access.log instead.</p>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/logs:/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/parser_settings.yaml --config /config/parser_config.yaml</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8001:8000&quot;</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
@@ -374,6 +376,8 @@ and modify the fluentd config so that it reads access.log instead.</p>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/state:/state</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/detector_settings.yaml --config /config/detector_config.yaml</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8002:8000&quot;</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
@@ -389,6 +393,8 @@ and modify the fluentd config so that it reads access.log instead.</p>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/logs:/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./container/run:/run</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv run detectmate --settings /config/detector_rule_settings.yaml --config /config/detector_rule_config.yaml</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DETECTMATE_HTTP_API_KEY=${DETECTMATE_HTTP_API_KEY:-}</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8003:8000&quot;</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
