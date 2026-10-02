@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from service.features.web.auth import require_api_key
 from service.client import DetectMateClient
 from service.features.web.router import router, get_service
 from service.features.engine import EngineState
@@ -37,6 +38,7 @@ _STATUS_RESPONSE = {
 def app():
     a = FastAPI()
     a.include_router(router)
+    a.dependency_overrides[require_api_key] = lambda: None  # auth is covered in test_api_auth.py
     return a
 
 
@@ -270,6 +272,6 @@ def test_client_import_exits_on_404(tmp_path, capsys):
     response = requests.Response()
     response.status_code = 404
     response._content = b'{"detail": "Persistency not configured for this component"}'
-    with patch("service.client.requests.post", return_value=response), pytest.raises(SystemExit):
+    with patch("service.client.requests.Session.post", return_value=response), pytest.raises(SystemExit):
         DetectMateClient("localhost:8000").persistency_import(str(state))
     assert "Persistency not configured" in capsys.readouterr().out

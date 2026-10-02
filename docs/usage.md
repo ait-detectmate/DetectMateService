@@ -62,6 +62,8 @@ The HTTP Admin API is fully available immediately. The engine stays idle until y
 curl -X POST http://127.0.0.1:8000/admin/start
 ```
 
+If the service has an API key configured, add `-H "X-Auth-Token: <key>"` to every `/admin` request. See [Authentication](configuration.md#authentication).
+
 This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.
 
 The same behaviour can also be configured persistently via the settings file or environment variable - see [`engine_autostart`](configuration.md#service-settings).
