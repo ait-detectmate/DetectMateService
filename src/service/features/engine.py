@@ -151,6 +151,26 @@ class Engine(ABC):
 
         self.log.debug("Engine initialized and ready.")
 
+    def _set_state(self, new_state: EngineState) -> None:
+        """Transition _state and notify _on_state_change.
+
+        This method must be called while holding _lifecycle_lock.
+        """
+        self._state = new_state
+        try:
+            self._on_state_change(new_state)  # this changes prometheus metric, but is implmented in core
+        except Exception:
+            self.log.exception("Engine state change hook failed (-> %s)", new_state.name)
+
+    def _on_state_change(self, new_state: EngineState) -> None:
+        """Hook called on every lifecycle transition, No-op here; Service
+        overrides it to keep the prometheus engine_running metric in sync.
+
+        Runs while _lifecycle_lock is held: overrides must be quick and
+        non-blocking and must not call start()/stop() or anything else
+        that takes the lock.
+        """
+
     def _setup_output_sockets(self) -> None:
         """Create and connect output sockets for all destinations in out_addr.
 
@@ -227,7 +247,7 @@ class Engine(ABC):
                 self._out_sockets = []
                 self._setup_output_sockets()
 
-            self._state = EngineState.RUNNING
+            self._set_state(EngineState.RUNNING)
             thread = threading.Thread(
                 target=self._run_loop,
                 name="EngineLoop",
@@ -239,7 +259,7 @@ class Engine(ABC):
                 # Thread creation can fail under OS resource exhaustion. Roll
                 # back so start() can retry, instead of leaving _state at
                 # RUNNING with no thread for stop() to join.
-                self._state = previous_state
+                self._set_state(previous_state)
                 raise EngineException(f"Failed to start engine thread: {e}") from e
 
             self._thread = thread
@@ -296,7 +316,7 @@ class Engine(ABC):
             self.log.critical(
                 "Engine loop thread exiting unexpectedly; marking engine stopped"
             )
-            self._state = EngineState.STOPPED
+            self._set_state(EngineState.STOPPED)
             try:
                 self._pair_sock.close()
             except Exception as e:
@@ -449,7 +469,7 @@ class Engine(ABC):
             # Signal _run_loop to exit *before* attempting to join it - this must
             # happen immediately, independent of whether the join below confirms
             # the thread actually died within the timeout.
-            self._state = EngineState.STOPPING
+            self._set_state(EngineState.STOPPING)
 
             if self._thread is None:  # satisfy type checker; should never happen
                 raise EngineException("Engine state is STOPPING but no thread was started")
@@ -465,7 +485,7 @@ class Engine(ABC):
 
             # The loop is confirmed dead, so the engine is stopped regardless of
             # whether the socket cleanup below succeeds.
-            self._state = EngineState.STOPPED
+            self._set_state(EngineState.STOPPED)
 
             # Close every socket regardless of individual failures, then report
             # them together instead of raising on the first one and leaking the rest.
