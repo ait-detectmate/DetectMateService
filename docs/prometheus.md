@@ -51,39 +51,21 @@ The `processing_duration_seconds` histogram uses the following buckets: 1 ms, 5 
 If you run DetectMate outside of Docker Compose, add a scrape job to your `prometheus.yml`:
 
 ```yaml
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'detectmate'
-    static_configs:
-      - targets:
-          - '127.0.0.1:8000'
+--8<-- "docs/examples/prometheus/prometheus-standalone.yml"
 ```
 
 If you run multiple services, list each one under `targets`:
 
 ```yaml
-scrape_configs:
-  - job_name: 'detectmate'
-    static_configs:
-      - targets:
-          - '127.0.0.1:8001'  # parser
-          - '127.0.0.1:8002'  # detector
+--8<-- "docs/examples/prometheus/prometheus-standalone-multi.yml"
 ```
 
 ## Docker Compose setup
 
-The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at `container/prometheus.yml` is pre-configured to scrape the `parser` and `detector` services:
+The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at `container/prometheus.yml` is pre-configured to scrape the `parser`, `detector`, and `detector-rule` services:
 
 ```yaml
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['parser:8000', 'detector:8000']
+--8<-- "container/prometheus.yml"
 ```
 
 Prometheus is accessible at `http://localhost:9090` after starting the stack with:

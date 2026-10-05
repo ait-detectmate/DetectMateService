@@ -1,10 +1,10 @@
-component_name: random-detector
-component_type: detectors.RandomDetector
+component_name: "my-detector"
 log_level: "DEBUG"
 log_dir: "./logs"
 
-# Manager Interface (Command Channel)
-manager_addr: "ipc:///tmp/detectmate.cmd.ipc"
+# Manager Interface
+http_host: 127.0.0.1
+http_port: 8000
 
 # Engine Interface (Data Channel)
 engine_addr: "ipc:///tmp/detectmate.engine.ipc"
