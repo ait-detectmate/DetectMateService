@@ -1,0 +1,14 @@
+detectors:                 # Category Level
+  NewValueDetector:        # Class Name Level
+    auto_config: false
+    method_type: new_value_detector
+    params:                # Implementation Specific Level
+    events:
+      1:
+          test:
+              params: {}
+              variables:
+                  - pos: 0
+                    name: var1
+                    params:
+                        threshold: 0.5
