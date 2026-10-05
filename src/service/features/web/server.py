@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 import uvicorn
 from fastapi import FastAPI, Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from service.features.web.router import router, get_service
+from service.features.web.auth import get_service
+from service.features.web.router import router
 
 
 if TYPE_CHECKING:

@@ -3,7 +3,10 @@ from pathlib import Path
 from uuid import uuid5, NAMESPACE_URL
 from typing import Any, Dict, Optional, List, Annotated, Union
 import yaml
-from pydantic import BaseModel, ValidationError, model_validator, UrlConstraints, field_serializer, Field
+from pydantic import (
+    BaseModel, ValidationError, model_validator, UrlConstraints, field_serializer, Field, SecretStr,
+    field_validator,
+)
 from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -76,6 +79,9 @@ class ServiceSettings(BaseSettings):
     # HTTP server (FastAPI) settings
     http_host: str = "127.0.0.1"
     http_port: int = 8000
+    # Key required in the X-Auth-Token header for admin routes.
+    # None disables authentication. Set it via DETECTMATE_HTTP_API_KEY.
+    http_api_key: Optional[SecretStr] = None
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.
@@ -84,6 +90,14 @@ class ServiceSettings(BaseSettings):
     )
 
     config_file: Optional[Path] = None
+
+    @field_validator("http_api_key", mode="before")
+    @classmethod
+    def _empty_api_key_is_none(cls, v: Any) -> Any:
+        """Treat an empty key (unset compose variable) as 'no auth'."""
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     # serializer so dumps/json/status become strings again
     @field_serializer("out_addr")
