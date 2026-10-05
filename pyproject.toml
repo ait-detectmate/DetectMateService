@@ -11,7 +11,7 @@ dynamic = ["version"]
 # detectmatelibrary[extra] with no version — since it's the same package name,
 # uv/pip unify it to this pin. Bump here, then run `uv lock`.
 dependencies = [
-    "detectmatelibrary==0.4.0",
+    "detectmatelibrary==0.4.1",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
@@ -20,8 +20,8 @@ dependencies = [
     "types-pyyaml>=6.0.12.20260518",
     "requests>=2.34.2",
     "prometheus-client>=0.25.0",
-    "uvicorn[standard]>=0.51.0",
-    "fastapi>=0.139.0",
+    "fastapi>=0.141.0",
+    "uvicorn[standard]>=0.52.0",
     "httpx>=0.28.1",
     "python-multipart>=0.0.20",
 ]
@@ -42,7 +42,7 @@ full = [
 dev = [
     "mike>=2.2.0",
     "pytest>=9.1.0",
-    "prek>=0.4.8",
+    "prek>=0.4.11",
     "pytest-cov>=6.2.1",
     "pytest-xdist>=3.8.0",
     "types-requests",
