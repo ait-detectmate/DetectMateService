@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/0.4.2/interfaces/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Interfaces - DetectMate Service</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Interfaces";
+        var mkdocs_page_input_path = "interfaces.md";
+        var mkdocs_page_url = "/DetectMateService/0.4.2/interfaces/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> DetectMate Service
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../prometheus/">Monitoring with Prometheus</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Contributing</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Development</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Interfaces</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#corecomponent-interface">CoreComponent Interface</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#key-requirements">Key Requirements</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#coreconfig-interface">CoreConfig Interface</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#key-requirements_1">Key Requirements</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#configuration-flow">Configuration Flow</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#component-loading">Component Loading</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#short-class-name">Short class name</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#dotted-path">Dotted path</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#import-resolution-order">Import resolution order</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#config-class-resolution">Config class resolution</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#service-settings">Service Settings</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#data-flow-schemas">Data Flow Schemas</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#complete-example">Complete Example</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-config-class-detectorsrandom_detectorpy">1. Config Class (detectors/random_detector.py)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-service-settings-settingsyaml">2. Service Settings (settings.yaml)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-component-config-random-configyaml">3. Component Config (random-config.yaml)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#4-run-the-service">4. Run the Service</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a>
+    </li>
+    </ul>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Maintainers</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release/">Release Process</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">DetectMate Service</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Contributing</li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Interfaces</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="library-interface-contract">Library Interface Contract</h1>
+<p>This document describes the interface contract between DetectMateService and DetectMateLibrary. If you're implementing custom components in the library, your classes must adhere to these interfaces.</p>
+<h2 id="corecomponent-interface">CoreComponent Interface</h2>
+<p>All processing components (readers, parsers, detectors) must inherit from <code>CoreComponent</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreComponent</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyComponent</span><span class="p">(</span><span class="n">CoreComponent</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Optional configuration dictionary or CoreConfig instance.</span>
+<span class="sd">                    May be None if no configuration is provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># Your initialization here</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process incoming data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: Raw bytes received from the upstream component.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bytes: Processed data to forward to downstream components.</span>
+<span class="sd">            None: Skip forwarding (filter out this message).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Your processing logic here</span>
+        <span class="k">return</span> <span class="n">processed_data</span>
+</code></pre></div>
+<h3 id="key-requirements">Key Requirements</h3>
+<ul>
+<li><strong>Constructor</strong>: Must accept an optional <code>config</code> parameter (can be <code>dict</code> or <code>CoreConfig</code> instance)</li>
+<li><strong>process() method</strong>: Must accept <code>bytes</code> and return <code>bytes | None</code></li>
+<li><strong>Return behavior</strong>:</li>
+<li>Return <code>bytes</code> to forward output to downstream components</li>
+<li>Return <code>None</code> to skip/filter the message (no output sent)</li>
+</ul>
+<h2 id="coreconfig-interface">CoreConfig Interface</h2>
+<p>Configuration classes must inherit from <code>CoreConfig</code>, which extends Pydantic's <code>BaseModel</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreConfig</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyComponentConfig</span><span class="p">(</span><span class="n">CoreConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for MyComponent.&quot;&quot;&quot;</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+<h3 id="key-requirements_1">Key Requirements</h3>
+<ul>
+<li><strong>Pydantic BaseModel</strong>: Must support <code>model_validate()</code> and <code>model_dump()</code> methods</li>
+<li><strong>Type hints</strong>: All fields should have type annotations</li>
+<li><strong>Defaults</strong>: Provide sensible defaults where appropriate</li>
+</ul>
+<h3 id="configuration-flow">Configuration Flow</h3>
+<ol>
+<li>Resolution: <code>ComponentResolver</code> expands the <code>component_type</code> from settings to a fully qualified path and derives the matching config class from it (see <a href="#component-loading">Component Loading</a>). An explicit <code>component_config_class</code> is optional and takes precedence.</li>
+<li>Service loads config from YAML file.</li>
+<li>Schema identification: The service calls dynamically imports and verify the configuration class.</li>
+<li>Validation: It ensures the config class is a subclass of <code>CoreConfig</code>.</li>
+<li>Component Instantiation: The service uses to dynamically loads the resolved component class.</li>
+<li>Validation: It ensures the component class is an instance of <code>CoreComponent</code></li>
+<li>Config from <code>ConfigManager</code> is passed to component constructor</li>
+<li>The Library processes and validates the configuration internally</li>
+<li>
+<p>Validation: The library checks if <code>auto_config</code> is enabled. If disabled and no <code>params</code> exist, it raises an AutoConfigError.</p>
+</li>
+<li>
+<p>Type Checking: It ensures the method_type matches the expected component type.</p>
+</li>
+<li>
+<p>Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.</p>
+</li>
+<li>
+<p>Keyword Cleaning: If a parameter key starts with <code>all_</code>, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).</p>
+</li>
+<li>
+<p>Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant <code>params</code> key.</p>
+</li>
+<li>Processor Adaptation: The service wraps the <code>CoreComponent</code> in a <code>LibraryComponentProcessor</code> (an adapter) to make it compatible with the <code>Engine</code> loop.</li>
+<li>At runtime, <code>reconfigure</code> command can update configs dynamically</li>
+</ol>
+<h2 id="component-loading">Component Loading</h2>
+<p>The <code>component_type</code> setting tells the service which class to load. You can use two forms: short class name or dotted path.</p>
+<h3 id="short-class-name">Short class name</h3>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RandomDetector</span>
+</code></pre></div>
+<p>A value without a dot is treated as a class name. <code>ComponentResolver</code> walks every submodule of <code>detectmatelibrary</code> and takes the first one that exports a <code>CoreComponent</code> subclass with that name, expanding it to a fully qualified path (<code>detectmatelibrary.detectors.RandomDetector</code>).</p>
+<p>Convenient for library components, but note:</p>
+<ul>
+<li><strong>Library only.</strong> Classes in your own package are never found. You get <code>ImportError: Could not find a component named '...' anywhere under 'detectmatelibrary'. Use the full dotted path.</code></li>
+<li><strong>First match wins.</strong> If two modules export a class of the same name, resolution order determines which one you get.</li>
+</ul>
+<h3 id="dotted-path">Dotted path</h3>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.random_detector.RandomDetector</span>
+</code></pre></div>
+<p>A value containing a dot is treated as <code>module.ClassName</code> and used as written, without search. Use this form for custom components, and whenever you want real import errors instead of "not found":</p>
+<ul>
+<li><code>detectors.random_detector.RandomDetector</code> - library component, <code>detectmatelibrary.</code> prefix is optional</li>
+<li><code>detectmatelibrary.detectors.random_detector.RandomDetector</code> - fully qualified library component</li>
+<li><code>mypackage.detectors.CustomDetector</code> - component from an external package</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> The resolved path becomes the <code>component_type</code> label on every Prometheus metric, and the two forms resolve to different strings. Use one form consistently across a deployment so dashboards do not split them into two series.</p>
+</blockquote>
+<h3 id="import-resolution-order">Import resolution order</h3>
+<p>Both loaders accept library-relative and absolute paths.</p>
+<table>
+<thead>
+<tr>
+<th>Loader</th>
+<th>Resolves</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ComponentLoader</code></td>
+<td><code>component_type</code></td>
+<td>1. path as-is → 2. <code>detectmatelibrary.{path}</code></td>
+</tr>
+<tr>
+<td><code>ConfigClassLoader</code></td>
+<td><code>component_config_class</code></td>
+<td>1. <code>detectmatelibrary.{path}</code> → 2. path as-is</td>
+</tr>
+</tbody>
+</table>
+<h3 id="config-class-resolution">Config class resolution</h3>
+<p>Once the component is resolved, <code>ComponentResolver</code> looks for <code>&lt;ClassName&gt;Config</code> in the <strong>same module</strong> and uses it as the configuration schema:<code>RandomDetector</code> → <code>RandomDetectorConfig</code>. Every component in DetectMateLibrary follows this convention, so <code>component_config_class</code> normally does not need to be set!</p>
+<p><strong>Set it explicitly only when the convention does not hold:</strong></p>
+<ul>
+<li>the config class has a different name or lives in a different module than the component (in case of custom components)</li>
+<li>the service runs as <code>component_type: core</code> (no component to derive a schema from)</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> If no <code>&lt;ClassName&gt;Config</code> is found and <code>component_config_class</code> is not set, the resolver falls back to <code>CoreConfig</code>. </p>
+</blockquote>
+<h3 id="service-settings">Service Settings</h3>
+<p>In your service settings YAML, specify:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.MyDetector</span><span class="w">   </span><span class="c1"># Component class path or class name</span>
+<span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detector-config.yaml</span><span class="w">      </span><span class="c1"># Path to component config</span>
+<span class="c1"># Optional:</span>
+<span class="c1"># component_config_class: mypackage.configs.MyDetectorSettings</span>
+<span class="c1">#   Only needed if the config class is not &lt;ComponentClass&gt;Config</span>
+<span class="c1">#   in the component&#39;s own module.</span>
+</code></pre></div>
+<h2 id="data-flow-schemas">Data Flow Schemas</h2>
+<p>Components in the processing pipeline use protobuf schemas for structured data exchange:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Input</th>
+<th>Output Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reader</td>
+<td>Raw source (file, network, etc.)</td>
+<td><code>LogSchema</code></td>
+</tr>
+<tr>
+<td>Parser</td>
+<td><code>LogSchema</code> bytes</td>
+<td><code>ParserSchema</code></td>
+</tr>
+<tr>
+<td>Detector</td>
+<td><code>ParserSchema</code> bytes</td>
+<td><code>DetectorSchema</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each component receives serialized protobuf bytes, deserializes them, processes the data, and serializes the output for the next stage.</p>
+<h2 id="complete-example">Complete Example</h2>
+<p>Here's a minimal detector component implementation:</p>
+<h3 id="1-config-class-detectorsrandom_detectorpy">1. Config Class (<code>detectors/random_detector.py</code>)</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common._config._formats</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogVariables</span><span class="p">,</span> <span class="n">AllLogVariables</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreDetector</span><span class="p">,</span> <span class="n">CoreDetectorConfig</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.utils.data_buffer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BufferMode</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">detectmatelibrary.schemas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">schemas</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RandomDetectorConfig</span><span class="p">(</span><span class="n">CoreDetectorConfig</span><span class="p">):</span>
+    <span class="n">method_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;random_detector&quot;</span>
+
+    <span class="n">events</span><span class="p">:</span> <span class="n">EventsConfig</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RandomDetector</span><span class="p">(</span><span class="n">CoreDetector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detects anomalies randomly in logs, completely independent of the input</span>
+<span class="sd">    data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RandomDetector&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">RandomDetectorConfig</span> <span class="o">=</span> <span class="n">RandomDetectorConfig</span><span class="p">()</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">RandomDetectorConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">buffer_mode</span><span class="o">=</span><span class="n">BufferMode</span><span class="o">.</span><span class="n">NO_BUF</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span> <span class="n">RandomDetectorConfig</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">schemas</span><span class="o">.</span><span class="n">ParserSchema</span><span class="p">]</span> <span class="o">|</span> <span class="n">schemas</span><span class="o">.</span><span class="n">ParserSchema</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Training is not applicable for RandomDetector.&quot;&quot;&quot;</span>
+        <span class="k">return</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">input_</span><span class="p">:</span> <span class="n">schemas</span><span class="o">.</span><span class="n">ParserSchema</span><span class="p">,</span> <span class="n">output_</span><span class="p">:</span> <span class="n">schemas</span><span class="o">.</span><span class="n">DetectorSchema</span>  <span class="c1"># type: ignore</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect anomalies randomly in the input data.&quot;&quot;&quot;</span>
+        <span class="n">overall_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">alerts</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">event_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">events</span><span class="p">[</span><span class="n">input_</span><span class="p">[</span><span class="s2">&quot;EventID&quot;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">event_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">relevant_log_fields</span> <span class="o">=</span> <span class="n">event_config</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">log_variable</span> <span class="ow">in</span> <span class="n">relevant_log_fields</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">random</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">random</span> <span class="o">&gt;</span> <span class="n">log_variable</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">]:</span>
+                <span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="c1"># Variable has .name, Header has .pos (str)</span>
+                <span class="n">var_name</span> <span class="o">=</span> <span class="n">log_variable</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_variable</span><span class="p">,</span> <span class="n">Variable</span><span class="p">)</span> <span class="k">else</span> <span class="n">log_variable</span><span class="o">.</span><span class="n">pos</span>
+                <span class="n">alerts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">)})</span>
+            <span class="n">overall_score</span> <span class="o">+=</span> <span class="n">score</span>
+
+        <span class="k">if</span> <span class="n">overall_score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">output_</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overall_score</span>
+            <span class="n">output_</span><span class="p">[</span><span class="s2">&quot;alertsObtain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">alerts</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+<h3 id="2-service-settings-settingsyaml">2. Service Settings (<code>settings.yaml</code>)</h3>
+<div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-detector</span>
+<span class="nt">component_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detectors.random_detector.RandomDetector</span>
+<span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-config.yaml</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span>
+<span class="nt">http_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
+<span class="nt">http_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
+<span class="nt">engine_addr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ipc:///tmp/threshold.engine.ipc</span>
+</code></pre></div>
+<h3 id="3-component-config-random-configyaml">3. Component Config (<code>random-config.yaml</code>)</h3>
+<p>Component configuration uses a nested structure:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">RandomDetector</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random_detector</span>
+<span class="w">        </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">        </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">        </span><span class="nt">events</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">1</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">                    </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">                    </span><span class="nt">variables</span><span class="p">:</span>
+<span class="w">                        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">                          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">var1</span>
+<span class="w">                          </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">                              </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.</span>
+<span class="w">                    </span><span class="nt">header_variables</span><span class="p">:</span>
+<span class="w">                        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
+<span class="w">                          </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</code></pre></div>
+<p>This hierarchical format allows the library to correctly route parameters based on category and class name.</p>
+<h3 id="4-run-the-service">4. Run the Service</h3>
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--configs<span class="w"> </span>random-config.yaml
+</code></pre></div>
+<h2 id="validation">Validation</h2>
+<p>The service validates components at load time:</p>
+<ol>
+<li><strong>Component class</strong>: Must be an instance of <code>CoreComponent</code> (in <code>ComponentLoader</code>)</li>
+<li><strong>Config class</strong>: Must be a subclass of <code>CoreConfig</code> (in <code>ConfigClassLoader</code>)</li>
+</ol>
+<p>If validation fails, the service raises an error.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../library-imports/" class="btn btn-neutral float-left" title="Library Imports"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../release/" class="btn btn-neutral float-right" title="Release Process">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../library-imports/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../release/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
