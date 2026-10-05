@@ -17,19 +17,41 @@ It uses NNG's messaging architecture to process data in real-time.
 - **Service management**: built-in CLI for starting, stopping, and monitoring the service.
 - **Scalable**: run multiple independent service instances.
 
-## Getting started
+## Where to start
 
-Check out the [Installation](installation.md) guide to set up the service, and then proceed to
-[Configuration](configuration.md) and [Usage](usage.md) to learn how to run it.
+The documentation has two different entry points: the **tutorial**, which builds a complete example log analysis
+pipeline from Docker containers so you can see the whole system work, and the **user guide**,
+which walks you through installing and configuring a single DetectMate service of your own.
+Pick the one that matches what you want to do.
 
-For a list of imports from the DetectMateLinbrary in the Service and their usage [Library Imports](library-imports.md).
-For library developers implementing custom components, see the [Library Interface Contract](interfaces.md).
+### Run the tutorial
 
-Please have a look to the [Getting Started Tutorial](getting_started.md) to see how it works.
+**[Tutorial: Detecting Anomalies in Nginx Logs](tutorial.md)** is the recommended starting point if
+you are new to DetectMate. It is a *guided walkthrough* that takes you from a fresh Ubuntu machine to a
+complete log analysis pipeline: Nginx produces access logs, Fluentd ingests them, a
+DetectMate parser structures them, detectors flag anomalies, and the results are displayed in
+Grafana. By the end you will have triggered real anomalies yourself and seen them come out the other side.
 
-## Docker
+It assumes no prior knowledge of DetectMate and takes roughly an hour.
 
-Docker Compose can be used to set up a full log data analysis pipeline. A complete configuration reference can be found in the [Docker Compose reference](docker-compose.md).
+### User guide: Set up your own service
+
+The user guide is the *conventional, reference documentation*:
+If you are past the tutorial, or want to run a single DetectMate service instead
+of a whole pipeline, read these in order:
+
+1. [Installation](installation.md): install the service and its optional extras.
+2. [Configuration](configuration.md) : service settings and component configuration files.
+3. [Usage](usage.md): the `detectmate` CLI: starting, stopping, and inspecting a service.
+4. [Using a Library Component](library.md): run a detector or parser from DetectMateLibrary.
+5. [Monitoring with Prometheus](prometheus.md): metrics and scrape configuration.
+
+### Reference and development
+
+- [Docker Compose reference](docker-compose.md): every service in the shipped Compose file, and how
+  they are connected. The reference companion to the tutorial.
+- [Library Imports](library-imports.md): which parts of DetectMateLibrary the service uses, and why.
+- [Library Interface Contract](interfaces.md): for library developers implementing custom components.
 
 ## Contribution
 

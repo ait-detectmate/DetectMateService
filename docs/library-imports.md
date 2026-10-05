@@ -48,11 +48,13 @@ result = self.component.process(raw_message)
 
 ### What the Service Expects from CoreComponent
 
-<!-- TODO: Link to DetectMateLibrary CoreComponent documentation -->
-
 - Constructor accepts optional `config` parameter
 - `process(data: bytes) -> bytes | None` method handles message processing
 - See [Library Interface Contract](interfaces.md) for the full interface specification
+
+Library-side documentation: [Components architecture](https://ait-detectmate.github.io/DetectMateLibrary/latest/overall_architecture/#components-architecture)
+for the class hierarchy, and [Create new component](https://ait-detectmate.github.io/DetectMateLibrary/latest/create_components/)
+for writing one.
 
 ## CoreConfig
 
@@ -97,12 +99,14 @@ The `Service.get_config_schema()` method returns the appropriate `CoreConfig` su
 
 ### What the Service Expects from CoreConfig
 
-<!-- TODO: Link to DetectMateLibrary CoreConfig documentation -->
-
 - Must be a Pydantic `BaseModel` subclass
 - Must support `model_validate(data)` for validation
 - Must support `model_dump()` for serialization
 - See [Library Interface Contract](interfaces.md) for the full interface specification
+
+Library-side documentation: [Components architecture](https://ait-detectmate.github.io/DetectMateLibrary/latest/overall_architecture/#components-architecture)
+for the config class pattern, and [Detectors — Configuration](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/#configuration)
+for how the library interprets the config contents.
 
 ## Protobuf Schemas
 
@@ -131,19 +135,22 @@ LogSchema bytes  --->  ParserSchema bytes  --->  DetectorSchema bytes
 
 ### What the Service Expects from Schemas
 
-<!-- TODO: Link to DetectMateLibrary schema documentation -->
-
 - Protobuf message classes with `SerializeToString()` and `ParseFromString()` methods
 - Consistent structure for pipeline interoperability
 
+Library-side documentation: [Schemas](https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/#schema-clases)
+for the `LogSchema` / `ParserSchema` / `DetectorSchema` field definitions.
+
 ## Import Resolution
 
-The service uses a two-step import resolution for library components:
+The service uses a two-step import resolution, so short paths like `detectors.RandomDetector` resolve to `detectmatelibrary.detectors.RandomDetector` while custom components from external packages still work. The two loaders try the two prefixes in opposite order:
 
-1. **DetectMateLibrary-relative** (tried first): Prepends `detectmatelibrary.` to the path
-2. **Absolute import** (fallback): Uses the path as-is
+| Loader | Resolves | Order |
+|--------|----------|-------|
+| `ComponentLoader` | `component_type` | 1. path as-is → 2. `detectmatelibrary.{path}` |
+| `ConfigClassLoader` | `component_config_class` | 1. `detectmatelibrary.{path}` → 2. path as-is |
 
-This allows short paths like `detectors.RandomDetector` to resolve to `detectmatelibrary.detectors.RandomDetector`, while still supporting custom components from external packages.
+`component_type` may also be given as a bare class name, see [Component Loading](interfaces.md#component-loading).
 
 ## File Reference
 

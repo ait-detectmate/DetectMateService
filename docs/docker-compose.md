@@ -61,7 +61,7 @@ This service depends on the `detector` and `detector-rule` services, because the
 
 ## Detector
 
-The detector service listens for parsed logs received from the `parser` service on a [Nano Message socket](https://nng.nanomsg.org/). It expects the data in the [ParserSchema format used by DetectMate](https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/) and sends anomalies using the [DetectorSchema](https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/) to another Nano Message socket provided by the `fluentout` service. This is the `NewValueDetector`, which needs training data before it can flag anomalies (see the [Getting Started](getting_started.md) tutorial).
+The detector service listens for parsed logs received from the `parser` service on a [Nano Message socket](https://nng.nanomsg.org/). It expects the data in the [ParserSchema format used by DetectMate](https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/) and sends anomalies using the [DetectorSchema](https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/) to another Nano Message socket provided by the `fluentout` service. This is the `NewValueDetector`, which needs training data before it can flag anomalies (see the [tutorial](tutorial.md)).
 
 ### Building the image
 
@@ -89,7 +89,7 @@ This service depends on the `fluentout` service, because `fluentout` creates the
 
 ## Detector (Rule-Based)
 
-The `detector-rule` service is a second detector that listens for the same parsed logs as `detector`, on its own socket. It runs the `RuleDetector`, which evaluates a fixed list of simple rules (e.g. "the parser found no matching template", "the log text contains a keyword like 'error'") against every log line instead of learning from training data. See the [Getting Started](getting_started.md) tutorial for a walkthrough that triggers one of its rules.
+The `detector-rule` service is a second detector that listens for the same parsed logs as `detector`, on its own socket. It runs the `RuleDetector`, which evaluates a fixed list of simple rules (e.g. "the parser found no matching template", "the log text contains a keyword like 'error'") against every log line instead of learning from training data. See the [tutorial](tutorial.md) for a walkthrough that triggers one of its rules.
 
 ### Building the image
 

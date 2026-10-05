@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from service.features.web.auth import require_api_key
 from service.features.web.router import router, get_service
 
 
@@ -10,6 +11,7 @@ from service.features.web.router import router, get_service
 def app():
     a = FastAPI()
     a.include_router(router)
+    a.dependency_overrides[require_api_key] = lambda: None  # auth is covered in test_api_auth.py
     return a
 
 
