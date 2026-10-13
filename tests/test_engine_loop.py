@@ -95,7 +95,7 @@ def test_skip_processing(comp):
 
 def test_admin_stop(comp):
     admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
-    response = httpx.post(f"{admin_url}/admin/stop")
+    response = httpx.post(f"{admin_url}/api/v1/stop")
 
     assert response.status_code == 200
     time.sleep(0.1)
@@ -108,11 +108,11 @@ def test_restart_after_stop_processes_messages(comp):
     receiving messages again."""
     admin_url = f"http://{comp.settings.http_host}:{comp.settings.http_port}"
 
-    assert httpx.post(f"{admin_url}/admin/stop").status_code == 200
+    assert httpx.post(f"{admin_url}/api/v1/stop").status_code == 200
     time.sleep(0.1)
     assert comp._state == EngineState.STOPPED
 
-    assert httpx.post(f"{admin_url}/admin/start").status_code == 200
+    assert httpx.post(f"{admin_url}/api/v1/start").status_code == 200
     time.sleep(0.1)
     assert comp._state == EngineState.RUNNING
 
