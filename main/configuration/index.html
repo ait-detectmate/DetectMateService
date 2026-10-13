@@ -72,7 +72,7 @@
     </li>
         </ul>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#http-admin-interface">HTTP Admin Interface</a>
+    <li class="toctree-l2"><a class="reference internal" href="#http-api">HTTP API</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#authentication">Authentication</a>
     </li>
@@ -80,7 +80,7 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#persistency-endpoints">Persistency Endpoints</a>
         <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#adminpersistencystatus-response">/admin/persistency/status response</a>
+    <li class="toctree-l4"><a class="reference internal" href="#apiv1persistencystatus-response">/api/v1/persistency/status response</a>
     </li>
         </ul>
     </li>
@@ -88,9 +88,9 @@
         <ul>
     <li class="toctree-l4"><a class="reference internal" href="#background-training-vs-configuration">Background: training vs. configuration</a>
     </li>
-    <li class="toctree-l4"><a class="reference internal" href="#post-admintrainingstate-payload">POST /admin/training/state payload</a>
+    <li class="toctree-l4"><a class="reference internal" href="#post-apiv1trainingstate-payload">POST /api/v1/training/state payload</a>
     </li>
-    <li class="toctree-l4"><a class="reference internal" href="#get-admintrainingstate-response">GET /admin/training/state response</a>
+    <li class="toctree-l4"><a class="reference internal" href="#get-apiv1trainingstate-response">GET /api/v1/training/state response</a>
     </li>
         </ul>
     </li>
@@ -236,7 +236,7 @@
 <td style="text-align: left;"><code>http_api_key</code></td>
 <td style="text-align: left;"><code>DETECTMATE_HTTP_API_KEY</code></td>
 <td style="text-align: left;">unset</td>
-<td style="text-align: left;">Key required in the <code>X-Auth-Token</code> header for all <code>/admin/*</code> routes. Unset or empty disables authentication. See <a href="#authentication">Authentication</a>.</td>
+<td style="text-align: left;">Key required in the <code>X-Auth-Token</code> header for all <code>/api/v1/*</code> routes. Unset or empty disables authentication. See <a href="#authentication">Authentication</a>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>manager_recv_timeout</code></td>
@@ -467,17 +467,17 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <blockquote>
 <p>These tables are auto-generated from the library documentation.</p>
 </blockquote>
-<h2 id="http-admin-interface">HTTP Admin Interface</h2>
+<h2 id="http-api">HTTP API</h2>
 <p>The service provides a REST API for runtime management and monitoring.</p>
 <h3 id="authentication">Authentication</h3>
-<p>When <code>http_api_key</code> is set, every <code>/admin/*</code> route requires the key in the <code>X-Auth-Token</code> header. A missing or wrong key returns <code>401 {"detail": "Invalid authentication credentials"}</code>. <code>/metrics</code>, <code>/docs</code>, <code>/redoc</code> and <code>/openapi.json</code> never require a key.</p>
-<p>If no key is set, the admin API is open and the service logs a warning at startup.</p>
+<p>When <code>http_api_key</code> is set, every <code>/api/v1/*</code> route requires the key in the <code>X-Auth-Token</code> header. A missing or wrong key returns <code>401 {"detail": "Invalid authentication credentials"}</code>. <code>/metrics</code>, <code>/docs</code>, <code>/redoc</code> and <code>/openapi.json</code> never require a key.</p>
+<p>If no key is set, the API is open and the service logs a warning at startup.</p>
 <p>Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_HTTP_API_KEY</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import secrets; print(secrets.token_urlsafe(32))&quot;</span><span class="k">)</span>
 detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml
 </code></pre></div>
 <p>Call the API with the header:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>http://127.0.0.1:8000/admin/status
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>http://127.0.0.1:8000/api/v1/status
 detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>status<span class="w">   </span><span class="c1"># or set DETECTMATE_API_KEY</span>
 </code></pre></div>
 <p>In the Swagger UI (<code>/docs</code>), click <strong>Authorize</strong> and enter the key.</p>
@@ -496,27 +496,27 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tbody>
 <tr>
 <td style="text-align: left;"><code>GET</code></td>
-<td style="text-align: left;"><code>/admin/status</code></td>
+<td style="text-align: left;"><code>/api/v1/status</code></td>
 <td style="text-align: left;">Returns the health, running state, and current effective configurations.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/start</code></td>
+<td style="text-align: left;"><code>/api/v1/start</code></td>
 <td style="text-align: left;">Starts the data processing engine thread. Idempotent - returns <code>200</code>/<code>"engine already running"</code> if already started. Returns <code>500</code> if the engine thread fails to start.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/stop</code></td>
+<td style="text-align: left;"><code>/api/v1/stop</code></td>
 <td style="text-align: left;">Stops the data processing engine thread. Idempotent - returns <code>200</code>/<code>"engine already stopped"</code> if already stopped. Returns <code>500</code> if the engine fails to stop cleanly.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/reconfigure</code></td>
+<td style="text-align: left;"><code>/api/v1/reconfigure</code></td>
 <td style="text-align: left;">Updates component parameters dynamically. Only <code>detectors</code>, <code>parsers</code>, and <code>readers</code> are valid top-level config keys - returns <code>400</code> for unknown keys or other invalid config data, and <code>409</code> if no config manager is configured (e.g. no <code>config_file</code> was set for this component).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/shutdown</code></td>
+<td style="text-align: left;"><code>/api/v1/shutdown</code></td>
 <td style="text-align: left;">Gracefully terminates the entire service process.</td>
 </tr>
 </tbody>
@@ -534,33 +534,33 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tbody>
 <tr>
 <td style="text-align: left;"><code>GET</code></td>
-<td style="text-align: left;"><code>/admin/persistency/status</code></td>
+<td style="text-align: left;"><code>/api/v1/persistency/status</code></td>
 <td style="text-align: left;">Returns persistency configuration, in-memory event counters, and timestamp of the last save.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/persistency/save</code></td>
+<td style="text-align: left;"><code>/api/v1/persistency/save</code></td>
 <td style="text-align: left;">Forces an immediate flush of in-memory learned state to storage.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/persistency/load</code></td>
+<td style="text-align: left;"><code>/api/v1/persistency/load</code></td>
 <td style="text-align: left;">Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns <code>409</code> if it is running.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>GET</code></td>
-<td style="text-align: left;"><code>/admin/persistency/export</code></td>
+<td style="text-align: left;"><code>/api/v1/persistency/export</code></td>
 <td style="text-align: left;">Downloads the current learned state as a zip archive.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/persistency/import</code></td>
+<td style="text-align: left;"><code>/api/v1/persistency/import</code></td>
 <td style="text-align: left;">Uploads a zip archive and restores state from it. The engine must be stopped first - returns <code>409</code> if it is running.</td>
 </tr>
 </tbody>
 </table>
-<p><code>/admin/persistency/save</code>, <code>/admin/persistency/status</code>, and <code>/admin/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/admin/persistency/load</code> and <code>/admin/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/admin/stop</code>. <code>/admin/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
-<h4 id="adminpersistencystatus-response"><code>/admin/persistency/status</code> response</h4>
+<p><code>/api/v1/persistency/save</code>, <code>/api/v1/persistency/status</code>, and <code>/api/v1/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/api/v1/persistency/load</code> and <code>/api/v1/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/api/v1/stop</code>. <code>/api/v1/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
+<h4 id="apiv1persistencystatus-response"><code>/api/v1/persistency/status</code> response</h4>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/state/NewValueDetector&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;save_interval_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
@@ -627,12 +627,12 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tbody>
 <tr>
 <td style="text-align: left;"><code>GET</code></td>
-<td style="text-align: left;"><code>/admin/training/state</code></td>
+<td style="text-align: left;"><code>/api/v1/training/state</code></td>
 <td style="text-align: left;">Returns the fit logic state from the last processed event.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
-<td style="text-align: left;"><code>/admin/training/state</code></td>
+<td style="text-align: left;"><code>/api/v1/training/state</code></td>
 <td style="text-align: left;">Overrides the training or configuration phase.</td>
 </tr>
 </tbody>
@@ -645,7 +645,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <li><strong>Train</strong>: the component fits its model on the observed data. Runs for a fixed number of events set via <code>data_use_training</code>.</li>
 </ul>
 <p>Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.</p>
-<h4 id="post-admintrainingstate-payload"><code>POST /admin/training/state</code> payload</h4>
+<h4 id="post-apiv1trainingstate-payload"><code>POST /api/v1/training/state</code> payload</h4>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;value&gt;&quot;</span><span class="p">}</span>
 </code></pre></div>
 <table>
@@ -675,7 +675,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </tbody>
 </table>
 <p>Any other value is rejected with <code>422 Unprocessable Entity</code>.</p>
-<h4 id="get-admintrainingstate-response"><code>GET /admin/training/state</code> response</h4>
+<h4 id="get-apiv1trainingstate-response"><code>GET /api/v1/training/state</code> response</h4>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training.&quot;</span><span class="p">}</span>
 </code></pre></div>
 <p>The <code>state</code> field reflects what the component did with the most recently processed event:</p>

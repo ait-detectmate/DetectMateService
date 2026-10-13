@@ -581,7 +581,7 @@ alice@ubuntu2404:~/DetectMateService$
 <p><strong>Wait a couple of minutes until parser and detector containers are up and running.</strong> You can check by executing <code>sudo docker compose logs parser</code>, <code>sudo docker compose logs detector</code> or <code>sudo docker compose logs detector-rule</code>.
 When the containers are ready, the output of the component will show <code>Uvicorn running on</code> or any HTTP-requests for the <code>/metrics</code> endpoint:</p>
 <div class="highlight"><pre><span></span><code>parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
-parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP Admin active at 0.0.0.0:8000
+parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP API active at 0.0.0.0:8000
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: Auto-starting engine...
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: engine started
 parser-1  | INFO:     Started server process [61]
