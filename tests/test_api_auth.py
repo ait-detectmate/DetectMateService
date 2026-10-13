@@ -28,7 +28,7 @@ def make_client(api_key=None):
     (API_KEY, {"X-Auth-Token": "wrong"}, 401),
     (None, {}, 200),
 ])
-def test_admin_auth(configured_key, headers, expected):
+def test_api_auth(configured_key, headers, expected):
     client, _ = make_client(configured_key)
     assert client.get("/api/v1/status", headers=headers).status_code == expected
 
