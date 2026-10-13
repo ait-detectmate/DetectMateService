@@ -36,16 +36,16 @@ class DetectMateClient:
 
     def start(self) -> None:
         print(f"Sending START to {self.base_url}...")
-        response = self.session.post(f"{self.base_url}/admin/start", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/start", timeout=self.timeout)
         self._handle_response(response)
 
     def stop(self) -> None:
         print(f"Sending STOP to {self.base_url}...")
-        response = self.session.post(f"{self.base_url}/admin/stop", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/stop", timeout=self.timeout)
         self._handle_response(response)
 
     def status(self) -> None:
-        response = self.session.get(f"{self.base_url}/admin/status", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/status", timeout=self.timeout)
         self._handle_response(response)
 
     def metrics(self) -> None:
@@ -70,7 +70,7 @@ class DetectMateClient:
 
             print(f"Sending RECONFIGURE (persist={persist}) to {self.base_url}...")
             response = self.session.post(
-                f"{self.base_url}/admin/reconfigure", timeout=self.timeout,
+                f"{self.base_url}/api/v1/reconfigure", timeout=self.timeout,
                 json=payload
             )
             self._handle_response(response)
@@ -80,23 +80,23 @@ class DetectMateClient:
             print(f"Error parsing YAML: {e}")
 
     def persistency_status(self) -> None:
-        response = self.session.get(f"{self.base_url}/admin/persistency/status", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/persistency/status", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_save(self) -> None:
         print(f"Sending PERSISTENCY SAVE to {self.base_url}...")
-        response = self.session.post(f"{self.base_url}/admin/persistency/save", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/persistency/save", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_load(self) -> None:
         print(f"Sending PERSISTENCY LOAD to {self.base_url}...")
-        response = self.session.post(f"{self.base_url}/admin/persistency/load", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/persistency/load", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_export(self, outfile: str) -> None:
         print(f"Exporting state from {self.base_url} to {outfile}...")
         try:
-            response = self.session.get(f"{self.base_url}/admin/persistency/export", timeout=self.timeout)
+            response = self.session.get(f"{self.base_url}/api/v1/persistency/export", timeout=self.timeout)
             response.raise_for_status()
             with open(outfile, "wb") as f:
                 f.write(response.content)
@@ -112,7 +112,7 @@ class DetectMateClient:
         try:
             with open(filepath, "rb") as f:
                 response = self.session.post(
-                    f"{self.base_url}/admin/persistency/import",
+                    f"{self.base_url}/api/v1/persistency/import",
                     files={"file": (filepath, f, "application/zip")},
                     timeout=self.timeout,
                 )
@@ -122,13 +122,13 @@ class DetectMateClient:
             sys.exit(1)
 
     def training_get_state(self) -> None:
-        response = self.session.get(f"{self.base_url}/admin/training/state", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/training/state", timeout=self.timeout)
         self._handle_response(response)
 
     def training_set_state(self, state: str) -> None:
         print(f"Sending TRAINING STATE '{state}' to {self.base_url}...")
         response = self.session.post(
-            f"{self.base_url}/admin/training/state", timeout=self.timeout,
+            f"{self.base_url}/api/v1/training/state", timeout=self.timeout,
             json={"state": state}
         )
         self._handle_response(response)
@@ -137,7 +137,7 @@ class DetectMateClient:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="detectmate-client",
-        description="CLI Client for DetectMateService HTTP Admin API"
+        description="CLI Client for DetectMateService HTTP API"
     )
     parser.add_argument(
         "--url",
