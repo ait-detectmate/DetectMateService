@@ -146,7 +146,7 @@
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP Admin active at 127.0.0.1:8000
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP API active at 127.0.0.1:8000
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
 INFO:     Started server process [3933168]
 INFO:     Waiting for application startup.
@@ -185,7 +185,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 </tr>
 <tr>
 <td style="text-align: left;"><code>--no-autostart</code></td>
-<td style="text-align: left;">Start the service without auto-starting the engine. Use <code>POST /admin/start</code> to begin processing.</td>
+<td style="text-align: left;">Start the service without auto-starting the engine. Use <code>POST /api/v1/start</code> to begin processing.</td>
 </tr>
 </tbody>
 </table>
@@ -193,10 +193,10 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 <p>By default the engine starts automatically when the service launches. Pass <code>--no-autostart</code> to keep the engine idle on startup:</p>
 <div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--no-autostart
 </code></pre></div>
-<p>The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/start
+<p>The HTTP API is fully available immediately. The engine stays idle until you trigger it explicitly:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/start
 </code></pre></div>
-<p>If the service has an API key configured, add <code>-H "X-Auth-Token: &lt;key&gt;"</code> to every <code>/admin</code> request. See <a href="../configuration/#authentication">Authentication</a>.</p>
+<p>If the service has an API key configured, add <code>-H "X-Auth-Token: &lt;key&gt;"</code> to every <code>/api/v1</code> request. See <a href="../configuration/#authentication">Authentication</a>.</p>
 <p>This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.</p>
 <p>The same behaviour can also be configured persistently via the settings file or environment variable - see <a href="../configuration/#service-settings"><code>engine_autostart</code></a>.</p>
 <h2 id="checking-status">Checking status</h2>
@@ -226,12 +226,12 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 <div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>reconfigure<span class="w"> </span>new_config.yaml<span class="w"> </span>--persist
 </code></pre></div>
 <h2 id="stopping-the-engine">Stopping the engine</h2>
-<p>To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with <code>start</code>:</p>
+<p>To stop just the processing engine. the service process, its HTTP API, and any loaded component stay up, and you can restart the engine afterward with <code>start</code>:</p>
 <div class="highlight"><pre><span></span><code>detectmate-client<span class="w"> </span>--url<span class="w"> </span>&lt;http_host:http_port&gt;<span class="w"> </span>stop
 </code></pre></div>
 <h2 id="stopping-the-process">Stopping the process</h2>
 <p>To shut down the entire service process (not just the engine) send <code>SIGINT</code> (Ctrl+C if it's running in your foreground terminal, as in the <a href="#quick-start-your-first-service">Quick start</a> output above) or <code>SIGTERM</code> (what <code>docker stop</code> and systemd send), or call the shutdown endpoint directly:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://&lt;http_host:http_port&gt;/admin/shutdown
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://&lt;http_host:http_port&gt;/api/v1/shutdown
 </code></pre></div>
 <p>Unlike <code>stop</code>, this is not restartable, the process exits. Expect these two log lines:</p>
 <div class="highlight"><pre><span></span><code>Shutdown signal received (SIGINT)...

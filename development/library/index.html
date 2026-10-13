@@ -229,30 +229,30 @@ and <a href="../configuration/#component-configuration">Component configuration<
 </code></pre></div>
 <p>The state is written under <code>{path}/{ComponentName}/</code> as a <code>metadata.json</code> index plus per-event data files (<code>.msgpack</code> for tracker backends, <code>.parquet</code> for dataframe backends).</p>
 <h4 id="controlling-persistency-at-runtime">Controlling persistency at runtime</h4>
-<p>Once persistency is configured, three admin endpoints become available:</p>
+<p>Once persistency is configured, three API endpoints become available:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Check current state: events seen, events since last save, last save timestamp</span>
-curl<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/status
+curl<span class="w"> </span>http://127.0.0.1:8000/api/v1/persistency/status
 
 <span class="c1"># Force an immediate save (e.g. before a planned maintenance window)</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/save
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/persistency/save
 
 <span class="c1"># Restore state from disk (e.g. after rolling back to a previous snapshot)</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/load
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/persistency/load
 </code></pre></div>
 <blockquote>
-<p><strong>Warning:</strong> <code>/admin/persistency/load</code> returns <code>409 Conflict</code> if the engine is running. Stop it first with <code>/admin/stop</code>, then load, then restart with <code>/admin/start</code>. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.</p>
+<p><strong>Warning:</strong> <code>/api/v1/persistency/load</code> returns <code>409 Conflict</code> if the engine is running. Stop it first with <code>/api/v1/stop</code>, then load, then restart with <code>/api/v1/start</code>. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.</p>
 </blockquote>
 <p>You can also use <code>detectmate-client</code> instead of curl — see <a href="../usage/#controlling-state-persistency">usage.md</a>.</p>
 <h4 id="exporting-and-importing-state">Exporting and importing state</h4>
 <p>You can download the current learned state as a portable zip archive and restore it later. Useful for backups, moving state between environments, or seeding a new instance.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Download the current state to a local file</span>
-curl<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/export<span class="w"> </span>-o<span class="w"> </span>detector_state.zip
+curl<span class="w"> </span>http://127.0.0.1:8000/api/v1/persistency/export<span class="w"> </span>-o<span class="w"> </span>detector_state.zip
 
 <span class="c1"># Restore state from a previously downloaded archive</span>
 <span class="c1"># (stop the engine first, import returns 409 if it is running)</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/stop
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/persistency/import<span class="w"> </span>-F<span class="w"> </span><span class="s2">&quot;file=@detector_state.zip&quot;</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/start
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/stop
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/persistency/import<span class="w"> </span>-F<span class="w"> </span><span class="s2">&quot;file=@detector_state.zip&quot;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/start
 </code></pre></div>
 <p>You can also use <code>detectmate-client</code> instead of curl:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Download the current state to a local file</span>
@@ -270,25 +270,25 @@ detectmate-client<span class="w"> </span>--url<span class="w"> </span><span clas
 <p>Detectors go through two phases as they process events: a <strong>configure</strong> phase (learning data structure) and a <strong>train</strong> phase (fitting the model). Both run automatically for a fixed number of events configured via <code>data_use_configure</code> and <code>data_use_training</code>. After those limits are reached, the component switches to inference-only mode.</p>
 <p>You can override this behaviour at any time using the training state endpoints:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Check what the component is currently doing</span>
-curl<span class="w"> </span>http://127.0.0.1:8000/admin/training/state
+curl<span class="w"> </span>http://127.0.0.1:8000/api/v1/training/state
 <span class="c1"># → {&quot;state&quot;: &quot;Training.&quot;}  |  &quot;Configuring&quot;  |  &quot;Default&quot;</span>
 
 <span class="c1"># Freeze the model — stop updating it with new events</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/training/state<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;stop_training&quot;}&#39;</span>
 
 <span class="c1"># Resume training — keep updating even past the configured event limit</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/training/state<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;keep_training&quot;}&#39;</span>
 
 <span class="c1"># Similarly for the configure phase</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/training/state<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;stop_configuring&quot;}&#39;</span>
 
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/admin/training/state<span class="w"> </span><span class="se">\</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://127.0.0.1:8000/api/v1/training/state<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;state&quot;: &quot;keep_configuring&quot;}&#39;</span>
 </code></pre></div>
