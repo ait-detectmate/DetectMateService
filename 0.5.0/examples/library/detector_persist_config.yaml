@@ -1,0 +1,7 @@
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    persist:
+      path: ./state      # Where to store state files
+      interval_seconds: 300  # Auto-save every 5 minutes
+      auto_load: true    # Restore previous state on startup
