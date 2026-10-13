@@ -17,7 +17,7 @@ You should see output like:
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP Admin active at 127.0.0.1:8000
+[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP API active at 127.0.0.1:8000
 [2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
 INFO:     Started server process [3933168]
 INFO:     Waiting for application startup.
@@ -46,7 +46,7 @@ detectmate --settings settings.yaml --config config.yaml
 | :--- | :--- |
 | `--settings` | Path to the service settings YAML file. |
 | `--config` | Path to the component configuration YAML file. |
-| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /admin/start` to begin processing. |
+| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /api/v1/start` to begin processing. |
 
 ## Starting in standby mode
 
@@ -56,13 +56,13 @@ By default the engine starts automatically when the service launches. Pass `--no
 detectmate --settings settings.yaml --no-autostart
 ```
 
-The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:
+The HTTP API is fully available immediately. The engine stays idle until you trigger it explicitly:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/admin/start
+curl -X POST http://127.0.0.1:8000/api/v1/start
 ```
 
-If the service has an API key configured, add `-H "X-Auth-Token: <key>"` to every `/admin` request. See [Authentication](configuration.md#authentication).
+If the service has an API key configured, add `-H "X-Auth-Token: <key>"` to every `/api/v1` request. See [Authentication](configuration.md#authentication).
 
 This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.
 
@@ -110,7 +110,7 @@ detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
 
 ## Stopping the engine
 
-To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with `start`:
+To stop just the processing engine. the service process, its HTTP API, and any loaded component stay up, and you can restart the engine afterward with `start`:
 
 ```bash
 detectmate-client --url <http_host:http_port> stop
@@ -121,7 +121,7 @@ detectmate-client --url <http_host:http_port> stop
 To shut down the entire service process (not just the engine) send `SIGINT` (Ctrl+C if it's running in your foreground terminal, as in the [Quick start](#quick-start-your-first-service) output above) or `SIGTERM` (what `docker stop` and systemd send), or call the shutdown endpoint directly:
 
 ```bash
-curl -X POST http://<http_host:http_port>/admin/shutdown
+curl -X POST http://<http_host:http_port>/api/v1/shutdown
 ```
 
 Unlike `stop`, this is not restartable, the process exits. Expect these two log lines:
