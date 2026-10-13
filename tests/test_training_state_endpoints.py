@@ -45,48 +45,48 @@ def no_component_client(app):
     app.dependency_overrides.clear()
 
 
-# ---------- POST /admin/training/state ----------
+# ---------- POST /api/v1/training/state ----------
 
 class TestTrainingSetState:
     @pytest.mark.parametrize("state", [
         "keep_training", "stop_training", "keep_configuring", "stop_configuring"
     ])
     def test_valid_states_accepted(self, client, mock_component, state):
-        resp = client.post("/admin/training/state", json={"state": state})
+        resp = client.post("/api/v1/training/state", json={"state": state})
         assert resp.status_code == 200
         assert resp.json() == {"message": f"state updated to: {state}"}
         mock_component.update_state.assert_called_once_with(state)
 
     def test_invalid_state_rejected(self, client):
-        resp = client.post("/admin/training/state", json={"state": "invalid_state"})
+        resp = client.post("/api/v1/training/state", json={"state": "invalid_state"})
         assert resp.status_code == 422
 
     def test_missing_state_field_rejected(self, client):
-        resp = client.post("/admin/training/state", json={})
+        resp = client.post("/api/v1/training/state", json={})
         assert resp.status_code == 422
 
     def test_no_library_component(self, no_component_client):
-        resp = no_component_client.post("/admin/training/state", json={"state": "stop_training"})
+        resp = no_component_client.post("/api/v1/training/state", json={"state": "stop_training"})
         assert resp.status_code == 404
         assert "No library component" in resp.json()["detail"]
 
 
-# ---------- GET /admin/training/state ----------
+# ---------- GET /api/v1/training/state ----------
 
 class TestTrainingGetState:
     def test_returns_current_state(self, client, mock_component):
-        resp = client.get("/admin/training/state")
+        resp = client.get("/api/v1/training/state")
         assert resp.status_code == 200
         assert resp.json() == {"state": "Training."}
         mock_component.get_state.assert_called_once()
 
     def test_reflects_updated_state(self, client, mock_component):
         mock_component.get_state.return_value = "Default"
-        resp = client.get("/admin/training/state")
+        resp = client.get("/api/v1/training/state")
         assert resp.status_code == 200
         assert resp.json()["state"] == "Default"
 
     def test_no_library_component(self, no_component_client):
-        resp = no_component_client.get("/admin/training/state")
+        resp = no_component_client.get("/api/v1/training/state")
         assert resp.status_code == 404
         assert "No library component" in resp.json()["detail"]

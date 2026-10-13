@@ -28,14 +28,14 @@ def make_client(api_key=None):
     (API_KEY, {"X-Auth-Token": "wrong"}, 401),
     (None, {}, 200),
 ])
-def test_admin_auth(configured_key, headers, expected):
+def test_api_auth(configured_key, headers, expected):
     client, _ = make_client(configured_key)
-    assert client.get("/admin/status", headers=headers).status_code == expected
+    assert client.get("/api/v1/status", headers=headers).status_code == expected
 
 
 def test_rejected_request_does_not_reach_service():
     client, svc = make_client(API_KEY)
-    assert client.post("/admin/shutdown").status_code == 401
+    assert client.post("/api/v1/shutdown").status_code == 401
     svc.shutdown.assert_not_called()
 
 
@@ -47,7 +47,7 @@ def test_public_routes_need_no_key(path):
 
 def test_status_does_not_leak_key():
     client, service = make_client(API_KEY)
-    resp = client.get("/admin/status", headers={"X-Auth-Token": API_KEY})
+    resp = client.get("/api/v1/status", headers={"X-Auth-Token": API_KEY})
     assert API_KEY not in resp.text
     # Service.status() json.dumps the report itself, without FastAPI's encoder
     report = Service.status(service)
@@ -66,7 +66,7 @@ def test_key_from_env(monkeypatch, env_value, expected):
 def test_startup_warning(caplog, api_key, warns):
     svc = MagicMock(settings=ServiceSettings(http_api_key=api_key), log=logging.getLogger("auth-test"))
     with caplog.at_level(logging.WARNING, logger="auth-test"):
-        Service._warn_if_admin_api_unauthenticated(svc)
+        Service._warn_if_api_unauthenticated(svc)
     assert ("unauthenticated" in caplog.text) == warns
 
 

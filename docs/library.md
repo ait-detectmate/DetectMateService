@@ -78,20 +78,20 @@ The state is written under `{path}/{ComponentName}/` as a `metadata.json` index 
 
 #### Controlling persistency at runtime
 
-Once persistency is configured, three admin endpoints become available:
+Once persistency is configured, three API endpoints become available:
 
 ```bash
 # Check current state: events seen, events since last save, last save timestamp
-curl http://127.0.0.1:8000/admin/persistency/status
+curl http://127.0.0.1:8000/api/v1/persistency/status
 
 # Force an immediate save (e.g. before a planned maintenance window)
-curl -X POST http://127.0.0.1:8000/admin/persistency/save
+curl -X POST http://127.0.0.1:8000/api/v1/persistency/save
 
 # Restore state from disk (e.g. after rolling back to a previous snapshot)
-curl -X POST http://127.0.0.1:8000/admin/persistency/load
+curl -X POST http://127.0.0.1:8000/api/v1/persistency/load
 ```
 
-> **Warning:** `/admin/persistency/load` returns `409 Conflict` if the engine is running. Stop it first with `/admin/stop`, then load, then restart with `/admin/start`. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.
+> **Warning:** `/api/v1/persistency/load` returns `409 Conflict` if the engine is running. Stop it first with `/api/v1/stop`, then load, then restart with `/api/v1/start`. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.
 
 You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-state-persistency).
 
@@ -101,13 +101,13 @@ You can download the current learned state as a portable zip archive and restore
 
 ```bash
 # Download the current state to a local file
-curl http://127.0.0.1:8000/admin/persistency/export -o detector_state.zip
+curl http://127.0.0.1:8000/api/v1/persistency/export -o detector_state.zip
 
 # Restore state from a previously downloaded archive
 # (stop the engine first, import returns 409 if it is running)
-curl -X POST http://127.0.0.1:8000/admin/stop
-curl -X POST http://127.0.0.1:8000/admin/persistency/import -F "file=@detector_state.zip"
-curl -X POST http://127.0.0.1:8000/admin/start
+curl -X POST http://127.0.0.1:8000/api/v1/stop
+curl -X POST http://127.0.0.1:8000/api/v1/persistency/import -F "file=@detector_state.zip"
+curl -X POST http://127.0.0.1:8000/api/v1/start
 ```
 
 You can also use `detectmate-client` instead of curl:
@@ -135,25 +135,25 @@ You can override this behaviour at any time using the training state endpoints:
 
 ```bash
 # Check what the component is currently doing
-curl http://127.0.0.1:8000/admin/training/state
+curl http://127.0.0.1:8000/api/v1/training/state
 # → {"state": "Training."}  |  "Configuring"  |  "Default"
 
 # Freeze the model — stop updating it with new events
-curl -X POST http://127.0.0.1:8000/admin/training/state \
+curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "stop_training"}'
 
 # Resume training — keep updating even past the configured event limit
-curl -X POST http://127.0.0.1:8000/admin/training/state \
+curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "keep_training"}'
 
 # Similarly for the configure phase
-curl -X POST http://127.0.0.1:8000/admin/training/state \
+curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "stop_configuring"}'
 
-curl -X POST http://127.0.0.1:8000/admin/training/state \
+curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "keep_configuring"}'
 ```
