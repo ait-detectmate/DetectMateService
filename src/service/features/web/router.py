@@ -10,7 +10,7 @@ from detectmatelibrary.utils.persistency import PersistencyLoadError
 from service.features.engine import EngineState
 from service.features.web.auth import require_api_key, get_service
 
-router = APIRouter(prefix="/admin", dependencies=[Depends(require_api_key)])
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
 
 
 class ReconfigPayload(BaseModel):
@@ -107,7 +107,7 @@ async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[st
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
-            detail="Stop the engine before loading state (/admin/stop)",
+            detail="Stop the engine before loading state (/api/v1/stop)",
         )
     saver = _get_saver(service)
     try:
@@ -149,7 +149,7 @@ async def admin_persistency_import(
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
-            detail="Stop the engine before importing state (/admin/stop)",
+            detail="Stop the engine before importing state (/api/v1/stop)",
         )
     data = await file.read()
     if not zipfile.is_zipfile(io.BytesIO(data)):

@@ -79,7 +79,7 @@ class ServiceSettings(BaseSettings):
     # HTTP server (FastAPI) settings
     http_host: str = "127.0.0.1"
     http_port: int = 8000
-    # Key required in the X-Auth-Token header for admin routes.
+    # Key required in the X-Auth-Token header for API routes.
     # None disables authentication. Set it via DETECTMATE_HTTP_API_KEY.
     http_api_key: Optional[SecretStr] = None
 
