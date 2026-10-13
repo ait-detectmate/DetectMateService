@@ -20,7 +20,7 @@ These settings control the service infrastructure.
 | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
 | `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         
 | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
-| `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/admin/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
+| `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
 | `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
 | `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
 | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
@@ -145,15 +145,15 @@ Some components ship only with an [optional extra](installation.md#optional-libr
 
 
 
-## HTTP Admin Interface
+## HTTP API
 
 The service provides a REST API for runtime management and monitoring.
 
 ### Authentication
 
-When `http_api_key` is set, every `/admin/*` route requires the key in the `X-Auth-Token` header. A missing or wrong key returns `401 {"detail": "Invalid authentication credentials"}`. `/metrics`, `/docs`, `/redoc` and `/openapi.json` never require a key.
+When `http_api_key` is set, every `/api/v1/*` route requires the key in the `X-Auth-Token` header. A missing or wrong key returns `401 {"detail": "Invalid authentication credentials"}`. `/metrics`, `/docs`, `/redoc` and `/openapi.json` never require a key.
 
-If no key is set, the admin API is open and the service logs a warning at startup.
+If no key is set, the API is open and the service logs a warning at startup.
 
 Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:
 
@@ -165,7 +165,7 @@ detectmate --settings settings.yaml
 Call the API with the header:
 
 ```bash
-curl -H "X-Auth-Token: $DETECTMATE_HTTP_API_KEY" http://127.0.0.1:8000/admin/status
+curl -H "X-Auth-Token: $DETECTMATE_HTTP_API_KEY" http://127.0.0.1:8000/api/v1/status
 detectmate-client --api-key "$DETECTMATE_HTTP_API_KEY" status   # or set DETECTMATE_API_KEY
 ```
 
@@ -181,11 +181,11 @@ The key is sent in cleartext over plain HTTP. Either keep `http_host` on loopbac
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/status` | Returns the health, running state, and current effective configurations. |
-| `POST` | `/admin/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
-| `POST` | `/admin/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
-| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
-| `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |
+| `GET` | `/api/v1/status` | Returns the health, running state, and current effective configurations. |
+| `POST` | `/api/v1/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
+| `POST` | `/api/v1/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
+| `POST` | `/api/v1/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
+| `POST` | `/api/v1/shutdown` | Gracefully terminates the entire service process. |
 
 ### Persistency Endpoints
 
@@ -193,15 +193,15 @@ These endpoints are available when the loaded library component has persistency 
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
-| `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
-| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running. |
-| `GET` | `/admin/persistency/export` | Downloads the current learned state as a zip archive. |
-| `POST` | `/admin/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
+| `GET` | `/api/v1/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
+| `POST` | `/api/v1/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
+| `POST` | `/api/v1/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running. |
+| `GET` | `/api/v1/persistency/export` | Downloads the current learned state as a zip archive. |
+| `POST` | `/api/v1/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
 
-`/admin/persistency/save`, `/admin/persistency/status`, and `/admin/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/admin/persistency/load` and `/admin/persistency/import` additionally return `409` if the engine is running - stop it first with `/admin/stop`. `/admin/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
+`/api/v1/persistency/save`, `/api/v1/persistency/status`, and `/api/v1/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/api/v1/persistency/load` and `/api/v1/persistency/import` additionally return `409` if the engine is running - stop it first with `/api/v1/stop`. `/api/v1/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
-#### `/admin/persistency/status` response
+#### `/api/v1/persistency/status` response
 
 ```json
 {
@@ -233,8 +233,8 @@ These endpoints control whether the library component is actively training or co
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/training/state` | Returns the fit logic state from the last processed event. |
-| `POST` | `/admin/training/state` | Overrides the training or configuration phase. |
+| `GET` | `/api/v1/training/state` | Returns the fit logic state from the last processed event. |
+| `POST` | `/api/v1/training/state` | Overrides the training or configuration phase. |
 
 Both endpoints return `404` if no library component is loaded. See [usage.md](usage.md#controlling-training-state) for `detectmate-client` equivalents.
 
@@ -247,7 +247,7 @@ Each incoming event is evaluated by the component's fit logic, which decides wha
 
 Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.
 
-#### `POST /admin/training/state` payload
+#### `POST /api/v1/training/state` payload
 
 ```json
 {"state": "<value>"}
@@ -262,7 +262,7 @@ Both phases stop automatically after their configured event count. By default th
 
 Any other value is rejected with `422 Unprocessable Entity`.
 
-#### `GET /admin/training/state` response
+#### `GET /api/v1/training/state` response
 
 ```json
 {"state": "Training."}

@@ -65,11 +65,11 @@ def client(app, service_with_saver):
     app.dependency_overrides.clear()
 
 
-# ---------- /admin/persistency/save ----------
+# ---------- /api/v1/persistency/save ----------
 
 class TestPersistencySave:
     def test_save_ok(self, client, mock_saver):
-        resp = client.post("/admin/persistency/save")
+        resp = client.post("/api/v1/persistency/save")
         assert resp.status_code == 200
         assert resp.json() == {"message": "state saved"}
         mock_saver.save.assert_called_once()
@@ -79,7 +79,7 @@ class TestPersistencySave:
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.post("/admin/persistency/save")
+        resp = c.post("/api/v1/persistency/save")
         assert resp.status_code == 404
         assert "No library component" in resp.json()["detail"]
         app.dependency_overrides.clear()
@@ -89,24 +89,24 @@ class TestPersistencySave:
         svc.library_component = MagicMock(spec=[])  # saver attribute absent
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.post("/admin/persistency/save")
+        resp = c.post("/api/v1/persistency/save")
         assert resp.status_code == 404
         assert "Persistency not configured" in resp.json()["detail"]
         app.dependency_overrides.clear()
 
 
-# ---------- /admin/persistency/load ----------
+# ---------- /api/v1/persistency/load ----------
 
 class TestPersistencyLoad:
     def test_load_ok(self, client, mock_saver):
-        resp = client.post("/admin/persistency/load")
+        resp = client.post("/api/v1/persistency/load")
         assert resp.status_code == 200
         assert resp.json() == {"message": "state loaded"}
         mock_saver.load.assert_called_once()
 
     def test_load_no_saved_state(self, client, mock_saver):
         mock_saver.load.side_effect = PersistencyLoadError("metadata.json missing")
-        resp = client.post("/admin/persistency/load")
+        resp = client.post("/api/v1/persistency/load")
         assert resp.status_code == 404
         assert "metadata.json missing" in resp.json()["detail"]
 
@@ -115,9 +115,9 @@ class TestPersistencyLoad:
         svc._state = EngineState.RUNNING
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.post("/admin/persistency/load")
+        resp = c.post("/api/v1/persistency/load")
         assert resp.status_code == 409
-        assert "/admin/stop" in resp.json()["detail"]
+        assert "/api/v1/stop" in resp.json()["detail"]
         app.dependency_overrides.clear()
 
     def test_load_no_library_component(self, app):
@@ -126,16 +126,16 @@ class TestPersistencyLoad:
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.post("/admin/persistency/load")
+        resp = c.post("/api/v1/persistency/load")
         assert resp.status_code == 404
         app.dependency_overrides.clear()
 
 
-# ---------- /admin/persistency/status ----------
+# ---------- /api/v1/persistency/status ----------
 
 class TestPersistencyStatus:
     def test_status_ok(self, client, mock_saver):
-        resp = client.get("/admin/persistency/status")
+        resp = client.get("/api/v1/persistency/status")
         assert resp.status_code == 200
         assert resp.json() == _STATUS_RESPONSE
         mock_saver.get_status.assert_called_once()
@@ -145,18 +145,18 @@ class TestPersistencyStatus:
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.get("/admin/persistency/status")
+        resp = c.get("/api/v1/persistency/status")
         assert resp.status_code == 404
         app.dependency_overrides.clear()
 
 
-# ---------- /admin/persistency/export ----------
+# ---------- /api/v1/persistency/export ----------
 
 class TestPersistencyExport:
     def test_export_ok(self, client, service_with_saver):
         service_with_saver.library_component.export_state.return_value = b"fake zip bytes"
         service_with_saver.library_component.name = "MyDetector"
-        resp = client.get("/admin/persistency/export")
+        resp = client.get("/api/v1/persistency/export")
         assert resp.status_code == 200
         assert resp.headers["content-type"] == "application/zip"
         assert 'filename="MyDetector_state.zip"' in resp.headers["content-disposition"]
@@ -164,13 +164,13 @@ class TestPersistencyExport:
 
     def test_export_no_persistency_configured(self, client, service_with_saver):
         service_with_saver.library_component.export_state.return_value = None
-        resp = client.get("/admin/persistency/export")
+        resp = client.get("/api/v1/persistency/export")
         assert resp.status_code == 404
         assert "Persistency not configured" in resp.json()["detail"]
 
     def test_export_no_persistency_attribute(self, client, service_with_saver):
         service_with_saver.library_component.persistency = None
-        resp = client.get("/admin/persistency/export")
+        resp = client.get("/api/v1/persistency/export")
         assert resp.status_code == 404
         assert resp.json()["detail"] == "Persistency not configured for this component"
         service_with_saver.library_component.export_state.assert_not_called()
@@ -180,17 +180,17 @@ class TestPersistencyExport:
         svc.library_component = None
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
-        resp = c.get("/admin/persistency/export")
+        resp = c.get("/api/v1/persistency/export")
         assert resp.status_code == 404
         app.dependency_overrides.clear()
 
 
-# ---------- /admin/persistency/import ----------
+# ---------- /api/v1/persistency/import ----------
 
 class TestPersistencyImport:
     def test_import_ok(self, client, service_with_saver):
         data = _make_zip({"metadata.json": b"{}", "events/1.msgpack": b"x"})
-        resp = client.post("/admin/persistency/import",
+        resp = client.post("/api/v1/persistency/import",
                            files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 200
         assert resp.json() == {"message": "state imported"}
@@ -200,21 +200,21 @@ class TestPersistencyImport:
         # Guards against archives produced by library versions with the
         # leading-slash zip-entry bug (fsspec MemoryFileSystem path handling).
         data = _make_zip({"/metadata.json": b"{}", "/events/1.msgpack": b"x"})
-        resp = client.post("/admin/persistency/import",
+        resp = client.post("/api/v1/persistency/import",
                            files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 200
         service_with_saver.library_component.import_state.assert_called_once_with(data)
 
     def test_import_invalid_zip(self, client):
         resp = client.post(
-            "/admin/persistency/import", files={"file": ("state.zip", b"not a zip", "application/zip")}
+            "/api/v1/persistency/import", files={"file": ("state.zip", b"not a zip", "application/zip")}
         )
         assert resp.status_code == 422
         assert "not a valid zip archive" in resp.json()["detail"]
 
     def test_import_missing_metadata(self, client):
         data = _make_zip({"events/1.msgpack": b"x"})
-        resp = client.post("/admin/persistency/import",
+        resp = client.post("/api/v1/persistency/import",
                            files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 422
         assert "metadata.json not found" in resp.json()["detail"]
@@ -222,7 +222,7 @@ class TestPersistencyImport:
     def test_import_load_error(self, client, service_with_saver):
         service_with_saver.library_component.import_state.side_effect = PersistencyLoadError("bad state")
         data = _make_zip({"metadata.json": b"{}"})
-        resp = client.post("/admin/persistency/import",
+        resp = client.post("/api/v1/persistency/import",
                            files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 422
         assert "bad state" in resp.json()["detail"]
@@ -233,9 +233,9 @@ class TestPersistencyImport:
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
         data = _make_zip({"metadata.json": b"{}"})
-        resp = c.post("/admin/persistency/import", files={"file": ("state.zip", data, "application/zip")})
+        resp = c.post("/api/v1/persistency/import", files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 409
-        assert "/admin/stop" in resp.json()["detail"]
+        assert "/api/v1/stop" in resp.json()["detail"]
         app.dependency_overrides.clear()
 
     def test_import_no_library_component(self, app):
@@ -245,7 +245,7 @@ class TestPersistencyImport:
         app.dependency_overrides[get_service] = lambda: svc
         c = TestClient(app)
         data = _make_zip({"metadata.json": b"{}"})
-        resp = c.post("/admin/persistency/import", files={"file": ("state.zip", data, "application/zip")})
+        resp = c.post("/api/v1/persistency/import", files={"file": ("state.zip", data, "application/zip")})
         assert resp.status_code == 404
         app.dependency_overrides.clear()
 
@@ -257,7 +257,7 @@ class TestPersistencyImport:
     def test_import_no_persistency_configured(self, client, service_with_saver, engine_state, payload):
         service_with_saver._state = engine_state
         service_with_saver.library_component.persistency = None
-        resp = client.post("/admin/persistency/import",
+        resp = client.post("/api/v1/persistency/import",
                            files={"file": ("state.zip", payload, "application/zip")})
         assert resp.status_code == 404
         assert resp.json()["detail"] == "Persistency not configured for this component"
