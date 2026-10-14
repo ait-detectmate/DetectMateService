@@ -22,7 +22,7 @@ uv sync --dev
 
 Every code contributor must use [`prek`](https://github.com/j178/prek) to run basic checks at commit time.
 `prek` is configured via the existing `.pre-commit-config.yaml`
-and can be installed as part of the `dev` extras. To ensure pre-commit hooks run before each commit, run:
+and is installed as part of the `dev` dependency group. To ensure pre-commit hooks run before each commit, run:
 
 ```bash
 uv run prek install
@@ -65,7 +65,7 @@ values) unless persistence with `auto_load` is configured — see
 
 `docker-compose.library-source.yml.example` is a template overlay that
 installs `detectmatelibrary` from a local source checkout instead of PyPI,
-for the `detector` service. Copy it to `docker-compose.library-source.yml`
+for the `parser`, `detector` and `detector-rule` services. Copy it to `docker-compose.library-source.yml`
 (gitignored, so your local path never ends up in version control) and point
 the volume at your checkout:
 
@@ -121,7 +121,7 @@ The entries are whatever the published DetectMateLibrary documentation lists und
 `parsers/` and `detectors/` sections, read from its `sitemap.xml`, and each one is named by
 the headline of its page. A component that gets a page in the library therefore appears here
 on the next run without anyone editing markdown. The script only rewrites the text between
-the `<!-- Start detectors -->` / `<!-- End detectors -->` markers. The docs workflow runs it
+the `<!-- Start parsers -->` / `<!-- End parsers -->` and `<!-- Start detectors -->` / `<!-- End detectors -->` markers. The docs workflow runs it
 before publishing, so the published tables stay current even between library bumps.
 
 
