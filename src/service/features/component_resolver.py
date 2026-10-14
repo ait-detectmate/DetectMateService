@@ -17,7 +17,7 @@ class ComponentResolver:
 
     Already fully-qualified paths (with a dot) are returned as-is and we try to
     get the config class from the same module.
-    For Short names wewalk the sub-modules of `detectmatelibrary` and find
+    For short names we walk the sub-modules of `detectmatelibrary` and find
     a class whose __name__ matches.
 
     Example:

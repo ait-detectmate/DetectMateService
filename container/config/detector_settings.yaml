@@ -3,7 +3,7 @@ component_type: NewValueDetector  # this is the component class name, the servic
 log_level: "DEBUG"
 log_dir: "/logs"
 
-# Manager Interface (Command Channel)
+# HTTP API (management and metrics)
 http_host: 0.0.0.0
 
 # Engine Interface (Data Channel)

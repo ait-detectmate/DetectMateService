@@ -98,7 +98,7 @@ def service_factory():
     for svc in services:
         svc.stop()
         try:
-            url = f"{BASE_HTTP_URL}:{svc.settings.http_port}/admin/shutdown"
+            url = f"{BASE_HTTP_URL}:{svc.settings.http_port}/api/v1/shutdown"
             httpx.post(url, timeout=0.5)
         except (httpx.HTTPError, Exception) as exc:
             logging.debug("Ignoring error during service HTTP shutdown for %s: %s", url, exc)
@@ -177,7 +177,7 @@ class TestServiceMultiOutputIntegration:
         service_factory(settings)
 
         # Request status via HTTP
-        response = httpx.get(f"{BASE_HTTP_URL}:{http_port}/admin/status")
+        response = httpx.get(f"{BASE_HTTP_URL}:{http_port}/api/v1/status")
         assert response.status_code == 200
         status_data = response.json()
 
@@ -218,7 +218,7 @@ class TestServiceMultiOutputIntegration:
         assert svc._state == EngineState.RUNNING
 
         # Send stop command
-        httpx.post(f"{BASE_HTTP_URL}:{http_port}/admin/stop")
+        httpx.post(f"{BASE_HTTP_URL}:{http_port}/api/v1/stop")
         time.sleep(SHUTDOWN_DELAY)
 
         assert svc._state == EngineState.STOPPED

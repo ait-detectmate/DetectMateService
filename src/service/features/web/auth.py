@@ -32,7 +32,7 @@ def require_api_key(
         token.encode(), expected.get_secret_value().encode()
     ):
         client_host = request.client.host if request.client else "unknown"
-        logger.warning("Rejected unauthenticated admin request from %s to %s", client_host, request.url.path)
+        logger.warning("Rejected unauthenticated API request from %s to %s", client_host, request.url.path)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

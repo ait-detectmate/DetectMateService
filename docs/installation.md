@@ -1,5 +1,7 @@
 # Installation
 
+DetectMateService requires **Python 3.12 or newer**.
+
 First, clone DetectMateService and navigate into the repository:
 
 ```bash
@@ -10,9 +12,7 @@ cd DetectMateService
 ## Setup with uv (recommended)
 
 We recommend using [uv](https://github.com/astral-sh/uv) to manage the environment
-and dependencies.
-
-### 1. Download the dependencies
+and dependencies. To create the environment and install the dependencies, run:
 
 ```bash
 uv sync
@@ -27,7 +27,7 @@ If you prefer plain `pip`, you can set things up like this instead:
 python -m venv .venv
 # Activate it
 source .venv/bin/activate
-# Install the project in editable mode with dev dependencies
+# Install the project and its dependencies
 pip install .
 ```
 
@@ -41,7 +41,7 @@ configured components actually need:
 
 | Extra              | Adds                                    | Needed for |
 |---------------------|------------------------------------------|------------|
-| `llm`               | `openai`, `tiktoken`, `scikit-learn`, `scipy`, `tenacity` | LLM-backed detectors/parsers |
+| `llm`               | `openai`, `tiktoken`, `scikit-learn`, `scipy`, `tenacity`, `pandas` | LLM-backed detectors/parsers |
 | `dataframes`        | `pandas`, `polars`                        | Dataframe-based persistency backends and components |
 | `polars-rtcompat`   | `polars[rtcompat]`                        | Polars runtime compatibility on older CPUs |
 | `full`              | all of the above                          | Running any/all library components, e.g. local development |

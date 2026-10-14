@@ -1,6 +1,6 @@
 # Docker Compose Reference
 
-DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of the docker-compose.yaml. The following image illustrates the log data pipeline deployed by Docker Compose:
+DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of `docker-compose.yml`. The following image illustrates the log data pipeline deployed by Docker Compose:
 
 ![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
 
@@ -30,7 +30,7 @@ Docker Compose builds the `fluentin` image using the configuration in the file [
 
 ### Depends
 
-This services depends on the `parser` service, because `parser` creates the socket file to establish communication.
+This service depends on the `parser` service, because `parser` creates the socket file to establish communication.
 
 ## Parser
 
@@ -38,7 +38,7 @@ The second component of the logdata analysis pipeline is the service `parser`. T
 
 ### Building the image
 
-Docker compose builds the `detectmate` image using the [Dockerfile](https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile) in the root of the DetectMate repository. This image is the same for `parser` and `detector`.
+Docker compose builds the `detectmate` image using the [Dockerfile](https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile) in the root of the DetectMate repository. This image is the same for `parser`, `detector` and `detector-rule`.
 
 ### Volumes
 
@@ -115,7 +115,7 @@ This service depends on the `fluentout` service, because `fluentout` creates the
 
 ## Fluentout
 
-The `fluentout`service receives data from both `detector` and `detector-rule`, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles `output.%Y%m%d` and `output-rule.%Y%m%d` respectively.
+The `fluentout` service receives data from both `detector` and `detector-rule`, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles `output.%Y%m%d` and `output-rule.%Y%m%d` respectively.
 
 While writing to a log file is just an example in this setup, you can refer to the [Fluentd documentation](https://docs.fluentd.org/) for guidance on writing alerts to other targets.
 
@@ -129,7 +129,7 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 `fluentout` mounts the following volumes using bind-mount. 
 
-- `container/fluentin:/fluentd/etc` provides the fluentd configuration. The file [container/fluentin/fluent.conf](https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf) contains one `<source>`/`<match>` pair for `detector` (`ipc:///run/output.ipc` → `output.%Y%m%d`) and one for `detector-rule` (`ipc:///run/output-rule.ipc` → `output-rule.%Y%m%d`), and can be used to reconfigure fluentd to write to other targets.
+- `container/fluentout:/fluentd/etc` provides the fluentd configuration. The file [container/fluentout/fluent.conf](https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf) contains one `<source>`/`<match>` pair for `detector` (`ipc:///run/output.ipc` → `output.%Y%m%d`) and one for `detector-rule` (`ipc:///run/output-rule.ipc` → `output-rule.%Y%m%d`), and can be used to reconfigure fluentd to write to other targets.
 
 - `container/fluentlogs:/fluentd/log` exposes the directory containing written log files. By default, `fluentout` writes alerts from `detector` to `output.%Y%m%d` and alerts from `detector-rule` to `output-rule.%Y%m%d`.
 
@@ -143,13 +143,13 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 `prometheus` mounts the following volumes:
 
-- `container/prometheus.yml:/etc/prometheus/prometheus.yml` is the single prometheus configuration file, that tells prometheus to collect the metrics data from `parser`, `detector` and `detector-rule` at **port 8000***.
+- `container/prometheus.yml:/etc/prometheus/prometheus.yml` is the single prometheus configuration file, that tells prometheus to collect the metrics data from `parser`, `detector` and `detector-rule` at **port 8000**.
 
 - `prometheus_data:/prometheus` holds the prometheus database.
 
 ### Ports
 
-This service exposes **port 9090**
+Prometheus listens on **port 9090** inside the Docker network only (`expose`, not `ports`), so it is reachable by other services such as `grafana` (`http://prometheus:9090`) but not from the host. Use Grafana at `http://localhost:3000` to explore the metrics.
 
 ## Grafana
 
@@ -159,13 +159,15 @@ This service exposes **port 9090**
 
 `grafana` mounts the following volumes:
 
-- `container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml`is the config file that preconfigures grafana to use prometheus as a datasource.
+- `container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml` is the config file that preconfigures grafana to use prometheus as a datasource.
+- `container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml` is the dashboard provider config. It tells grafana to load every dashboard JSON file from `/var/lib/grafana/dashboards` into a `DetectMate` folder.
+- `container/grafana/dashboards:/var/lib/grafana/dashboards` provides the dashboard JSON files, such as `detectmate.json` (the **DetectMateService Overview** dashboard).
 - `grafana_data:/var/lib/grafana` is the database of grafana
 
 ## Kafka
 
-The [Apache Kafka](https://kafka.apache.org/) service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active(commented out).
+The [Apache Kafka](https://kafka.apache.org/) service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active (commented out).
 
 
 !!! note
-    In container/fluentout/fluent.conf contains an example Fluentd configuration for sending alerts to Kafka.
+    `container/fluentout/fluent.conf` contains an example Fluentd configuration for sending alerts to Kafka.

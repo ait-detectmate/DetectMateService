@@ -68,11 +68,13 @@ The DetectMate repository ships a ready-to-use Docker Compose configuration that
 --8<-- "container/prometheus.yml"
 ```
 
-Prometheus is accessible at `http://localhost:9090` after starting the stack with:
+Start the stack with:
 
 ```bash
 docker compose up
 ```
+
+Prometheus listens on port 9090 inside the Docker network only. It is not published to the host. Grafana reaches it at `http://prometheus:9090`, and you can explore the metrics through Grafana, see below.
 
 See the [Docker Compose reference](docker-compose.md) for details on the full stack setup.
 
