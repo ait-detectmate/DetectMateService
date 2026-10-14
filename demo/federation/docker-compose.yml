@@ -2,11 +2,7 @@
 # Run from this directory:  docker compose up --build --abort-on-container-exit
 x-node: &node
   image: detectmate-federation-demo
-  build:
-    context: ../..
-    dockerfile: demo/federation/Dockerfile
-    args:
-      LIBRARY_REF: ${LIBRARY_REF:-}
+  pull_policy: never  # local image, built by site-a
   volumes:
     - ./config:/config:ro
   command: detectmate --settings /config/settings.yaml --config /config/detector_config.yaml
@@ -15,8 +11,15 @@ x-env: &env
   DETECTMATE_HTTP_API_KEY: ${DETECTMATE_HTTP_API_KEY:-demo-key}
 
 services:
+  # The only service that builds the image; the others reuse it by name,
+  # so it is built once instead of once per node.
   site-a:
     <<: *node
+    build:
+      context: ../..
+      dockerfile: demo/federation/Dockerfile
+      args:
+        LIBRARY_REF: ${LIBRARY_REF:-}
     environment: {<<: *env, DETECTMATE_COMPONENT_NAME: site-a}
     ports: ["8101:8000"]
 
@@ -39,6 +42,7 @@ services:
   # Feeds the sites and runs the federation round over the HTTP API.
   controller:
     image: detectmate-federation-demo
+    pull_policy: never
     volumes:
       - ./federation_demo.py:/demo/federation_demo.py:ro
     environment: *env
