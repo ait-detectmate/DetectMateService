@@ -8,7 +8,7 @@ This document provides an overview of where DetectMateService imports from Detec
 |--------|---------------|---------|---------|
 | `CoreComponent` | `detectmatelibrary.common.core` | `core.py`, `component_loader.py` | Base class for all processing components |
 | `CoreConfig` | `detectmatelibrary.common.core` | `core.py`, `config_loader.py`, `config_manager.py` | Base class for configuration schemas |
-| `LogSchema` | `detectmatelibrary.schemas` | Integration tests | Reader output format |
+| `LogSchema` | `detectmatelibrary.schemas` | Integration tests | Parser input format |
 | `ParserSchema` | `detectmatelibrary.schemas` | Integration tests | Parser output format |
 | `DetectorSchema` | `detectmatelibrary.schemas` | Integration tests | Detector output format |
 
@@ -120,14 +120,14 @@ from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
 
 The schemas are used in integration tests to verify correct data flow between pipeline stages:
 
-- **LogSchema**: Serialized output from Reader components
+- **LogSchema**: Serialized log lines sent to Parser components by the log source (e.g. Fluentd)
 - **ParserSchema**: Serialized output from Parser components
 - **DetectorSchema**: Serialized output from Detector components
 
 ### Data Flow
 
 ```
-Reader                    Parser                     Detector
+Log source                Parser                     Detector
    |                         |                          |
    v                         v                          v
 LogSchema bytes  --->  ParserSchema bytes  --->  DetectorSchema bytes
