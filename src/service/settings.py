@@ -158,6 +158,11 @@ class ServiceSettings(BaseSettings):
                 except (IOError, yaml.YAMLError) as e:
                     raise SystemExit(f"[config] Error reading YAML file {path}: {e}") from e
 
+        # reject unknown keys (e.g. removed settings like manager_addr) instead of silently dropping them
+        unknown_keys = sorted(set(data) - set(cls.model_fields))
+        if unknown_keys:
+            raise SystemExit(f"[config] Unknown setting(s) in {path}: {', '.join(unknown_keys)}")
+
         # convert string paths to Path objects
         if "log_dir" in data and isinstance(data["log_dir"], str):
             data["log_dir"] = Path(data["log_dir"])

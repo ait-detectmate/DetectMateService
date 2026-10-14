@@ -1,3 +1,4 @@
+import pytest
 import yaml
 import tempfile
 import os
@@ -143,3 +144,13 @@ def test_env_vars_override_yaml(tmpdir, monkeypatch):
 
     # Verify that component_id was generated
     assert settings.component_id is not None
+
+
+def test_unknown_key_in_yaml_raises(tmp_path):
+    """Unknown keys (e.g. the removed manager_addr) must be rejected, not
+    silently dropped."""
+    yaml_file = tmp_path / "settings.yaml"
+    yaml_file.write_text("component_name: test\nmanager_addr: ipc:///tmp/detectmate.cmd.ipc\n")
+
+    with pytest.raises(SystemExit, match="manager_addr"):
+        ServiceSettings.from_yaml(yaml_file)
