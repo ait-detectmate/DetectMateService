@@ -4,7 +4,7 @@ This document describes the interface contract between DetectMateService and Det
 
 ## CoreComponent Interface
 
-All processing components (readers, parsers, detectors) must inherit from `CoreComponent`:
+All processing components (parsers and detectors) must inherit from `CoreComponent`:
 
 ```python
 from detectmatelibrary.common.core import CoreComponent
@@ -66,10 +66,10 @@ class MyComponentConfig(CoreConfig):
 
 1. Resolution: `ComponentResolver` expands the `component_type` from settings to a fully qualified path and derives the matching config class from it (see [Component Loading](#component-loading)). An explicit `component_config_class` is optional and takes precedence.
 2. Service loads config from YAML file.
-3. Schema identification: The service calls dynamically imports and verify the configuration class.
+3. Schema identification: `ConfigClassLoader` dynamically imports the resolved configuration class.
  - Validation: It ensures the config class is a subclass of `CoreConfig`.
-4. Component Instantiation: The service uses to dynamically loads the resolved component class.
- - Validation: It ensures the component class is an instance of `CoreComponent`
+4. Component Instantiation: `ComponentLoader` dynamically imports the resolved component class and instantiates it.
+ - Validation: It ensures the new instance is an instance of `CoreComponent`.
 5. Config from `ConfigManager` is passed to component constructor
 6. The Library processes and validates the configuration internally
  - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it raises an AutoConfigError.
@@ -155,7 +155,7 @@ Components in the processing pipeline use protobuf schemas for structured data e
 
 | Stage | Input | Output Schema |
 |-------|-------|---------------|
-| Reader | Raw source (file, network, etc.) | `LogSchema` |
+| Log source (e.g. Fluentd with the `detectmate` formatter) | Raw log lines (file, network, etc.) | `LogSchema` |
 | Parser | `LogSchema` bytes | `ParserSchema` |
 | Detector | `ParserSchema` bytes | `DetectorSchema` |
 
