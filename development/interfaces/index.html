@@ -161,18 +161,23 @@
                 <h1 id="library-interface-contract">Library Interface Contract</h1>
 <p>This document describes the interface contract between DetectMateService and DetectMateLibrary. If you're implementing custom components in the library, your classes must adhere to these interfaces.</p>
 <h2 id="corecomponent-interface">CoreComponent Interface</h2>
-<p>All processing components (readers, parsers, detectors) must inherit from <code>CoreComponent</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreComponent</span>
+<p>All processing components (parsers and detectors) must inherit from <code>CoreComponent</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreComponent</span><span class="p">,</span> <span class="n">CoreConfig</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyComponent</span><span class="p">(</span><span class="n">CoreComponent</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;MyComponent&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">CoreConfig</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the component.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            name: Name of the component instance.</span>
 <span class="sd">            config: Optional configuration dictionary or CoreConfig instance.</span>
 <span class="sd">                    May be None if no configuration is provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">CoreConfig</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">CoreConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
         <span class="c1"># Your initialization here</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -190,7 +195,7 @@
 </code></pre></div>
 <h3 id="key-requirements">Key Requirements</h3>
 <ul>
-<li><strong>Constructor</strong>: Must accept an optional <code>config</code> parameter (can be <code>dict</code> or <code>CoreConfig</code> instance)</li>
+<li><strong>Constructor</strong>: Must accept a <code>name</code> and an optional <code>config</code> parameter (can be <code>dict</code> or <code>CoreConfig</code> instance). The service passes the config as a <code>dict</code></li>
 <li><strong>process() method</strong>: Must accept <code>bytes</code> and return <code>bytes | None</code></li>
 <li><strong>Return behavior</strong>:</li>
 <li>Return <code>bytes</code> to forward output to downstream components</li>
@@ -216,28 +221,22 @@
 <ol>
 <li>Resolution: <code>ComponentResolver</code> expands the <code>component_type</code> from settings to a fully qualified path and derives the matching config class from it (see <a href="#component-loading">Component Loading</a>). An explicit <code>component_config_class</code> is optional and takes precedence.</li>
 <li>Service loads config from YAML file.</li>
-<li>Schema identification: The service calls dynamically imports and verify the configuration class.</li>
+<li>Schema identification: <code>ConfigClassLoader</code> dynamically imports the resolved configuration class.</li>
 <li>Validation: It ensures the config class is a subclass of <code>CoreConfig</code>.</li>
-<li>Component Instantiation: The service uses to dynamically loads the resolved component class.</li>
-<li>Validation: It ensures the component class is an instance of <code>CoreComponent</code></li>
+<li>Component Instantiation: <code>ComponentLoader</code> dynamically imports the resolved component class and instantiates it.</li>
+<li>Validation: It ensures the new instance is an instance of <code>CoreComponent</code>.</li>
 <li>Config from <code>ConfigManager</code> is passed to component constructor</li>
 <li>The Library processes and validates the configuration internally</li>
 <li>
-<p>Validation: The library checks if <code>auto_config</code> is enabled. If disabled and no <code>params</code> exist, it raises an AutoConfigError.</p>
+<p>Validation: The library checks if <code>auto_config</code> is enabled. If disabled and no <code>params</code> exist, it emits a <code>MissingParamsWarning</code>.</p>
 </li>
 <li>
 <p>Type Checking: It ensures the method_type matches the expected component type.</p>
 </li>
 <li>
-<p>Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.</p>
-</li>
-<li>
-<p>Keyword Cleaning: If a parameter key starts with <code>all_</code>, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).</p>
-</li>
-<li>
 <p>Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant <code>params</code> key.</p>
 </li>
-<li>Processor Adaptation: The service wraps the <code>CoreComponent</code> in a <code>LibraryComponentProcessor</code> (an adapter) to make it compatible with the <code>Engine</code> loop.</li>
+<li>Processing: The <code>Engine</code> loop calls <code>Service.process()</code>, which passes each message to the <code>CoreComponent</code>'s <code>process()</code> method.</li>
 <li>At runtime, <code>reconfigure</code> command can update configs dynamically</li>
 </ol>
 <h2 id="component-loading">Component Loading</h2>
@@ -317,8 +316,8 @@
 </thead>
 <tbody>
 <tr>
-<td>Reader</td>
-<td>Raw source (file, network, etc.)</td>
+<td>Log source (e.g. Fluentd with the <code>detectmate</code> formatter)</td>
+<td>Raw log lines (file, network, etc.)</td>
 <td><code>LogSchema</code></td>
 </tr>
 <tr>
@@ -337,7 +336,7 @@
 <h2 id="complete-example">Complete Example</h2>
 <p>Here's a minimal detector component implementation:</p>
 <h3 id="1-config-class-detectorsrandom_detectorpy">1. Config Class (<code>detectors/random_detector.py</code>)</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common._config._formats</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogVariables</span><span class="p">,</span> <span class="n">AllLogVariables</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common._config._formats</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventsConfig</span><span class="p">,</span> <span class="n">Variable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">detectmatelibrary.common.detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreDetector</span><span class="p">,</span> <span class="n">CoreDetectorConfig</span>
 
@@ -430,11 +429,12 @@
 <span class="w">                              </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.</span>
 <span class="w">                    </span><span class="nt">header_variables</span><span class="p">:</span>
 <span class="w">                        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
-<span class="w">                          </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">                          </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">                              </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
 </code></pre></div>
 <p>This hierarchical format allows the library to correctly route parameters based on category and class name.</p>
 <h3 id="4-run-the-service">4. Run the Service</h3>
-<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--configs<span class="w"> </span>random-config.yaml
+<div class="highlight"><pre><span></span><code>detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml<span class="w"> </span>--config<span class="w"> </span>random-config.yaml
 </code></pre></div>
 <h2 id="validation">Validation</h2>
 <p>The service validates components at load time:</p>

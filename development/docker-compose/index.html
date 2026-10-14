@@ -184,7 +184,7 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="docker-compose-reference">Docker Compose Reference</h1>
-<p>DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of the docker-compose.yaml. The following image illustrates the log data pipeline deployed by Docker Compose:</p>
+<p>DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of <code>docker-compose.yml</code>. The following image illustrates the log data pipeline deployed by Docker Compose:</p>
 <p><img alt="Illustration of a logpipeline" src="../images/Detectmate.drawio.png" title="logpipeline" /></p>
 <p>Log file ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. Using the default setup, fluentd reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards it to <strong>both</strong> detector services shipped by default, <code>detector</code> and <code>detector-rule</code>. If either detector finds an anomaly, it sends it to the <code>fluentout</code> process, which can communicate with various targets, such as Elasticsearch, Kafka, or a log file.</p>
 <p>The following sections will explain the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/docker-compose.yml">docker-compose.yml</a> service by service.</p>
@@ -207,11 +207,11 @@
 </li>
 </ul>
 <h3 id="depends">Depends</h3>
-<p>This services depends on the <code>parser</code> service, because <code>parser</code> creates the socket file to establish communication.</p>
+<p>This service depends on the <code>parser</code> service, because <code>parser</code> creates the socket file to establish communication.</p>
 <h2 id="parser">Parser</h2>
 <p>The second component of the logdata analysis pipeline is the service <code>parser</code>. This DetectMate service listens for logs received from the <code>fluentin</code> service on a <a href="https://nng.nanomsg.org/">Nano Message socket</a>. It expects the data in the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">LogSchema format used by DetectMate</a> and sends the parsed data using the <a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/schemas/">ParserSchema</a> to another Nano Message socket provided by a DetectMate detector service.</p>
 <h3 id="building-the-image_1">Building the image</h3>
-<p>Docker compose builds the <code>detectmate</code> image using the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> in the root of the DetectMate repository. This image is the same for <code>parser</code> and <code>detector</code>.</p>
+<p>Docker compose builds the <code>detectmate</code> image using the <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile">Dockerfile</a> in the root of the DetectMate repository. This image is the same for <code>parser</code>, <code>detector</code> and <code>detector-rule</code>.</p>
 <h3 id="volumes_1">Volumes</h3>
 <p>All DetectMate containers (<code>parser</code>, <code>detector</code> and <code>detector-rule</code>) need the following volumes mounted:</p>
 <ul>
@@ -275,7 +275,7 @@
 <h3 id="depends_3">Depends</h3>
 <p>This service depends on the <code>fluentout</code> service, because <code>fluentout</code> creates the socket file to establish communication.</p>
 <h2 id="fluentout">Fluentout</h2>
-<p>The <code>fluentout</code>service receives data from both <code>detector</code> and <code>detector-rule</code>, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles <code>output.%Y%m%d</code> and <code>output-rule.%Y%m%d</code> respectively.</p>
+<p>The <code>fluentout</code> service receives data from both <code>detector</code> and <code>detector-rule</code>, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles <code>output.%Y%m%d</code> and <code>output-rule.%Y%m%d</code> respectively.</p>
 <p>While writing to a log file is just an example in this setup, you can refer to the <a href="https://docs.fluentd.org/">Fluentd documentation</a> for guidance on writing alerts to other targets.</p>
 <p>Since each detector's output socket is a 1:1 <a href="https://nng.nanomsg.org/">Nano Message</a> <code>Pair0</code> connection, <code>fluentout</code> needs one <code>&lt;source&gt;</code>/<code>&lt;match&gt;</code> pair per detector rather than a single shared one - but both live in the same Fluentd process and container, so no second <code>fluentout</code> container is needed.</p>
 <h3 id="building-the-image_4">Building the image</h3>
@@ -284,7 +284,7 @@
 <p><code>fluentout</code> mounts the following volumes using bind-mount. </p>
 <ul>
 <li>
-<p><code>container/fluentin:/fluentd/etc</code> provides the fluentd configuration. The file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf">container/fluentin/fluent.conf</a> contains one <code>&lt;source&gt;</code>/<code>&lt;match&gt;</code> pair for <code>detector</code> (<code>ipc:///run/output.ipc</code> → <code>output.%Y%m%d</code>) and one for <code>detector-rule</code> (<code>ipc:///run/output-rule.ipc</code> → <code>output-rule.%Y%m%d</code>), and can be used to reconfigure fluentd to write to other targets.</p>
+<p><code>container/fluentout:/fluentd/etc</code> provides the fluentd configuration. The file <a href="https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf">container/fluentout/fluent.conf</a> contains one <code>&lt;source&gt;</code>/<code>&lt;match&gt;</code> pair for <code>detector</code> (<code>ipc:///run/output.ipc</code> → <code>output.%Y%m%d</code>) and one for <code>detector-rule</code> (<code>ipc:///run/output-rule.ipc</code> → <code>output-rule.%Y%m%d</code>), and can be used to reconfigure fluentd to write to other targets.</p>
 </li>
 <li>
 <p><code>container/fluentlogs:/fluentd/log</code> exposes the directory containing written log files. By default, <code>fluentout</code> writes alerts from <code>detector</code> to <code>output.%Y%m%d</code> and alerts from <code>detector-rule</code> to <code>output-rule.%Y%m%d</code>.</p>
@@ -299,27 +299,29 @@
 <p><code>prometheus</code> mounts the following volumes:</p>
 <ul>
 <li>
-<p><code>container/prometheus.yml:/etc/prometheus/prometheus.yml</code> is the single prometheus configuration file, that tells prometheus to collect the metrics data from <code>parser</code>, <code>detector</code> and <code>detector-rule</code> at <strong>port 8000</strong>*.</p>
+<p><code>container/prometheus.yml:/etc/prometheus/prometheus.yml</code> is the single prometheus configuration file, that tells prometheus to collect the metrics data from <code>parser</code>, <code>detector</code> and <code>detector-rule</code> at <strong>port 8000</strong>.</p>
 </li>
 <li>
 <p><code>prometheus_data:/prometheus</code> holds the prometheus database.</p>
 </li>
 </ul>
 <h3 id="ports_3">Ports</h3>
-<p>This service exposes <strong>port 9090</strong></p>
+<p>Prometheus listens on <strong>port 9090</strong> inside the Docker network only (<code>expose</code>, not <code>ports</code>), so it is reachable by other services such as <code>grafana</code> (<code>http://prometheus:9090</code>) but not from the host. Use Grafana at <code>http://localhost:3000</code> to explore the metrics.</p>
 <h2 id="grafana">Grafana</h2>
 <p><a href="https://grafana.com/">Grafana</a> allows to visualize the metrics data that is stored in the <code>prometheus</code> service. Per default the username and password are <strong>admin/admin</strong>.</p>
 <h3 id="volumes_6">Volumes</h3>
 <p><code>grafana</code> mounts the following volumes:</p>
 <ul>
-<li><code>container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml</code>is the config file that preconfigures grafana to use prometheus as a datasource.</li>
+<li><code>container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml</code> is the config file that preconfigures grafana to use prometheus as a datasource.</li>
+<li><code>container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml</code> is the dashboard provider config. It tells grafana to load every dashboard JSON file from <code>/var/lib/grafana/dashboards</code> into a <code>DetectMate</code> folder.</li>
+<li><code>container/grafana/dashboards:/var/lib/grafana/dashboards</code> provides the dashboard JSON files, such as <code>detectmate.json</code> (the <strong>DetectMateService Overview</strong> dashboard).</li>
 <li><code>grafana_data:/var/lib/grafana</code> is the database of grafana</li>
 </ul>
 <h2 id="kafka">Kafka</h2>
-<p>The <a href="https://kafka.apache.org/">Apache Kafka</a> service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active(commented out).</p>
+<p>The <a href="https://kafka.apache.org/">Apache Kafka</a> service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active (commented out).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In container/fluentout/fluent.conf contains an example Fluentd configuration for sending alerts to Kafka.</p>
+<p><code>container/fluentout/fluent.conf</code> contains an example Fluentd configuration for sending alerts to Kafka.</p>
 </div>
               
             </div>

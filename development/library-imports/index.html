@@ -175,7 +175,7 @@
 <td><code>LogSchema</code></td>
 <td><code>detectmatelibrary.schemas</code></td>
 <td>Integration tests</td>
-<td>Reader output format</td>
+<td>Parser input format</td>
 </tr>
 <tr>
 <td><code>ParserSchema</code></td>
@@ -206,13 +206,13 @@
 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">CoreComponent</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </code></pre></div>
-<h4 id="2-processor-adapter-corepy">2. Processor Adapter (<code>core.py</code>)</h4>
-<p>The <code>LibraryComponentProcessor</code> wraps a <code>CoreComponent</code> to use it as the service's message processor:</p>
+<h4 id="2-message-processing-corepy">2. Message Processing (<code>core.py</code>)</h4>
+<p><code>Service</code> is itself the engine's processor: the <code>Engine</code> loop calls <code>Service.process()</code> for each incoming message, which delegates to the loaded <code>CoreComponent</code>:</p>
 <ul>
-<li><strong>process() invocation</strong>: The service calls <code>component.process(raw_message)</code> for each incoming message</li>
+<li><strong>process() invocation</strong>: <code>Service.process()</code> calls <code>self.library_component.process(raw_message)</code></li>
 <li><strong>Return handling</strong>: <code>bytes</code> output is forwarded; <code>None</code> skips the message</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">raw_message</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_component</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">raw_message</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="what-the-service-expects-from-corecomponent">What the Service Expects from CoreComponent</h3>
 <ul>
@@ -237,17 +237,17 @@ for writing one.</p>
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="2-schema-for-configmanager-config_managerpy">2. Schema for ConfigManager (<code>config_manager.py</code>)</h4>
-<p>The <code>ConfigManager</code> uses <code>CoreConfig</code> subclasses as Pydantic schemas for validation:</p>
+<p>The <code>ConfigManager</code> receives the component's <code>CoreConfig</code> subclass as its schema:</p>
 <ul>
-<li><strong>Default creation</strong>: <code>self.schema()</code> creates default config instances</li>
-<li><strong>Validation</strong>: <code>self.schema.model_validate(data)</code> validates incoming config data</li>
-<li><strong>Serialization</strong>: <code>model_dump()</code> converts config to dict for YAML storage</li>
+<li><strong>Default creation</strong>: if the config file does not exist, <code>self.schema()</code> creates a default config instance and writes it to the file</li>
+<li><strong>Validation</strong>: config files and <code>reconfigure</code> payloads are validated against <code>ServiceConfig</code></li>
+<li><strong>Serialization</strong>: <code>to_dict()</code> (if available) or <code>model_dump()</code> converts the config to a dict for YAML storage</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="c1"># Validation</span>
-<span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">new_configs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Validation (top-level structure only)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">new_configs</span><span class="p">)</span>
 
 <span class="c1"># Serialization</span>
-<span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>  <span class="c1"># falls back to model_dump()</span>
 </code></pre></div>
 <h4 id="3-service-initialization-corepy">3. Service Initialization (<code>core.py</code>)</h4>
 <p>The <code>Service.get_config_schema()</code> method returns the appropriate <code>CoreConfig</code> subclass for the component.</p>
@@ -268,12 +268,12 @@ for how the library interprets the config contents.</p>
 <h3 id="usage-points_2">Usage Points</h3>
 <p>The schemas are used in integration tests to verify correct data flow between pipeline stages:</p>
 <ul>
-<li><strong>LogSchema</strong>: Serialized output from Reader components</li>
+<li><strong>LogSchema</strong>: Serialized log lines sent to Parser components by the log source (e.g. Fluentd)</li>
 <li><strong>ParserSchema</strong>: Serialized output from Parser components</li>
 <li><strong>DetectorSchema</strong>: Serialized output from Detector components</li>
 </ul>
 <h3 id="data-flow">Data Flow</h3>
-<div class="highlight"><pre><span></span><code>Reader                    Parser                     Detector
+<div class="highlight"><pre><span></span><code>Log source                Parser                     Detector
    |                         |                          |
    v                         v                          v
 LogSchema bytes  ---&gt;  ParserSchema bytes  ---&gt;  DetectorSchema bytes

@@ -66,7 +66,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#component-configuration">Component configuration</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#what-goes-in-a-the-config-file">What goes in a the config file</a>
+    <li class="toctree-l3"><a class="reference internal" href="#what-goes-in-the-config-file">What goes in the config file</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#library-component-reference">Library component reference</a>
     </li>
@@ -158,8 +158,10 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="configuration">Configuration</h1>
-<p>DetectMateService can be configured using a YAML settings file, environment variables, or CLI flags. The precedence order is:</p>
-<p><strong>CLI flags &gt; environment variables &gt; YAML file</strong></p>
+<p>DetectMateService is configured with a YAML settings file (<code>--settings</code>) and environment variables. Environment variables override values from the YAML file, and unset settings fall back to their defaults.</p>
+<p>Two settings can also be set with CLI flags, which override both: <code>--config</code> sets <code>config_file</code>, and <code>--no-autostart</code> sets <code>engine_autostart</code> to <code>false</code>.</p>
+<p><strong>CLI flags (<code>--config</code>, <code>--no-autostart</code>) &gt; environment variables &gt; YAML file &gt; defaults</strong></p>
+<p>Unknown keys in the YAML file are rejected at startup.</p>
 <h2 id="service-settings">Service settings</h2>
 <p>These settings control the service infrastructure.</p>
 <table>
@@ -182,7 +184,7 @@
 <td style="text-align: left;"><code>component_id</code></td>
 <td style="text-align: left;"><code>DETECTMATE_COMPONENT_ID</code></td>
 <td style="text-align: left;"><code>None</code> (computed)</td>
-<td style="text-align: left;">Unique identifier for the component, used as a metric label and in log file names. Derived from <code>component_type</code> and <code>component_name</code> if not set explicitly.</td>
+<td style="text-align: left;">Unique identifier for the component, used as a metric label and in log file names. Derived from <code>component_type</code> and <code>component_name</code> if not set explicitly, or from <code>component_type</code> and <code>engine_addr</code> if no <code>component_name</code> is set.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>component_type</code></td>
@@ -239,22 +241,10 @@
 <td style="text-align: left;">Key required in the <code>X-Auth-Token</code> header for all <code>/api/v1/*</code> routes. Unset or empty disables authentication. See <a href="#authentication">Authentication</a>.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>manager_recv_timeout</code></td>
-<td style="text-align: left;"><code>DETECTMATE_MANAGER_RECV_TIMEOUT</code></td>
-<td style="text-align: left;"><code>100</code></td>
-<td style="text-align: left;">Receive timeout (ms) for the manager command channel.</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>manager_thread_join_timeout</code></td>
-<td style="text-align: left;"><code>DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT</code></td>
-<td style="text-align: left;"><code>1.0</code></td>
-<td style="text-align: left;">Timeout (s) when waiting for the manager thread to stop.</td>
-</tr>
-<tr>
 <td style="text-align: left;"><code>engine_addr</code></td>
 <td style="text-align: left;"><code>DETECTMATE_ENGINE_ADDR</code></td>
 <td style="text-align: left;"><code>ipc:///tmp/detectmate.engine.ipc</code></td>
-<td style="text-align: left;">Address for data processing (PAIR0/1).</td>
+<td style="text-align: left;">Address for data processing (PAIR0).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>engine_autostart</code></td>
@@ -284,13 +274,31 @@
 <td style="text-align: left;"><code>out_addr</code></td>
 <td style="text-align: left;"><code>DETECTMATE_OUT_ADDR</code></td>
 <td style="text-align: left;"><code>[]</code></td>
-<td style="text-align: left;">List of output addresses (strongly typed NNG URLs).</td>
+<td style="text-align: left;">List of output addresses (strongly typed NNG URLs). As an environment variable, pass a JSON list, e.g. <code>DETECTMATE_OUT_ADDR='["tcp://host:5000", "ipc:///tmp/out.ipc"]'</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>out_dial_timeout</code></td>
 <td style="text-align: left;"><code>DETECTMATE_OUT_DIAL_TIMEOUT</code></td>
 <td style="text-align: left;"><code>1000</code></td>
 <td style="text-align: left;">Timeout (ms) for connecting to output addresses.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tls_input</code></td>
+<td style="text-align: left;"><code>DETECTMATE_TLS_INPUT__CERT_KEY_FILE</code></td>
+<td style="text-align: left;">unset</td>
+<td style="text-align: left;">TLS config for the input socket, required when <code>engine_addr</code> uses <code>tls+tcp://</code>. Takes <code>cert_key_file</code> (PEM file with the server certificate and private key).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tls_output</code></td>
+<td style="text-align: left;"><code>DETECTMATE_TLS_OUTPUT__CA_FILE</code>, <code>DETECTMATE_TLS_OUTPUT__SERVER_NAME</code></td>
+<td style="text-align: left;">unset</td>
+<td style="text-align: left;">TLS config for the output sockets, required when any <code>out_addr</code> uses <code>tls+tcp://</code>. Takes <code>ca_file</code> (CA certificate used to verify the server) and an optional <code>server_name</code> (SNI override when the hostname differs from the certificate).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>config_file</code></td>
+<td style="text-align: left;"><code>DETECTMATE_CONFIG_FILE</code></td>
+<td style="text-align: left;">unset</td>
+<td style="text-align: left;">Path to the component configuration file, see <a href="#component-configuration">Component configuration</a>. Overridden by <code>--config</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -302,8 +310,8 @@ display label anywhere. Logs, metrics and log file names all use <code>component
 <p>This means:</p>
 <ul>
 <li><strong>Names must be unique per instance.</strong> </li>
-<li><strong>Without a name, uniqueness comes from the address.</strong> Two components of the same type sharing one <code>engine_addr</code> collide. Set <code>component_name</code> when you run more than one instance.</li>
-<li><strong>Changing <code>component_type</code> or <code>component_name</code>changes the id</strong></li>
+<li><strong>Without a name, the id is derived from the address</strong> (<code>detectmate/{component_type}|{engine_addr}</code>). Two components of the same type sharing one <code>engine_addr</code> collide. Set <code>component_name</code> when you run more than one instance.</li>
+<li><strong>Changing <code>component_type</code> or <code>component_name</code> changes the id</strong></li>
 <li><strong><code>component_id</code> can be set explicitly</strong> if you need to control it directly</li>
 </ul>
 <h3 id="yaml-files">YAML files</h3>
@@ -312,7 +320,7 @@ display label anywhere. Logs, metrics and log file names all use <code>component
 <span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;DEBUG&quot;</span>
 <span class="nt">log_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./logs&quot;</span>
 
-<span class="c1"># Manager Interface</span>
+<span class="c1"># HTTP API (management and metrics)</span>
 <span class="nt">http_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
 <span class="nt">http_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
 
@@ -329,10 +337,12 @@ display label anywhere. Logs, metrics and log file names all use <code>component
 </code></pre></div>
 <h3 id="environment-variables">Environment variables</h3>
 <p>Environment variables override values in the YAML file. They are prefixed with <code>DETECTMATE_</code>.</p>
+<p>List and nested settings take JSON, or use <code>__</code> to set a single nested field (e.g. <code>DETECTMATE_TLS_OUTPUT__CA_FILE</code>).</p>
 <p>Example:
 <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_LOG_LEVEL</span><span class="o">=</span>DEBUG
 <span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_COMPONENT_NAME</span><span class="o">=</span>worker-1
-detectmate<span class="w"> </span>start
+<span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_OUT_ADDR</span><span class="o">=</span><span class="s1">&#39;[&quot;tcp://127.0.0.1:5000&quot;]&#39;</span>
+detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml
 </code></pre></div></p>
 <h2 id="component-configuration">Component configuration</h2>
 <p>In addition to the service settings (which configure the <em>runner</em>), you can also pass a separate configuration file for the specific component logic (e.g., detector parameters) using the <code>--config</code> flag in the CLI. This file is specific to the implementation of the component you are running.</p>
@@ -343,7 +353,6 @@ Example detector_config.yaml</p>
 <span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span><span class="w">        </span><span class="c1"># Class Name Level</span>
 <span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
-<span class="w">    </span><span class="nt">params</span><span class="p">:</span><span class="w">                </span><span class="c1"># Implementation Specific Level</span>
 <span class="w">    </span><span class="nt">events</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">1</span><span class="p">:</span>
 <span class="w">            </span><span class="nt">test</span><span class="p">:</span>
@@ -357,7 +366,7 @@ Example detector_config.yaml</p>
 <span class="w">                    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
 <span class="w">                      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </code></pre></div>
-<h3 id="what-goes-in-a-the-config-file">What goes in a the config file</h3>
+<h3 id="what-goes-in-the-config-file">What goes in the config file</h3>
 <p>Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
 same for every component. What is valid <em>inside</em> is defined by the component's configuration
 class (<code>&lt;ComponentClass&gt;Config</code>, see
@@ -371,10 +380,6 @@ To find the fields a component accepts:</p>
   explains how the library interprets the values.</li>
 <li><strong>The config class itself</strong>: the fields, types and defaults of <code>&lt;ComponentClass&gt;Config</code> in the
   library source are the authoritative list.</li>
-<li><strong>Let the service generate one</strong>: point <code>config_file</code> at a path that does not exist yet and the
-  service writes a default file derived from the component's config class on startup. It is a
-  scaffold, not a working config! Values it cannot infer are written as <code>&lt;PLACEHOLDER&gt;</code> and have
-  to be filled in.</li>
 </ul>
 <p>You can read more about Components in the <a href="../library/">Using a Library Component</a> section.</p>
 <h3 id="library-component-reference">Library component reference</h3>
@@ -512,7 +517,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
 <td style="text-align: left;"><code>/api/v1/reconfigure</code></td>
-<td style="text-align: left;">Updates component parameters dynamically. Only <code>detectors</code>, <code>parsers</code>, and <code>readers</code> are valid top-level config keys - returns <code>400</code> for unknown keys or other invalid config data, and <code>409</code> if no config manager is configured (e.g. no <code>config_file</code> was set for this component).</td>
+<td style="text-align: left;">Updates component parameters dynamically. Only <code>detectors</code> and <code>parsers</code> are valid top-level config keys - returns <code>400</code> for unknown keys or other invalid config data, and <code>409</code> if no config manager is configured (e.g. no <code>config_file</code> was set for this component).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
@@ -545,7 +550,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tr>
 <td style="text-align: left;"><code>POST</code></td>
 <td style="text-align: left;"><code>/api/v1/persistency/load</code></td>
-<td style="text-align: left;">Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns <code>409</code> if it is running.</td>
+<td style="text-align: left;">Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns <code>409</code> if it is running, and <code>404</code> if no saved state exists at the configured <code>path</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>GET</code></td>
@@ -559,7 +564,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </tr>
 </tbody>
 </table>
-<p><code>/api/v1/persistency/save</code>, <code>/api/v1/persistency/status</code>, and <code>/api/v1/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/api/v1/persistency/load</code> and <code>/api/v1/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/api/v1/stop</code>. <code>/api/v1/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
+<p><code>/api/v1/persistency/save</code>, <code>/api/v1/persistency/status</code>, and <code>/api/v1/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/api/v1/persistency/load</code> and <code>/api/v1/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/api/v1/stop</code>. <code>/api/v1/persistency/load</code> also returns <code>404</code> if no saved state exists yet (no <code>metadata.json</code> under the state path). <code>/api/v1/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
 <h4 id="apiv1persistencystatus-response"><code>/api/v1/persistency/status</code> response</h4>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/state/NewValueDetector&quot;</span><span class="p">,</span>
@@ -676,7 +681,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </table>
 <p>Any other value is rejected with <code>422 Unprocessable Entity</code>.</p>
 <h4 id="get-apiv1trainingstate-response"><code>GET /api/v1/training/state</code> response</h4>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training.&quot;</span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training&quot;</span><span class="p">}</span>
 </code></pre></div>
 <p>The <code>state</code> field reflects what the component did with the most recently processed event:</p>
 <table>
@@ -688,7 +693,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>"Training."</code></td>
+<td style="text-align: left;"><code>"Training"</code></td>
 <td style="text-align: left;">Last event was used for model training.</td>
 </tr>
 <tr>
@@ -697,7 +702,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </tr>
 <tr>
 <td style="text-align: left;"><code>"Default"</code></td>
-<td style="text-align: left;">Neither,  the component is in inference-only mode.</td>
+<td style="text-align: left;">Neither, the component is in inference-only mode.</td>
 </tr>
 </tbody>
 </table>
@@ -724,8 +729,8 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 <tbody>
 <tr>
 <td style="text-align: left;"><code>path</code></td>
-<td style="text-align: left;"><code>./state</code></td>
-<td style="text-align: left;">Where to write state files. Accepts any fsspec-compatible URL (<code>s3://</code>, <code>gs://</code>, local path, etc.). The component name is appended automatically.</td>
+<td style="text-align: left;"><code>$STATE_DIRECTORY</code>, else <code>./state</code></td>
+<td style="text-align: left;">Where to write state files. If unset, the first directory in the <code>STATE_DIRECTORY</code> environment variable is used (set by systemd's <code>StateDirectory=</code>), otherwise <code>./state</code> relative to the working directory. Accepts any fsspec-compatible URL (<code>s3://</code>, <code>gs://</code>, local path, etc.). The component name is appended automatically.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>interval_seconds</code></td>

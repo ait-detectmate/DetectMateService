@@ -243,9 +243,10 @@
 <span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;parser:8000&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;detector:8000&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;detector-rule:8000&#39;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
-<p>Prometheus is accessible at <code>http://localhost:9090</code> after starting the stack with:</p>
+<p>Start the stack with:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up
 </code></pre></div>
+<p>Prometheus listens on port 9090 inside the Docker network only. It is not published to the host. Grafana reaches it at <code>http://prometheus:9090</code>, and you can explore the metrics through Grafana, see below.</p>
 <p>See the <a href="../docker-compose/">Docker Compose reference</a> for details on the full stack setup.</p>
 <h2 id="visualizing-metrics-with-grafana">Visualizing metrics with Grafana</h2>
 <p>The Docker Compose stack includes a Grafana instance pre-configured with Prometheus as a datasource. Access it at <code>http://localhost:3000</code> (default credentials: <code>admin</code> / <code>admin</code>).</p>

@@ -53,10 +53,6 @@
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Installation</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#setup-with-uv-recommended">Setup with uv (recommended)</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#1-download-the-dependencies">1. Download the dependencies</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#alternative-setup-with-pip">Alternative setup with pip</a>
     </li>
@@ -128,14 +124,14 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="installation">Installation</h1>
+<p>DetectMateService requires <strong>Python 3.12 or newer</strong>.</p>
 <p>First, clone DetectMateService and navigate into the repository:</p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ait-detectmate/DetectMateService.git
 <span class="nb">cd</span><span class="w"> </span>DetectMateService
 </code></pre></div>
 <h2 id="setup-with-uv-recommended">Setup with uv (recommended)</h2>
 <p>We recommend using <a href="https://github.com/astral-sh/uv">uv</a> to manage the environment
-and dependencies.</p>
-<h3 id="1-download-the-dependencies">1. Download the dependencies</h3>
+and dependencies. To create the environment and install the dependencies, run:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync
 </code></pre></div>
 <h2 id="alternative-setup-with-pip">Alternative setup with pip</h2>
@@ -144,7 +140,7 @@ and dependencies.</p>
 python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
 <span class="c1"># Activate it</span>
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate
-<span class="c1"># Install the project in editable mode with dev dependencies</span>
+<span class="c1"># Install the project and its dependencies</span>
 pip<span class="w"> </span>install<span class="w"> </span>.
 </code></pre></div>
 <h2 id="optional-library-components-extras">Optional library components (extras)</h2>
@@ -164,7 +160,7 @@ configured components actually need:</p>
 <tbody>
 <tr>
 <td><code>llm</code></td>
-<td><code>openai</code>, <code>tiktoken</code>, <code>scikit-learn</code>, <code>scipy</code>, <code>tenacity</code></td>
+<td><code>openai</code>, <code>tiktoken</code>, <code>scikit-learn</code>, <code>scipy</code>, <code>tenacity</code>, <code>pandas</code></td>
 <td>LLM-backed detectors/parsers</td>
 </tr>
 <tr>
