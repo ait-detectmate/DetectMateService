@@ -38,7 +38,7 @@ The second component of the logdata analysis pipeline is the service `parser`. T
 
 ### Building the image
 
-Docker compose builds the `detectmate` image using the [Dockerfile](https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile) in the root of the DetectMate repository. This image is the same for `parser` and `detector`.
+Docker compose builds the `detectmate` image using the [Dockerfile](https://github.com/ait-detectmate/DetectMateService/blob/main/Dockerfile) in the root of the DetectMate repository. This image is the same for `parser`, `detector` and `detector-rule`.
 
 ### Volumes
 
@@ -160,6 +160,8 @@ This service exposes **port 9090**
 `grafana` mounts the following volumes:
 
 - `container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml` is the config file that preconfigures grafana to use prometheus as a datasource.
+- `container/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml` is the dashboard provider config. It tells grafana to load every dashboard JSON file from `/var/lib/grafana/dashboards` into a `DetectMate` folder.
+- `container/grafana/dashboards:/var/lib/grafana/dashboards` provides the dashboard JSON files, such as `detectmate.json` (the **DetectMateService Overview** dashboard).
 - `grafana_data:/var/lib/grafana` is the database of grafana
 
 ## Kafka
