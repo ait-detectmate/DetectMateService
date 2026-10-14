@@ -188,7 +188,7 @@ The key is sent in cleartext over plain HTTP. Either keep `http_host` on loopbac
 | `GET` | `/api/v1/status` | Returns the health, running state, and current effective configurations. |
 | `POST` | `/api/v1/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
 | `POST` | `/api/v1/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
-| `POST` | `/api/v1/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
+| `POST` | `/api/v1/reconfigure` | Updates component parameters dynamically. Only `detectors` and `parsers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
 | `POST` | `/api/v1/shutdown` | Gracefully terminates the entire service process. |
 
 ### Persistency Endpoints
