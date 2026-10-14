@@ -227,6 +227,21 @@ These endpoints are available when the loaded library component has persistency 
 | `events_since_save` | Events ingested since the last successful save. |
 | `last_saved_at` | UTC timestamp of the last successful save, or `null` if no save has occurred yet. |
 
+### Federation Endpoints
+
+These endpoints run stack-later federation between detectors. They need `allow_fed: true` in the component config. See [federation.md](federation.md) for a full round.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/admin/federation/status` | Returns whether federation is enabled, stacked peer count, aggregation count and time, and whether it was finalized. |
+| `GET` | `/admin/federation/export` | Downloads this node's federation binary. |
+| `POST` | `/admin/federation/stack` | Uploads one or more peer binaries for the next aggregation. |
+| `POST` | `/admin/federation/aggregate` | Merges the stacked peers and returns the merged binary. |
+| `POST` | `/admin/federation/adopt` | Replaces this node's learned state with a merged binary. |
+| `POST` | `/admin/federation/finalize` | Ends federation for this node. Permanent. |
+
+All except `status` return `404` if no library component is loaded and `409` if federation is disabled or finalized, or the engine is running.
+
 ### Training State Endpoints
 
 These endpoints control whether the library component is actively training or configuring its model. They are available whenever a library component is loaded.

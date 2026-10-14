@@ -161,3 +161,7 @@ curl -X POST http://127.0.0.1:8000/admin/training/state \
 The four valid state values are `keep_training`, `stop_training`, `keep_configuring`, and `stop_configuring`. Any other value is rejected with `422`.
 
 You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-training-state).
+
+### 7. Federated learning
+
+Detectors with `allow_fed: true` can merge their learned state through a hub over the admin API. See [federation.md](federation.md).

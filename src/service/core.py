@@ -15,6 +15,7 @@ from service.features.engine import Engine, EngineException, EngineState
 from service.features.component_loader import ComponentLoader
 from service.features.config_loader import ConfigClassLoader
 from service.features.component_resolver import ComponentResolver
+from service.features.federation import FederationState
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
 from prometheus_client import REGISTRY, Counter, Enum, Histogram
 
@@ -129,6 +130,7 @@ class Service(Engine, ABC):
 
         # Load library component if component_type is specified and not core
         self.library_component: Optional[CoreComponent] = None
+        self.federation = FederationState()
         if hasattr(settings, 'component_type') and self._is_library_component_type(settings.component_type):
 
             try:
