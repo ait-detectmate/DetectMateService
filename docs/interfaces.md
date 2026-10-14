@@ -7,17 +7,22 @@ This document describes the interface contract between DetectMateService and Det
 All processing components (parsers and detectors) must inherit from `CoreComponent`:
 
 ```python
-from detectmatelibrary.common.core import CoreComponent
+from detectmatelibrary.common.core import CoreComponent, CoreConfig
 
 class MyComponent(CoreComponent):
-    def __init__(self, config=None):
+    def __init__(self, name: str = "MyComponent", config: CoreConfig | dict | None = None):
         """Initialize the component.
 
         Args:
+            name: Name of the component instance.
             config: Optional configuration dictionary or CoreConfig instance.
                     May be None if no configuration is provided.
         """
-        super().__init__(config)
+        if config is None:
+            config = CoreConfig()
+        elif isinstance(config, dict):
+            config = CoreConfig.from_dict(config, name)
+        super().__init__(name=name, config=config)
         # Your initialization here
 
     def process(self, data: bytes) -> bytes | None:
@@ -36,7 +41,7 @@ class MyComponent(CoreComponent):
 
 ### Key Requirements
 
-- **Constructor**: Must accept an optional `config` parameter (can be `dict` or `CoreConfig` instance)
+- **Constructor**: Must accept a `name` and an optional `config` parameter (can be `dict` or `CoreConfig` instance). The service passes the config as a `dict`
 - **process() method**: Must accept `bytes` and return `bytes | None`
 - **Return behavior**:
   - Return `bytes` to forward output to downstream components
@@ -164,7 +169,7 @@ Here's a minimal detector component implementation:
 ### 1. Config Class (`detectors/random_detector.py`)
 
 ```python
-from detectmatelibrary.common._config._formats import LogVariables, AllLogVariables
+from detectmatelibrary.common._config._formats import EventsConfig, Variable
 
 from detectmatelibrary.common.detector import CoreDetector, CoreDetectorConfig
 
@@ -264,7 +269,8 @@ detectors:
                               threshold: 0.
                     header_variables:
                         - pos: level
-                          params: {}
+                          params:
+                              threshold: 0.5
 ```
 
 This hierarchical format allows the library to correctly route parameters based on category and class name.
@@ -272,7 +278,7 @@ This hierarchical format allows the library to correctly route parameters based 
 ### 4. Run the Service
 
 ```bash
-detectmate --settings settings.yaml --configs random-config.yaml
+detectmate --settings settings.yaml --config random-config.yaml
 ```
 
 ## Validation

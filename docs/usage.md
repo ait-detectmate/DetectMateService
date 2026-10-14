@@ -4,9 +4,10 @@ DetectMateService provides a command-line interface (CLI) `detectmate` to manage
 
 ## Quick start your first Service
 
-To run a component with default settings only, you can use this command:
+`detectmate` needs a settings file. To run a service with default settings only, create an empty one and start the service with it:
 ```bash
-detectmate
+touch settings.yaml
+detectmate --settings settings.yaml
 ```
 
 You should see output like:
@@ -72,7 +73,7 @@ The same behaviour can also be configured persistently via the settings file or 
 To check the status of a running service run:
 
 ```bash
-detectmate-client status --url <http_host:http_port>
+detectmate-client --url <http_host:http_port> status
 ```
 
 Output:
@@ -104,7 +105,7 @@ detectmate-client --url <http_host:http_port> reconfigure new_config.yaml
 Add `--persist` to save the new configuration to the original config file (if supported).
 
 ```bash
-detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
+detectmate-client --url <http_host:http_port> reconfigure new_config.yaml --persist
 ```
 
 ## Stopping the engine
