@@ -8,7 +8,7 @@ This document provides an overview of where DetectMateService imports from Detec
 |--------|---------------|---------|---------|
 | `CoreComponent` | `detectmatelibrary.common.core` | `core.py`, `component_loader.py` | Base class for all processing components |
 | `CoreConfig` | `detectmatelibrary.common.core` | `core.py`, `config_loader.py`, `config_manager.py` | Base class for configuration schemas |
-| `LogSchema` | `detectmatelibrary.schemas` | Integration tests | Reader output format |
+| `LogSchema` | `detectmatelibrary.schemas` | Integration tests | Parser input format |
 | `ParserSchema` | `detectmatelibrary.schemas` | Integration tests | Parser output format |
 | `DetectorSchema` | `detectmatelibrary.schemas` | Integration tests | Detector output format |
 
@@ -35,15 +35,15 @@ if not isinstance(instance, CoreComponent):
     raise TypeError(...)
 ```
 
-#### 2. Processor Adapter (`core.py`)
+#### 2. Message Processing (`core.py`)
 
-The `LibraryComponentProcessor` wraps a `CoreComponent` to use it as the service's message processor:
+`Service` is itself the engine's processor: the `Engine` loop calls `Service.process()` for each incoming message, which delegates to the loaded `CoreComponent`:
 
-- **process() invocation**: The service calls `component.process(raw_message)` for each incoming message
+- **process() invocation**: `Service.process()` calls `self.library_component.process(raw_message)`
 - **Return handling**: `bytes` output is forwarded; `None` skips the message
 
 ```python
-result = self.component.process(raw_message)
+return self.library_component.process(raw_message)
 ```
 
 ### What the Service Expects from CoreComponent
@@ -79,18 +79,18 @@ if not issubclass(config_class, CoreConfig):
 
 #### 2. Schema for ConfigManager (`config_manager.py`)
 
-The `ConfigManager` uses `CoreConfig` subclasses as Pydantic schemas for validation:
+The `ConfigManager` receives the component's `CoreConfig` subclass as its schema:
 
-- **Default creation**: `self.schema()` creates default config instances
-- **Validation**: `self.schema.model_validate(data)` validates incoming config data
-- **Serialization**: `model_dump()` converts config to dict for YAML storage
+- **Default creation**: if the config file does not exist, `self.schema()` creates a default config instance and writes it to the file
+- **Validation**: config files and `reconfigure` payloads are validated against `ServiceConfig`
+- **Serialization**: `to_dict()` (if available) or `model_dump()` converts the config to a dict for YAML storage
 
 ```python
-# Validation
-self._configs = self.schema.model_validate(new_configs)
+# Validation (top-level structure only)
+self._configs = ServiceConfig.model_validate(new_configs)
 
 # Serialization
-data = self._configs.model_dump()
+data = self._configs.to_dict()  # falls back to model_dump()
 ```
 
 #### 3. Service Initialization (`core.py`)
@@ -120,14 +120,14 @@ from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
 
 The schemas are used in integration tests to verify correct data flow between pipeline stages:
 
-- **LogSchema**: Serialized output from Reader components
+- **LogSchema**: Serialized log lines sent to Parser components by the log source (e.g. Fluentd)
 - **ParserSchema**: Serialized output from Parser components
 - **DetectorSchema**: Serialized output from Detector components
 
 ### Data Flow
 
 ```
-Reader                    Parser                     Detector
+Log source                Parser                     Detector
    |                         |                          |
    v                         v                          v
 LogSchema bytes  --->  ParserSchema bytes  --->  DetectorSchema bytes

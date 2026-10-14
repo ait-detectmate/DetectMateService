@@ -19,15 +19,15 @@ The following diagram illustrates a typical log analysis pipeline:
 
 ![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
 
-Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectmateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
+Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectMateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
 
 ## The Objective
 
-In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
+In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to paths the model has not seen during training.
 
 ## Preparation
 
-We will setup the DetectMate on a fresh installation of Ubuntu Noble:
+We will set up DetectMate on a fresh installation of Ubuntu Noble:
 
 ```
 alice@ubuntu2404:~$ lsb_release -a
@@ -38,7 +38,7 @@ Release:	24.04
 Codename:	noble
 ```
 
-In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:
+In this tutorial we want to find anomalies in Nginx access logs. So let's install nginx:
 
 ```
 alice@ubuntu2404:~$ sudo apt update && sudo apt install nginx -y
@@ -177,7 +177,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 !!! note
     Since we did not add our user to the docker group, we have to use sudo for docker compose!
 
-With Docker compose working, we will now download the DetectmateService repository using `git`:
+With Docker compose working, we will now download the DetectMateService repository using `git`:
 
 ```
 alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
@@ -255,7 +255,7 @@ Initially we edit the `docker-compose.yml` and change only the `fluentin` volume
 --8<-- "docker-compose.yml"
 ```
 
-Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
+Now that the `access.log` file is available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
 ```
 --8<-- "container/fluentin/fluent.conf:tutorial"
@@ -317,7 +317,7 @@ Next to the `NewValueDetector`, the pipeline also runs a second detector, `detec
 By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
 With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
 
-Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
+Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different URLs:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
@@ -380,7 +380,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `output.<date>.log` and have a look:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged to `container/fluentlogs/output.<date>.log`: fluentd fills in the `%Y%m%d` part of the path configured in `fluent.conf`. (The `output.%Y%m%d` directory next to it is only fluentd's buffer.) Find the filename with `ls container/fluentlogs/` and have a look:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
@@ -391,14 +391,14 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/output.20260318.log
-2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.20261014.log
+2026-10-14T09:53:28+00:00	nng.*	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"NewValueDetector_10","detectionTimestamp":1791971608,"logIDs":["9922ab54-0fdb-41b5-815c-41af09df8020"],"score":1.0,"extractedTimestamps":[1791971608],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1791971608,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
 Great! We detected our first anomaly.
 
-If you check `container/fluentlogs/output-rule.%Y%m%d` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
+If you check `container/fluentlogs/output-rule.<date>.log` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
 
 
 
@@ -426,11 +426,11 @@ Now append a contrived log line to `/var/log/nginx/access.log` that doesn't matc
 alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
 ```
 
-Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.%Y%m%d`:
+Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.<date>.log`:
 
 ```
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
-2026-07-13T12:03:55+00:00	nng.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"10","detectionTimestamp":1783944235,"logIDs":["5269c4a0-304c-431d-809b-ae34a15aa68b"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1783944235,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20261014.log
+2026-10-14T09:53:46+00:00	nngrule.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"RuleDetector_10","detectionTimestamp":1791971626,"logIDs":["35a7e9c0-c2f2-4f8c-ade1-73ce33340ec4"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1791971626,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
 ```
 
 The rule-based detector caught it: `"R001 - TemplateNotFound":"No template found by parser"`. Unlike `NewValueDetector`, it needed no training data at all — it was ready to alert from the very first log line.

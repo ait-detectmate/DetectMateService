@@ -20,8 +20,8 @@ class ConfigClassLoader:
         """Load a config class from a path string.
 
         Args:
-            config_class_path: dot path like "readers.log_file.LogFileConfig"
-                               or fully-qualified like "myplugin.readers.LogFileConfig"
+            config_class_path: dot path like "detectors.random_detector.RandomDetectorConfig"
+                               or fully-qualified like "myplugin.detectors.MyDetectorConfig"
 
         Returns:
             The config class (not an instance)
