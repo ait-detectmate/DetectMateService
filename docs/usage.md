@@ -110,7 +110,7 @@ detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
 
 ## Stopping the engine
 
-To stop just the processing engine. the service process, its HTTP API, and any loaded component stay up, and you can restart the engine afterward with `start`:
+To stop just the processing engine, run the command below. The service process, its HTTP API, and any loaded component stay up, and you can restart the engine afterward with `start`:
 
 ```bash
 detectmate-client --url <http_host:http_port> stop
@@ -131,7 +131,7 @@ Shutdown signal received (SIGINT)...
 Clean exit.
 ```
 
-(`SIGTERM` logs the same two lines with `SIGTERM` in place of `SIGINT`.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown. you don't need to call `stop` first.
+(`SIGTERM` logs the same two lines with `SIGTERM` in place of `SIGINT`.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown, so you don't need to call `stop` first.
 
 ## Controlling state persistency
 
@@ -171,7 +171,7 @@ detectmate-client --url <http_host:http_port> training-get-state
 # Freeze the model, stop training immediately
 detectmate-client --url <http_host:http_port> training-set-state stop_training
 
-# Resume training, eep updating past the configured event limit
+# Resume training: keep updating past the configured event limit
 detectmate-client --url <http_host:http_port> training-set-state keep_training
 
 # Force the configure phase on or off

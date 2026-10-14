@@ -1,6 +1,6 @@
 # Docker Compose Reference
 
-DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of the docker-compose.yaml. The following image illustrates the log data pipeline deployed by Docker Compose:
+DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of `docker-compose.yml`. The following image illustrates the log data pipeline deployed by Docker Compose:
 
 ![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
 
@@ -30,7 +30,7 @@ Docker Compose builds the `fluentin` image using the configuration in the file [
 
 ### Depends
 
-This services depends on the `parser` service, because `parser` creates the socket file to establish communication.
+This service depends on the `parser` service, because `parser` creates the socket file to establish communication.
 
 ## Parser
 
@@ -115,7 +115,7 @@ This service depends on the `fluentout` service, because `fluentout` creates the
 
 ## Fluentout
 
-The `fluentout`service receives data from both `detector` and `detector-rule`, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles `output.%Y%m%d` and `output-rule.%Y%m%d` respectively.
+The `fluentout` service receives data from both `detector` and `detector-rule`, parses it from the proper detectmate protobuf format, and then writes the alerts to the logfiles `output.%Y%m%d` and `output-rule.%Y%m%d` respectively.
 
 While writing to a log file is just an example in this setup, you can refer to the [Fluentd documentation](https://docs.fluentd.org/) for guidance on writing alerts to other targets.
 
@@ -143,7 +143,7 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 `prometheus` mounts the following volumes:
 
-- `container/prometheus.yml:/etc/prometheus/prometheus.yml` is the single prometheus configuration file, that tells prometheus to collect the metrics data from `parser`, `detector` and `detector-rule` at **port 8000***.
+- `container/prometheus.yml:/etc/prometheus/prometheus.yml` is the single prometheus configuration file, that tells prometheus to collect the metrics data from `parser`, `detector` and `detector-rule` at **port 8000**.
 
 - `prometheus_data:/prometheus` holds the prometheus database.
 
@@ -159,13 +159,13 @@ This service exposes **port 9090**
 
 `grafana` mounts the following volumes:
 
-- `container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml`is the config file that preconfigures grafana to use prometheus as a datasource.
+- `container/grafana/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml` is the config file that preconfigures grafana to use prometheus as a datasource.
 - `grafana_data:/var/lib/grafana` is the database of grafana
 
 ## Kafka
 
-The [Apache Kafka](https://kafka.apache.org/) service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active(commented out).
+The [Apache Kafka](https://kafka.apache.org/) service is a message queue that can be used to read logdata from or send alerts to. It is not needed by the logpipeline and is therefore not active (commented out).
 
 
 !!! note
-    In container/fluentout/fluent.conf contains an example Fluentd configuration for sending alerts to Kafka.
+    `container/fluentout/fluent.conf` contains an example Fluentd configuration for sending alerts to Kafka.

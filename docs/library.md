@@ -8,7 +8,7 @@ For this, ensure that the library is installed in the same activated virtual env
 > **Note:** Some library components depend on optional extras (e.g. LLM-backed
 > detectors need `llm`, dataframe-based persistency backends need `dataframes`).
 > If the component you want to use raises an `ImportError` mentioning a missing
-> extra, install the service with the matching extra — see
+> extra, install the service with the matching extra, see
 > [Optional library components](installation.md#optional-library-components-extras)
 > in the installation guide.
 
@@ -93,7 +93,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/persistency/load
 
 > **Warning:** `/api/v1/persistency/load` returns `409 Conflict` if the engine is running. Stop it first with `/api/v1/stop`, then load, then restart with `/api/v1/start`. Loading while the engine is active would corrupt in-memory state otherwise the detector could end up with a mix of old and restored data with no error to indicate something went wrong.
 
-You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-state-persistency).
+You can also use `detectmate-client` instead of curl, see [usage.md](usage.md#controlling-state-persistency).
 
 #### Exporting and importing state
 
@@ -138,12 +138,12 @@ You can override this behaviour at any time using the training state endpoints:
 curl http://127.0.0.1:8000/api/v1/training/state
 # → {"state": "Training."}  |  "Configuring"  |  "Default"
 
-# Freeze the model — stop updating it with new events
+# Freeze the model: stop updating it with new events
 curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "stop_training"}'
 
-# Resume training — keep updating even past the configured event limit
+# Resume training: keep updating even past the configured event limit
 curl -X POST http://127.0.0.1:8000/api/v1/training/state \
   -H "Content-Type: application/json" \
   -d '{"state": "keep_training"}'
@@ -160,4 +160,4 @@ curl -X POST http://127.0.0.1:8000/api/v1/training/state \
 
 The four valid state values are `keep_training`, `stop_training`, `keep_configuring`, and `stop_configuring`. Any other value is rejected with `422`.
 
-You can also use `detectmate-client` instead of curl — see [usage.md](usage.md#controlling-training-state).
+You can also use `detectmate-client` instead of curl, see [usage.md](usage.md#controlling-training-state).

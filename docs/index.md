@@ -3,9 +3,9 @@
 Welcome to the DetectMate Service Framework documentation. DetectMate is a flexible, component-based framework for
 building distributed detection and processing services.
 
-The Detectmate Framework consists of the [Detectmate Service](https://github.com/ait-detectmate/DetectMateService) and the [Detectmate Library](https://github.com/ait-detectmate/DetectMateLibrary). The DetectMate Service is a very generic Microservice that handles the input, forwards it to the DetectMate Library, which processes the data, and finally sends the results back to the output interfaces.
+The DetectMate Framework consists of the [DetectMate Service](https://github.com/ait-detectmate/DetectMateService) and the [DetectMate Library](https://github.com/ait-detectmate/DetectMateLibrary). The DetectMate Service is a very generic microservice that handles the input, forwards it to the DetectMate Library, which processes the data, and finally sends the results back to the output interfaces.
 
-![High Level Schema]( images/High-Level-Schema.drawio.png)
+![High Level Schema](images/High-Level-Schema.drawio.png)
 
 It uses NNG's messaging architecture to process data in real-time.
 
@@ -41,7 +41,7 @@ If you are past the tutorial, or want to run a single DetectMate service instead
 of a whole pipeline, read these in order:
 
 1. [Installation](installation.md): install the service and its optional extras.
-2. [Configuration](configuration.md) : service settings and component configuration files.
+2. [Configuration](configuration.md): service settings and component configuration files.
 3. [Usage](usage.md): the `detectmate` CLI: starting, stopping, and inspecting a service.
 4. [Using a Library Component](library.md): run a detector or parser from DetectMateLibrary.
 5. [Monitoring with Prometheus](prometheus.md): metrics and scrape configuration.

@@ -19,15 +19,15 @@ The following diagram illustrates a typical log analysis pipeline:
 
 ![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
 
-Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectmateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
+Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectMateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
 
 ## The Objective
 
-In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
+In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to paths the model has not seen during training.
 
 ## Preparation
 
-We will setup the DetectMate on a fresh installation of Ubuntu Noble:
+We will set up DetectMate on a fresh installation of Ubuntu Noble:
 
 ```
 alice@ubuntu2404:~$ lsb_release -a
@@ -38,7 +38,7 @@ Release:	24.04
 Codename:	noble
 ```
 
-In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:
+In this tutorial we want to find anomalies in Nginx access logs. So let's install nginx:
 
 ```
 alice@ubuntu2404:~$ sudo apt update && sudo apt install nginx -y
@@ -177,7 +177,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 !!! note
     Since we did not add our user to the docker group, we have to use sudo for docker compose!
 
-With Docker compose working, we will now download the DetectmateService repository using `git`:
+With Docker compose working, we will now download the DetectMateService repository using `git`:
 
 ```
 alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
@@ -255,7 +255,7 @@ Initially we edit the `docker-compose.yml` and change only the `fluentin` volume
 --8<-- "docker-compose.yml"
 ```
 
-Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
+Now that the `access.log` file is available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
 ```
 --8<-- "container/fluentin/fluent.conf:tutorial"

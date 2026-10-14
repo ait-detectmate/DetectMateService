@@ -4,7 +4,7 @@ We're happily taking patches and other contributions. Below is a summary of the 
 
 ## Bug reports and enhancement requests
 
-Bug reports and enhancement requests are an important part of making `DetectMateService` more stable and are curated through Github issues.
+Bug reports and enhancement requests are an important part of making `DetectMateService` more stable and are curated through GitHub issues.
 Before reporting an issue, check our backlog of open issues to see if anybody else has already reported it. 
 If that is the case, you might be able to give additional information on that issue.
 Bug reports are very helpful to us in improving the software, and therefore, they are very welcome. It is very important to give us
@@ -12,8 +12,8 @@ at least the following information in a bug report:
 
 1. Description of the bug. Describe the problem clearly.
 2. Steps to reproduce. With the following configuration, go to.., click.., see error
-3. Expected behavoir. What should happen?
-4. Environment. What was the environment for the test(version, browser, etc..)
+3. Expected behavior. What should happen?
+4. Environment. What was the environment for the test (DetectMateService version, Python version, OS, deployment method, etc.)?
 
 *Please don't include any private/sensitive information in your issue! For reporting security-related issues, see [SECURITY.md](https://github.com/ait-detectmate/DetectMateService/blob/main/SECURITY.md)*
 
@@ -21,7 +21,7 @@ at least the following information in a bug report:
 
 To contribute to this project, you must fork the project and create a pull request to the upstream repository. The following figure shows the workflow:
 
-![GitHub Workflow]( images/GitHub-Contrib.drawio.png)
+![GitHub Workflow](images/GitHub-Contrib.drawio.png)
 
 ### 1. Fork
 
@@ -37,7 +37,7 @@ git clone -b development git@github.com:YOURUSERNAME/DetectMateService.git
 
 ### 3. Create a feature branch
 
-Every single workpackage should be developed in it's own feature-branch. Use a name that describes the feature:
+Every work package should be developed in its own feature branch. Use a name that describes the feature:
 
 ```bash
 cd DetectMateService
@@ -46,7 +46,7 @@ git checkout -b feature-some_important_work
 
 ### 4. Develop your feature and improvements in the feature-branch
 
-Please make sure that you commit only improvements that are related to the workpage you created the feature-branch for. See the section [Development](development.md) for detailed information about how to develope code for `DetectMateService`. 
+Please make sure that you commit only improvements that are related to the work package you created the feature branch for. See the section [Development](development.md) for detailed information about how to develop code for `DetectMateService`. 
 
 *`DetectMateService` uses [prek](https://github.com/j178/prek) to ensure code quality. Make sure that you use it properly*
 

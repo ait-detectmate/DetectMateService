@@ -18,12 +18,12 @@ These settings control the service infrastructure.
 | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
 | `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
 | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
-| `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         
+| `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         |
 | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
 | `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
 | `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
 | `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
-| `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
+| `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0).                                                                    |
 | `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
 | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
 | `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
@@ -45,7 +45,7 @@ This means:
 
 - **Names must be unique per instance.** 
 - **Without a name, uniqueness comes from the address.** Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
-- **Changing `component_type` or `component_name`changes the id**
+- **Changing `component_type` or `component_name` changes the id**
 - **`component_id` can be set explicitly** if you need to control it directly
 
 
@@ -82,7 +82,7 @@ Example detector_config.yaml
 --8<-- "docs/examples/configuration/detector_config.yaml"
 ```
 
-### What goes in a the config file
+### What goes in the config file
 
 Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
 same for every component. What is valid *inside* is defined by the component's configuration
@@ -274,7 +274,7 @@ The `state` field reflects what the component did with the most recently process
 | :--- | :--- |
 | `"Training."` | Last event was used for model training. |
 | `"Configuring"` | Last event was used for the configure phase. |
-| `"Default"` | Neither,  the component is in inference-only mode. |
+| `"Default"` | Neither, the component is in inference-only mode. |
 
 ### Persistency component configuration
 
