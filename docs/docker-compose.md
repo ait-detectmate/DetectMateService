@@ -129,7 +129,7 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 `fluentout` mounts the following volumes using bind-mount. 
 
-- `container/fluentin:/fluentd/etc` provides the fluentd configuration. The file [container/fluentin/fluent.conf](https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf) contains one `<source>`/`<match>` pair for `detector` (`ipc:///run/output.ipc` → `output.%Y%m%d`) and one for `detector-rule` (`ipc:///run/output-rule.ipc` → `output-rule.%Y%m%d`), and can be used to reconfigure fluentd to write to other targets.
+- `container/fluentout:/fluentd/etc` provides the fluentd configuration. The file [container/fluentout/fluent.conf](https://github.com/ait-detectmate/DetectMateService/blob/main/container/fluentout/fluent.conf) contains one `<source>`/`<match>` pair for `detector` (`ipc:///run/output.ipc` → `output.%Y%m%d`) and one for `detector-rule` (`ipc:///run/output-rule.ipc` → `output-rule.%Y%m%d`), and can be used to reconfigure fluentd to write to other targets.
 
 - `container/fluentlogs:/fluentd/log` exposes the directory containing written log files. By default, `fluentout` writes alerts from `detector` to `output.%Y%m%d` and alerts from `detector-rule` to `output-rule.%Y%m%d`.
 
@@ -149,7 +149,7 @@ Docker Compose builds the `fluentout` image using the configuration in the file 
 
 ### Ports
 
-This service exposes **port 9090**
+Prometheus listens on **port 9090** inside the Docker network only (`expose`, not `ports`), so it is reachable by other services such as `grafana` (`http://prometheus:9090`) but not from the host. Use Grafana at `http://localhost:3000` to explore the metrics.
 
 ## Grafana
 
