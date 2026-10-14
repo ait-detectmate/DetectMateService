@@ -1,8 +1,12 @@
 # Configuration
 
-DetectMateService can be configured using a YAML settings file, environment variables, or CLI flags. The precedence order is:
+DetectMateService is configured with a YAML settings file (`--settings`) and environment variables. Environment variables override values from the YAML file, and unset settings fall back to their defaults.
 
-**CLI flags > environment variables > YAML file**
+Two settings can also be set with CLI flags, which override both: `--config` sets `config_file`, and `--no-autostart` sets `engine_autostart` to `false`.
+
+**CLI flags (`--config`, `--no-autostart`) > environment variables > YAML file > defaults**
+
+Unknown keys in the YAML file are rejected at startup.
 
 ## Service settings
 
@@ -11,7 +15,7 @@ These settings control the service infrastructure.
 | Setting                       | Env Variable                             | Default                            | Description                                                                                               |
 | :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
 | `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
-| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly.     |
+| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly, or from `component_type` and `engine_addr` if no `component_name` is set. |
 | `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
 | `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
 | `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
@@ -21,8 +25,6 @@ These settings control the service infrastructure.
 | `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         |
 | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
 | `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
-| `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
-| `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
 | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0).                                                                    |
 | `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
 | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
@@ -30,6 +32,9 @@ These settings control the service infrastructure.
 | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
 | `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs).                                                       |
 | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+| `tls_input`                   | `DETECTMATE_TLS_INPUT__CERT_KEY_FILE`    | unset                              | TLS config for the input socket, required when `engine_addr` uses `tls+tcp://`. Takes `cert_key_file` (PEM file with the server certificate and private key). |
+| `tls_output`                  | `DETECTMATE_TLS_OUTPUT__CA_FILE`, `DETECTMATE_TLS_OUTPUT__SERVER_NAME` | unset | TLS config for the output sockets, required when any `out_addr` uses `tls+tcp://`. Takes `ca_file` (CA certificate used to verify the server) and an optional `server_name` (SNI override when the hostname differs from the certificate). |
+| `config_file`                 | `DETECTMATE_CONFIG_FILE`                 | unset                              | Path to the component configuration file, see [Component configuration](#component-configuration). Overridden by `--config`. |
 
 
 ### Naming components
@@ -44,7 +49,7 @@ component_id = uuid5(NAMESPACE_URL, f"detectmate/{component_type}/{component_nam
 This means:
 
 - **Names must be unique per instance.** 
-- **Without a name, uniqueness comes from the address.** Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
+- **Without a name, the id is derived from the address** (`detectmate/{component_type}|{engine_addr}`). Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
 - **Changing `component_type` or `component_name` changes the id**
 - **`component_id` can be set explicitly** if you need to control it directly
 
@@ -97,10 +102,6 @@ To find the fields a component accepts:
   explains how the library interprets the values.
 - **The config class itself**: the fields, types and defaults of `<ComponentClass>Config` in the
   library source are the authoritative list.
-- **Let the service generate one**: point `config_file` at a path that does not exist yet and the
-  service writes a default file derived from the component's config class on startup. It is a
-  scaffold, not a working config! Values it cannot infer are written as `<PLACEHOLDER>` and have
-  to be filled in.
 
 You can read more about Components in the [Using a Library Component](library.md) section.
 
@@ -195,11 +196,11 @@ These endpoints are available when the loaded library component has persistency 
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
 | `POST` | `/api/v1/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
-| `POST` | `/api/v1/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running. |
+| `POST` | `/api/v1/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running, and `404` if no saved state exists at the configured `path`. |
 | `GET` | `/api/v1/persistency/export` | Downloads the current learned state as a zip archive. |
 | `POST` | `/api/v1/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
 
-`/api/v1/persistency/save`, `/api/v1/persistency/status`, and `/api/v1/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/api/v1/persistency/load` and `/api/v1/persistency/import` additionally return `409` if the engine is running - stop it first with `/api/v1/stop`. `/api/v1/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
+`/api/v1/persistency/save`, `/api/v1/persistency/status`, and `/api/v1/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/api/v1/persistency/load` and `/api/v1/persistency/import` additionally return `409` if the engine is running - stop it first with `/api/v1/stop`. `/api/v1/persistency/load` also returns `404` if no saved state exists yet (no `metadata.json` under the state path). `/api/v1/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
 #### `/api/v1/persistency/status` response
 
@@ -265,14 +266,14 @@ Any other value is rejected with `422 Unprocessable Entity`.
 #### `GET /api/v1/training/state` response
 
 ```json
-{"state": "Training."}
+{"state": "Training"}
 ```
 
 The `state` field reflects what the component did with the most recently processed event:
 
 | Value | Meaning |
 | :--- | :--- |
-| `"Training."` | Last event was used for model training. |
+| `"Training"` | Last event was used for model training. |
 | `"Configuring"` | Last event was used for the configure phase. |
 | `"Default"` | Neither, the component is in inference-only mode. |
 
@@ -286,7 +287,7 @@ Persistency for detector components is enabled through the `persist` block in th
 
 | Field | Default | Description |
 | :--- | :--- | :--- |
-| `path` | `./state` | Where to write state files. Accepts any fsspec-compatible URL (`s3://`, `gs://`, local path, etc.). The component name is appended automatically. |
+| `path` | `$STATE_DIRECTORY`, else `./state` | Where to write state files. If unset, the first directory in the `STATE_DIRECTORY` environment variable is used (set by systemd's `StateDirectory=`), otherwise `./state` relative to the working directory. Accepts any fsspec-compatible URL (`s3://`, `gs://`, local path, etc.). The component name is appended automatically. |
 | `interval_seconds` | `300` | Seconds between background saves. |
 | `events_until_save` | `null` | If set, trigger an additional save after this many events. Combines with the timer. |
 | `auto_load` | `false` | If `true`, the component restores its previous state from `path` when it starts. |
