@@ -136,7 +136,7 @@ You can override this behaviour at any time using the training state endpoints:
 ```bash
 # Check what the component is currently doing
 curl http://127.0.0.1:8000/api/v1/training/state
-# → {"state": "Training."}  |  "Configuring"  |  "Default"
+# → {"state": "Training"}  |  "Configuring"  |  "Default"
 
 # Freeze the model: stop updating it with new events
 curl -X POST http://127.0.0.1:8000/api/v1/training/state \
