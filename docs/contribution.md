@@ -103,13 +103,13 @@ git rebase -i HEAD~2
 
 Delete your local feature-branch after the pull-request was merged into the development branch.
 
-### 8. Update your local main branch
+### 8. Update your local development branch
 
 Update your local development branch:
 
 ```bash
 git fetch upstream development
-git checkout -b development
+git checkout development
 git rebase upstream/development
 ```
 
@@ -117,7 +117,7 @@ Additional infos:
 
 - [https://www.atlassian.com/git/tutorials/merging-vs-rebasing](https://www.atlassian.com/git/tutorials/merging-vs-rebasing)
 
-### 9. Update your main branch in your github-repository
+### 9. Update your development branch in your GitHub repository
 
 Please make sure that you updated your local development branch as described in section 8. above. After that push the changes to your github-repository to keep it up2date:
 
