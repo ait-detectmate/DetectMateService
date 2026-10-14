@@ -391,8 +391,8 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.20260318.log
-2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.20261014.log
+2026-10-14T09:53:28+00:00	nng.*	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"NewValueDetector_10","detectionTimestamp":1791971608,"logIDs":["9922ab54-0fdb-41b5-815c-41af09df8020"],"score":1.0,"extractedTimestamps":[1791971608],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1791971608,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
@@ -429,8 +429,8 @@ alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configu
 Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.<date>.log`:
 
 ```
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
-2026-07-13T12:03:55+00:00	nng.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"10","detectionTimestamp":1783944235,"logIDs":["5269c4a0-304c-431d-809b-ae34a15aa68b"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1783944235,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20261014.log
+2026-10-14T09:53:46+00:00	nngrule.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"RuleDetector_10","detectionTimestamp":1791971626,"logIDs":["35a7e9c0-c2f2-4f8c-ade1-73ce33340ec4"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1791971626,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
 ```
 
 The rule-based detector caught it: `"R001 - TemplateNotFound":"No template found by parser"`. Unlike `NewValueDetector`, it needed no training data at all — it was ready to alert from the very first log line.
