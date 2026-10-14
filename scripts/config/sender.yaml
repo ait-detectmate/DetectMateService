@@ -2,7 +2,6 @@ component_name: "sender"
 component_type: "core"
 log_dir: "./logs"
 log_level: "DEBUG"
-manager_addr: "ipc:///tmp/sender.cmd.ipc"
 engine_addr: "ipc:///tmp/sender.engine.ipc"
 
 # Output to the receiver (which might be down)
