@@ -3,6 +3,7 @@ component_type: "core"
 log_dir: "./logs"
 log_level: "DEBUG"
 engine_addr: "ipc:///tmp/receiver.engine.ipc"
+http_port: 8012
 
 # Receiver does not forward messages
 out_addr: []

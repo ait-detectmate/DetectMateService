@@ -3,6 +3,7 @@ component_type: "core"
 log_dir: "./logs"
 log_level: "DEBUG"
 engine_addr: "ipc:///tmp/sender.engine.ipc"
+http_port: 8011
 
 # Output to the receiver (which might be down)
 out_addr:
