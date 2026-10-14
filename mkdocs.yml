@@ -13,6 +13,7 @@ nav:
     - Usage:
       - Running the Service: usage.md
       - Using a Library Component: library.md
+      - Federated Learning: federation.md
       - Monitoring with Prometheus: prometheus.md
     - Docker Compose Reference: docker-compose.md
   - Contributing:
