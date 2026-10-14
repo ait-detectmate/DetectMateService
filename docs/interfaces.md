@@ -72,16 +72,12 @@ class MyComponentConfig(CoreConfig):
  - Validation: It ensures the new instance is an instance of `CoreComponent`.
 5. Config from `ConfigManager` is passed to component constructor
 6. The Library processes and validates the configuration internally
- - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it raises an AutoConfigError.
+ - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it emits a `MissingParamsWarning`.
 
  - Type Checking: It ensures the method_type matches the expected component type.
 
- - Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.
-
- - Keyword Cleaning: If a parameter key starts with `all_`, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).
-
   - Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant `params` key.
-7. Processor Adaptation: The service wraps the `CoreComponent` in a `LibraryComponentProcessor` (an adapter) to make it compatible with the `Engine` loop.
+7. Processing: The `Engine` loop calls `Service.process()`, which passes each message to the `CoreComponent`'s `process()` method.
 8. At runtime, `reconfigure` command can update configs dynamically
 
 ## Component Loading
