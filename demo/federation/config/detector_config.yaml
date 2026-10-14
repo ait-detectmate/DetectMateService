@@ -1,0 +1,15 @@
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    auto_config: false
+    allow_fed: true  # required for /api/v1/federation/*
+    # No data_use_training: the controller switches training on and off
+    # with /api/v1/training/state.
+    events:
+      1:
+        login:
+          params: {}
+          variables:
+            - pos: 0
+              name: user
+              params: {}

@@ -1,0 +1,11 @@
+# Shared by all nodes; docker-compose.yml sets DETECTMATE_COMPONENT_NAME per container.
+component_type: NewValueDetector
+log_level: INFO
+log_to_file: false
+
+http_host: 0.0.0.0
+http_port: 8000
+
+# No out_addr: alerts are sent back on the input socket, where the controller reads them.
+engine_addr: "tcp://0.0.0.0:5000"
+engine_autostart: true

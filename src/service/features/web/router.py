@@ -9,6 +9,12 @@ from typing import Any, Dict, List, Literal, cast
 from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
+try:
+    # Base implementation that only warns; components that support adopt override it.
+    from detectmatelibrary.common._core_op._fed_component import FedOperations
+    _STUB_LOAD_BINARY = FedOperations.load_binary
+except (ImportError, AttributeError):
+    _STUB_LOAD_BINARY = None
 from service.features.engine import EngineState
 from service.features.web.auth import require_api_key, get_service
 
@@ -100,7 +106,7 @@ def _require_stopped(service: Any, action: str) -> None:
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
-            detail=f"Stop the engine before {action} (/admin/stop)",
+            detail=f"Stop the engine before {action} (/api/v1/stop)",
         )
 
 
@@ -115,11 +121,7 @@ async def api_persistency_save(service: Any = Depends(get_service)) -> Dict[str,
 @router.post("/persistency/load")  # type: ignore[misc]
 async def api_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Restore state from storage, replacing current in-memory state."""
-    if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
-        raise HTTPException(
-            status_code=409,
-            detail="Stop the engine before loading state (/api/v1/stop)",
-        )
+    _require_stopped(service, "loading state")
     saver = _get_saver(service)
     try:
         saver.load()
@@ -157,11 +159,7 @@ async def api_persistency_import(
     """Restore learned state from an uploaded zip archive."""
     component = _get_component(service)
     _require_persistency(component)
-    if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
-        raise HTTPException(
-            status_code=409,
-            detail="Stop the engine before importing state (/api/v1/stop)",
-        )
+    _require_stopped(service, "importing state")
     data = await file.read()
     if not zipfile.is_zipfile(io.BytesIO(data)):
         raise HTTPException(status_code=422, detail="Uploaded file is not a valid zip archive")
@@ -233,14 +231,23 @@ async def _read_binaries(files: List[UploadFile]) -> List[bytes]:
     return binaries
 
 
+def _can_load_binary(component: Any) -> bool:
+    """True if the component implements load_binary() rather than inheriting
+    the library stub, which only warns and leaves the state unchanged."""
+    method = getattr(component, "load_binary", None)
+    if method is None:
+        return False
+    return _STUB_LOAD_BINARY is None or getattr(method, "__func__", None) is not _STUB_LOAD_BINARY
+
+
 @router.get("/federation/status")  # type: ignore[misc]
-async def admin_federation_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_federation_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
     component = _get_component(service)
     return {"enabled": _fed_enabled(component), **asdict(service.federation)}
 
 
 @router.get("/federation/export")  # type: ignore[misc]
-async def admin_federation_export(service: Any = Depends(get_service)) -> Response:
+async def api_federation_export(service: Any = Depends(get_service)) -> Response:
     """Return this component's federation binary for a hub to stack."""
     component = _get_fed_component(service, "exporting federation state")
     data = component.to_binary()
@@ -250,7 +257,7 @@ async def admin_federation_export(service: Any = Depends(get_service)) -> Respon
 
 
 @router.post("/federation/stack")  # type: ignore[misc]
-async def admin_federation_stack(
+async def api_federation_stack(
     service: Any = Depends(get_service),
     files: List[UploadFile] = File(...),
 ) -> Dict[str, Any]:
@@ -266,13 +273,13 @@ async def admin_federation_stack(
 
 
 @router.post("/federation/aggregate")  # type: ignore[misc]
-async def admin_federation_aggregate(unstack: bool = True, service: Any = Depends(get_service)) -> Response:
+async def api_federation_aggregate(unstack: bool = True, service: Any = Depends(get_service)) -> Response:
     """Merge the stacked peers into this component and return the global
     binary."""
     component = _get_fed_component(service, "aggregating")
     state = service.federation
     if state.stacked_peers == 0:
-        raise HTTPException(status_code=409, detail="No peer state stacked (/admin/federation/stack)")
+        raise HTTPException(status_code=409, detail="No peer state stacked (/api/v1/federation/stack)")
     data = component.aggregate(unstack=unstack)
     state.rounds_aggregated += 1
     state.last_aggregated_at = datetime.now(timezone.utc).isoformat()
@@ -282,17 +289,17 @@ async def admin_federation_aggregate(unstack: bool = True, service: Any = Depend
 
 
 @router.post("/federation/adopt")  # type: ignore[misc]
-async def admin_federation_adopt(
+async def api_federation_adopt(
     service: Any = Depends(get_service),
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     """Replace this component's state with a global binary from the hub."""
     component = _get_fed_component(service, "adopting federation state")
-    if not hasattr(component, "load_binary"):
+    if not _can_load_binary(component):
         raise HTTPException(
             status_code=501,
-            detail="The installed DetectMateLibrary has no load_binary(); "
-                   "import the hub's /admin/persistency/export archive instead",
+            detail=f"{component.name} cannot load a federation binary (no load_binary()); "
+            "import the hub's /api/v1/persistency/export archive instead",
         )
     (data,) = await _read_binaries([file])
     try:
@@ -303,7 +310,7 @@ async def admin_federation_adopt(
 
 
 @router.post("/federation/finalize")  # type: ignore[misc]
-async def admin_federation_finalize(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_federation_finalize(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """End federation for this component and remove its federation files.
 
     This cannot be undone: export, stack and aggregate are rejected

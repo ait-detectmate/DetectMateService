@@ -1,0 +1,46 @@
+# Federation demo: three site detectors and one hub, each in its own container.
+# Run from this directory:  docker compose up --build --abort-on-container-exit
+x-node: &node
+  image: detectmate-federation-demo
+  build:
+    context: ../..
+    dockerfile: demo/federation/Dockerfile
+    args:
+      LIBRARY_REF: ${LIBRARY_REF:-}
+  volumes:
+    - ./config:/config:ro
+  command: detectmate --settings /config/settings.yaml --config /config/detector_config.yaml
+
+x-env: &env
+  DETECTMATE_HTTP_API_KEY: ${DETECTMATE_HTTP_API_KEY:-demo-key}
+
+services:
+  site-a:
+    <<: *node
+    environment: {<<: *env, DETECTMATE_COMPONENT_NAME: site-a}
+    ports: ["8101:8000"]
+
+  site-b:
+    <<: *node
+    environment: {<<: *env, DETECTMATE_COMPONENT_NAME: site-b}
+    ports: ["8102:8000"]
+
+  site-c:
+    <<: *node
+    environment: {<<: *env, DETECTMATE_COMPONENT_NAME: site-c}
+    ports: ["8103:8000"]
+
+  # Receives no log data; only aggregates the sites' state.
+  hub:
+    <<: *node
+    environment: {<<: *env, DETECTMATE_COMPONENT_NAME: hub, DETECTMATE_ENGINE_AUTOSTART: "false"}
+    ports: ["8104:8000"]
+
+  # Feeds the sites and runs the federation round over the HTTP API.
+  controller:
+    image: detectmate-federation-demo
+    volumes:
+      - ./federation_demo.py:/demo/federation_demo.py:ro
+    environment: *env
+    command: python /demo/federation_demo.py
+    depends_on: [site-a, site-b, site-c, hub]

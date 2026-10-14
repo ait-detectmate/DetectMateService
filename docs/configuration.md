@@ -237,12 +237,12 @@ These endpoints run stack-later federation between detectors. They need `allow_f
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/federation/status` | Returns whether federation is enabled, stacked peer count, aggregation count and time, and whether it was finalized. |
-| `GET` | `/admin/federation/export` | Downloads this node's federation binary. |
-| `POST` | `/admin/federation/stack` | Uploads one or more peer binaries for the next aggregation. |
-| `POST` | `/admin/federation/aggregate` | Merges the stacked peers and returns the merged binary. |
-| `POST` | `/admin/federation/adopt` | Replaces this node's learned state with a merged binary. |
-| `POST` | `/admin/federation/finalize` | Ends federation for this node. Permanent. |
+| `GET` | `/api/v1/federation/status` | Returns whether federation is enabled, stacked peer count, aggregation count and time, and whether it was finalized. |
+| `GET` | `/api/v1/federation/export` | Downloads this node's federation binary. |
+| `POST` | `/api/v1/federation/stack` | Uploads one or more peer binaries for the next aggregation. |
+| `POST` | `/api/v1/federation/aggregate` | Merges the stacked peers and returns the merged binary. |
+| `POST` | `/api/v1/federation/adopt` | Replaces this node's learned state with a merged binary. |
+| `POST` | `/api/v1/federation/finalize` | Ends federation for this node. Permanent. |
 
 All except `status` return `404` if no library component is loaded and `409` if federation is disabled or finalized, or the engine is running.
 
