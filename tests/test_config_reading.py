@@ -154,3 +154,39 @@ def test_unknown_key_in_yaml_raises(tmp_path):
 
     with pytest.raises(SystemExit, match="manager_addr"):
         ServiceSettings.from_yaml(yaml_file)
+
+
+def test_list_env_var_overrides_yaml(tmp_path, monkeypatch):
+    """List fields like out_addr are read from the env as JSON and override the
+    YAML value."""
+    yaml_file = tmp_path / "settings.yaml"
+    yaml_file.write_text('out_addr: ["ipc:///tmp/from_yaml.ipc"]\n')
+    monkeypatch.setenv("DETECTMATE_OUT_ADDR", '["tcp://127.0.0.1:5000", "ipc:///tmp/from_env.ipc"]')
+
+    settings = ServiceSettings.from_yaml(yaml_file)
+
+    assert [str(a) for a in settings.out_addr] == ["tcp://127.0.0.1:5000", "ipc:///tmp/from_env.ipc"]
+
+
+def test_nested_model_env_var_as_json(tmp_path, monkeypatch):
+    """Nested models like tls_output can be set from a JSON env var."""
+    yaml_file = tmp_path / "settings.yaml"
+    yaml_file.write_text('out_addr: ["tls+tcp://detector:5555"]\n')
+    monkeypatch.setenv("DETECTMATE_TLS_OUTPUT", '{"ca_file": "/certs/ca.pem", "server_name": "detector"}')
+
+    settings = ServiceSettings.from_yaml(yaml_file)
+
+    assert settings.tls_output is not None
+    assert settings.tls_output.ca_file == Path("/certs/ca.pem")
+    assert settings.tls_output.server_name == "detector"
+
+
+def test_invalid_list_env_var_exits_cleanly(tmp_path, monkeypatch):
+    """A non-JSON value for a list field exits with a config error instead of a
+    traceback."""
+    yaml_file = tmp_path / "settings.yaml"
+    yaml_file.write_text("log_level: INFO\n")
+    monkeypatch.setenv("DETECTMATE_OUT_ADDR", "tcp://127.0.0.1:5000")
+
+    with pytest.raises(SystemExit, match="out_addr"):
+        ServiceSettings.from_yaml(yaml_file)

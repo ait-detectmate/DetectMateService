@@ -30,7 +30,7 @@ These settings control the service infrastructure.
 | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
 | `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
 | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
-| `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs).                                                       |
+| `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs). As an environment variable, pass a JSON list, e.g. `DETECTMATE_OUT_ADDR='["tcp://host:5000", "ipc:///tmp/out.ipc"]'`. |
 | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
 | `tls_input`                   | `DETECTMATE_TLS_INPUT__CERT_KEY_FILE`    | unset                              | TLS config for the input socket, required when `engine_addr` uses `tls+tcp://`. Takes `cert_key_file` (PEM file with the server certificate and private key). |
 | `tls_output`                  | `DETECTMATE_TLS_OUTPUT__CA_FILE`, `DETECTMATE_TLS_OUTPUT__SERVER_NAME` | unset | TLS config for the output sockets, required when any `out_addr` uses `tls+tcp://`. Takes `ca_file` (CA certificate used to verify the server) and an optional `server_name` (SNI override when the hostname differs from the certificate). |
@@ -67,11 +67,14 @@ You can provide a YAML file containing the service settings. Below is an example
 
 Environment variables override values in the YAML file. They are prefixed with `DETECTMATE_`.
 
+List and nested settings take JSON, or use `__` to set a single nested field (e.g. `DETECTMATE_TLS_OUTPUT__CA_FILE`).
+
 Example:
 ```bash
 export DETECTMATE_LOG_LEVEL=DEBUG
 export DETECTMATE_COMPONENT_NAME=worker-1
-detectmate start
+export DETECTMATE_OUT_ADDR='["tcp://127.0.0.1:5000"]'
+detectmate --settings settings.yaml
 ```
 
 ## Component configuration
