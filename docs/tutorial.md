@@ -317,7 +317,7 @@ Next to the `NewValueDetector`, the pipeline also runs a second detector, `detec
 By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
 With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
 
-Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
+Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different URLs:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
@@ -380,7 +380,7 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `output.<date>.log` and have a look:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged to `container/fluentlogs/output.<date>.log`: fluentd fills in the `%Y%m%d` part of the path configured in `fluent.conf`. (The `output.%Y%m%d` directory next to it is only fluentd's buffer.) Find the filename with `ls container/fluentlogs/` and have a look:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
@@ -391,14 +391,14 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/output.20260318.log
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.20260318.log
 2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
 Great! We detected our first anomaly.
 
-If you check `container/fluentlogs/output-rule.%Y%m%d` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
+If you check `container/fluentlogs/output-rule.<date>.log` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
 
 
 
@@ -426,7 +426,7 @@ Now append a contrived log line to `/var/log/nginx/access.log` that doesn't matc
 alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
 ```
 
-Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.%Y%m%d`:
+Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.<date>.log`:
 
 ```
 alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
