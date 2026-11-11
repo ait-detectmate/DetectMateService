@@ -6,7 +6,7 @@ This document describes the interface contract between DetectMateService and Det
 
 All processing components (parsers and detectors) must inherit from `CoreComponent`:
 
-```python
+```python title="Create a Component"
 from detectmatelibrary.common.core import CoreComponent, CoreConfig
 
 class MyComponent(CoreComponent):
@@ -51,7 +51,7 @@ class MyComponent(CoreComponent):
 
 Configuration classes must inherit from `CoreConfig`, which extends Pydantic's `BaseModel`:
 
-```python
+```python title="Create a Config Component"
 from detectmatelibrary.common.core import CoreConfig
 
 class MyComponentConfig(CoreConfig):
@@ -91,7 +91,7 @@ The `component_type` setting tells the service which class to load. You can use 
 
 ### Short class name
 
-```yaml
+```yaml title="Select component"
 component_type: RandomDetector
 ```
 
@@ -105,7 +105,7 @@ Convenient for library components, but note:
 
 ### Dotted path
 
-```yaml
+```yaml title="Select component from detectors"
 component_type: detectors.random_detector.RandomDetector
 ```
 
@@ -141,7 +141,7 @@ Once the component is resolved, `ComponentResolver` looks for `<ClassName>Config
 
 In your service settings YAML, specify:
 
-```yaml
+```yaml title="Specify Detector"
 component_type: detectors.MyDetector   # Component class path or class name
 config_file: detector-config.yaml      # Path to component config
 # Optional:
@@ -168,7 +168,7 @@ Here's a minimal detector component implementation:
 
 ### 1. Config Class (`detectors/random_detector.py`)
 
-```python
+```python title="Random Detector Code"
 from detectmatelibrary.common._config._formats import EventsConfig, Variable
 
 from detectmatelibrary.common.detector import CoreDetector, CoreDetectorConfig
@@ -238,7 +238,7 @@ class RandomDetector(CoreDetector):
 
 ### 2. Service Settings (`settings.yaml`)
 
-```yaml
+```yaml title="Setting Random detector"
 component_name: random-detector
 component_type: detectors.random_detector.RandomDetector
 config_file: random-config.yaml
@@ -252,7 +252,7 @@ engine_addr: ipc:///tmp/threshold.engine.ipc
 
 Component configuration uses a nested structure:
 
-```yaml
+```yaml title="Config Random Detector"
 detectors:
     RandomDetector:
         method_type: random_detector
@@ -277,7 +277,7 @@ This hierarchical format allows the library to correctly route parameters based 
 
 ### 4. Run the Service
 
-```bash
+```bash title="Run detector with CLI"
 detectmate --settings settings.yaml --config random-config.yaml
 ```
 
