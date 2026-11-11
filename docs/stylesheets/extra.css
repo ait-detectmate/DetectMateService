@@ -1,0 +1,43 @@
+.highlight.language-console,
+.highlight.language-yaml,
+.highlight.language-yml {
+  --md-code-bg-color: #f1f5f9;
+  --md-code-fg-color: #1e293b;
+  --md-code-hl-string-color: #0a3069;
+  --md-code-hl-number-color: #8250df;
+  --md-code-hl-keyword-color: #cf222e;
+  --md-code-hl-function-color: #8250df;
+  --md-code-hl-name-color: #1e293b;
+  --md-code-hl-operator-color: #0550ae;
+  --md-code-hl-punctuation-color: #1e293b;
+  --md-code-hl-comment-color: #57606a;
+  --terminal-prompt-color: #16713b;
+  --terminal-output-color: #475569;
+}
+
+/* Dark mode. */
+[data-md-color-scheme="slate"] .highlight.language-console,
+[data-md-color-scheme="slate"] .highlight.language-yaml,
+[data-md-color-scheme="slate"] .highlight.language-yml {
+  --md-code-bg-color: #0d1117;
+  --md-code-fg-color: #e6edf3;
+  --md-code-hl-string-color: #a5d6ff;
+  --md-code-hl-number-color: #d2a8ff;
+  --md-code-hl-keyword-color: #ff7b72;
+  --md-code-hl-function-color: #d2a8ff;
+  --md-code-hl-name-color: #e6edf3;
+  --md-code-hl-operator-color: #79c0ff;
+  --md-code-hl-punctuation-color: #e6edf3;
+  --md-code-hl-comment-color: #8b949e;
+  --terminal-prompt-color: #3fb950;
+  --terminal-output-color: #b1bac4;
+}
+
+.highlight.language-console .gp {
+  color: var(--terminal-prompt-color);
+  font-weight: 700;
+}
+
+.highlight.language-console .go {
+  color: var(--terminal-output-color);
+}
