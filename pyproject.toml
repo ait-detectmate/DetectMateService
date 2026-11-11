@@ -49,6 +49,7 @@ dev = [
     "httpx2>=2.7.0",
     "pymdown-extensions>=10.0",
     "DetectMateService[full]",
+    "mkdocs-material>=9.8.1",
 ]
 
 [project.scripts]
