@@ -1,6 +1,14 @@
+/* Terminal, YAML, Bash, and Python blocks. Requires pygments_lang_class: true. */
+/* Light mode (Material's default scheme). */
 .highlight.language-console,
 .highlight.language-yaml,
-.highlight.language-yml {
+.highlight.language-yml,
+.highlight.language-bash,
+.highlight.language-sh,
+.highlight.language-shell,
+.highlight.language-python,
+.highlight.language-py,
+.highlight.language-python3 {
   --md-code-bg-color: #f1f5f9;
   --md-code-fg-color: #1e293b;
   --md-code-hl-string-color: #0a3069;
@@ -18,7 +26,13 @@
 /* Dark mode. */
 [data-md-color-scheme="slate"] .highlight.language-console,
 [data-md-color-scheme="slate"] .highlight.language-yaml,
-[data-md-color-scheme="slate"] .highlight.language-yml {
+[data-md-color-scheme="slate"] .highlight.language-yml,
+[data-md-color-scheme="slate"] .highlight.language-bash,
+[data-md-color-scheme="slate"] .highlight.language-sh,
+[data-md-color-scheme="slate"] .highlight.language-shell,
+[data-md-color-scheme="slate"] .highlight.language-python,
+[data-md-color-scheme="slate"] .highlight.language-py,
+[data-md-color-scheme="slate"] .highlight.language-python3 {
   --md-code-bg-color: #0d1117;
   --md-code-fg-color: #e6edf3;
   --md-code-hl-string-color: #a5d6ff;

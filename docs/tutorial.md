@@ -142,13 +142,13 @@ In this section, we will focus solely on the installation commands.
 
 First run the following command to uninstall all conflicting packages:
 
-```console title="Removing conflicting packages"
+```bash title="Removing conflicting packages"
 sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 ```
 
 Now set up Docker's apt repository:
 
-```console title="Set up Docker"
+```bash title="Set up Docker"
 # Add Docker's official GPG key:
 sudo apt update
 sudo apt install ca-certificates curl
@@ -170,7 +170,7 @@ sudo apt update
 
 Install docker and docker compose:
 
-```console title="Install docker compose"
+```bash title="Install docker compose"
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
