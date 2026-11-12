@@ -19,9 +19,7 @@ at least the following information in a bug report:
 
 ## Working on the codebase
 
-To contribute to this project, you must fork the project and create a pull request to the upstream repository. The following figure shows the workflow:
-
-![GitHub Workflow](images/GitHub-Contrib.drawio.png)
+To contribute to this project, you must fork the project and create a pull request to the upstream repository, following the next steps:
 
 ### 1. Fork
 

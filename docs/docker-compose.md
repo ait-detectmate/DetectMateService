@@ -2,7 +2,7 @@
 
 DetectMate Service ships a comprehensive Docker Compose configuration that includes all services required to consume and process logs and send alerts. This reference explains the settings of `docker-compose.yml`. The following image illustrates the log data pipeline deployed by Docker Compose:
 
-![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
+![Illustration of a logpipeline](img/ServicePipeline.svg "logpipeline")
 
 Log file ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. Using the default setup, fluentd reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards it to **both** detector services shipped by default, `detector` and `detector-rule`. If either detector finds an anomaly, it sends it to the `fluentout` process, which can communicate with various targets, such as Elasticsearch, Kafka, or a log file.
 
