@@ -6,19 +6,19 @@ Every DetectMate service exposes a Prometheus-compatible metrics endpoint on its
 
 The metrics endpoint is available at:
 
-```
+```console title="Metrics endpoint"
 http://<http_host>:<http_port>/metrics
 ```
 
 With default settings this is `http://127.0.0.1:8000/metrics`. You can fetch it directly with curl:
 
-```bash
+```bash title="Fetch metrics from curl"
 curl http://127.0.0.1:8000/metrics
 ```
 
 Or use the DetectMate client CLI:
 
-```bash
+```bash title="Fetch metrics from CLI"
 detectmate-client --url http://127.0.0.1:8000 metrics
 ```
 
@@ -26,20 +26,22 @@ detectmate-client --url http://127.0.0.1:8000 metrics
 
 All metrics are labeled with `component_type` and `component_id`, so a single Prometheus instance can distinguish between multiple DetectMate services.
 
-| Metric | Type | Description |
-| :----- | :--- | :---------- |
-| `engine_running` | Enum (`running`, `stopped`) | Current state of the processing engine |
-| `engine_starts_total` | Counter | Number of times the engine has been started |
-| `processing_duration_seconds` | Histogram | Time spent processing each message, in seconds |
-| `processing_errors_total` | Counter | Number of exceptions raised during processing |
-| `data_read_bytes_total` | Counter | Total bytes read from input interfaces |
-| `data_read_lines_total` | Counter | Total lines read from input interfaces |
-| `data_processed_bytes_total` | Counter | Total bytes processed by the component |
-| `data_processed_lines_total` | Counter | Total lines processed by the component |
-| `data_written_bytes_total` | Counter | Total bytes written to output interfaces |
-| `data_written_lines_total` | Counter | Total lines written to output interfaces |
-| `data_dropped_bytes_total` | Counter | Total bytes dropped due to disconnected or slow downstream peers |
-| `data_dropped_lines_total` | Counter | Total lines dropped due to disconnected or slow downstream peers |
+??? "Available Metrics"
+
+    | Metric | Type | Description |
+    | :----- | :--- | :---------- |
+    | `engine_running` | Enum (`running`, `stopped`) | Current state of the processing engine |
+    | `engine_starts_total` | Counter | Number of times the engine has been started |
+    | `processing_duration_seconds` | Histogram | Time spent processing each message, in seconds |
+    | `processing_errors_total` | Counter | Number of exceptions raised during processing |
+    | `data_read_bytes_total` | Counter | Total bytes read from input interfaces |
+    | `data_read_lines_total` | Counter | Total lines read from input interfaces |
+    | `data_processed_bytes_total` | Counter | Total bytes processed by the component |
+    | `data_processed_lines_total` | Counter | Total lines processed by the component |
+    | `data_written_bytes_total` | Counter | Total bytes written to output interfaces |
+    | `data_written_lines_total` | Counter | Total lines written to output interfaces |
+    | `data_dropped_bytes_total` | Counter | Total bytes dropped due to disconnected or slow downstream peers |
+    | `data_dropped_lines_total` | Counter | Total lines dropped due to disconnected or slow downstream peers |
 
 The `processing_duration_seconds` histogram uses the following buckets: 1 ms, 5 ms, 10 ms, 25 ms, 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2.5 s, 5 s, 10 s.
 
@@ -50,13 +52,13 @@ The `processing_duration_seconds` histogram uses the following buckets: 1 ms, 5 
 
 If you run DetectMate outside of Docker Compose, add a scrape job to your `prometheus.yml`:
 
-```yaml
+```yaml title="Prometheus configuration"
 --8<-- "docs/examples/prometheus/prometheus-standalone.yml"
 ```
 
 If you run multiple services, list each one under `targets`:
 
-```yaml
+```yaml title="Prometheus configuration multiple services"
 --8<-- "docs/examples/prometheus/prometheus-standalone-multi.yml"
 ```
 
@@ -64,13 +66,13 @@ If you run multiple services, list each one under `targets`:
 
 The DetectMate repository ships a ready-to-use Docker Compose configuration that includes Prometheus and Grafana. The Prometheus configuration file at `container/prometheus.yml` is pre-configured to scrape the `parser`, `detector`, and `detector-rule` services:
 
-```yaml
+```yaml title="Configuration of Prometheus"
 --8<-- "container/prometheus.yml"
 ```
 
 Start the stack with:
 
-```bash
+```bash title="Start the stack in Docker"
 docker compose up
 ```
 

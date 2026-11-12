@@ -2,7 +2,30 @@ site_name: DetectMate Service
 site_url: https://ait-detectmate.github.io/DetectMateService/
 
 theme:
-  name: readthedocs
+  name: material
+  logo: img/logo_service.png
+  favicon: img/logo.svg
+  features:
+    - navigation.footer   # previous / next page links at the bottom of every page
+    - content.code.copy
+  palette:
+    # Light mode configuration
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Dark mode configuration
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 nav:
   - Home: index.md
@@ -24,11 +47,22 @@ nav:
   - Maintainers:
     - Release Process: release.md
 
-
-
 markdown_extensions:
   - admonition
+  - pymdownx.details
   - pymdownx.snippets:
       base_path: ["."]
       check_paths: true
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - pymdownx.highlight:
+      pygments_lang_class: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  version:
+    provider: mike

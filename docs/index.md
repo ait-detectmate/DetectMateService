@@ -1,13 +1,15 @@
-# DetectMate Service Framework
+# DetectMate Service
+
+![UML](img/logo_2.svg)
 
 Welcome to the DetectMate Service Framework documentation. DetectMate is a flexible, component-based framework for
 building distributed detection and processing services.
 
-The DetectMate Framework consists of the [DetectMate Service](https://github.com/ait-detectmate/DetectMateService) and the [DetectMate Library](https://github.com/ait-detectmate/DetectMateLibrary). The DetectMate Service is a very generic microservice that handles the input, forwards it to the DetectMate Library, which processes the data, and finally sends the results back to the output interfaces.
+The DetectMate Framework consists of the [DetectMate Service](https://github.com/ait-detectmate/DetectMateService) and the [DetectMate Library](https://github.com/ait-detectmate/DetectMateLibrary). The DetectMate Service is a very generic microservice that handles the input, forwards it to the DetectMate Library, which processes the data, and finally sends the results back to the output interfaces. It uses NNG's messaging architecture to process data in real-time.
 
-![High Level Schema](images/High-Level-Schema.drawio.png)
 
-It uses NNG's messaging architecture to process data in real-time.
+![High Level Schema](img/graph.svg)
+
 
 ## Key features
 

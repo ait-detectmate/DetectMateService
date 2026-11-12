@@ -12,29 +12,30 @@ Unknown keys in the YAML file are rejected at startup.
 
 These settings control the service infrastructure.
 
-| Setting                       | Env Variable                             | Default                            | Description                                                                                               |
-| :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
-| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
-| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly, or from `component_type` and `engine_addr` if no `component_name` is set. |
-| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
-| `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
-| `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
-| `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
-| `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
-| `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
-| `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         |
-| `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
-| `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
-| `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0).                                                                    |
-| `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
-| `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
-| `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
-| `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
-| `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs). As an environment variable, pass a JSON list, e.g. `DETECTMATE_OUT_ADDR='["tcp://host:5000", "ipc:///tmp/out.ipc"]'`. |
-| `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
-| `tls_input`                   | `DETECTMATE_TLS_INPUT__CERT_KEY_FILE`    | unset                              | TLS config for the input socket, required when `engine_addr` uses `tls+tcp://`. Takes `cert_key_file` (PEM file with the server certificate and private key). |
-| `tls_output`                  | `DETECTMATE_TLS_OUTPUT__CA_FILE`, `DETECTMATE_TLS_OUTPUT__SERVER_NAME` | unset | TLS config for the output sockets, required when any `out_addr` uses `tls+tcp://`. Takes `ca_file` (CA certificate used to verify the server) and an optional `server_name` (SNI override when the hostname differs from the certificate). |
-| `config_file`                 | `DETECTMATE_CONFIG_FILE`                 | unset                              | Path to the component configuration file, see [Component configuration](#component-configuration). Overridden by `--config`. |
+??? "Settings"
+    | Setting                       | Env Variable                             | Default                            | Description                                                                                               |
+    | :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
+    | `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
+    | `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly, or from `component_type` and `engine_addr` if no `component_name` is set. |
+    | `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
+    | `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
+    | `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
+    | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
+    | `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
+    | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
+    | `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         |
+    | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
+    | `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
+    | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0).                                                                    |
+    | `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
+    | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
+    | `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
+    | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
+    | `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs). As an environment variable, pass a JSON list, e.g. `DETECTMATE_OUT_ADDR='["tcp://host:5000", "ipc:///tmp/out.ipc"]'`. |
+    | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+    | `tls_input`                   | `DETECTMATE_TLS_INPUT__CERT_KEY_FILE`    | unset                              | TLS config for the input socket, required when `engine_addr` uses `tls+tcp://`. Takes `cert_key_file` (PEM file with the server certificate and private key). |
+    | `tls_output`                  | `DETECTMATE_TLS_OUTPUT__CA_FILE`, `DETECTMATE_TLS_OUTPUT__SERVER_NAME` | unset | TLS config for the output sockets, required when any `out_addr` uses `tls+tcp://`. Takes `ca_file` (CA certificate used to verify the server) and an optional `server_name` (SNI override when the hostname differs from the certificate). |
+    | `config_file`                 | `DETECTMATE_CONFIG_FILE`                 | unset                              | Path to the component configuration file, see [Component configuration](#component-configuration). Overridden by `--config`. |
 
 
 ### Naming components
@@ -42,7 +43,7 @@ These settings control the service infrastructure.
 `component_name` can be chosen freely, but it is **not** used as a
 display label anywhere. Logs, metrics and log file names all use `component_id`, `component_name` is only used to seed it.
 
-```python
+```python title="Add component name"
 component_id = uuid5(NAMESPACE_URL, f"detectmate/{component_type}/{component_name}").hex
 ```
 
@@ -58,7 +59,7 @@ This means:
 
 You can provide a YAML file containing the service settings. Below is an example `settings.yaml`:
 
-```yaml
+```yaml title="Setting yaml"
 --8<-- "docs/examples/configuration/settings.yaml"
 ```
 
@@ -70,7 +71,7 @@ Environment variables override values in the YAML file. They are prefixed with `
 List and nested settings take JSON, or use `__` to set a single nested field (e.g. `DETECTMATE_TLS_OUTPUT__CA_FILE`).
 
 Example:
-```bash
+```bash title="Define environment variables"
 export DETECTMATE_LOG_LEVEL=DEBUG
 export DETECTMATE_COMPONENT_NAME=worker-1
 export DETECTMATE_OUT_ADDR='["tcp://127.0.0.1:5000"]'
@@ -86,7 +87,7 @@ The configuration must be namespaced by the component category (detectors or par
 Example detector_config.yaml
 
 
-```yaml
+```yaml title="Detector configuration"
 --8<-- "docs/examples/configuration/detector_config.yaml"
 ```
 
@@ -114,35 +115,33 @@ Every parser and detector the library documents and the fields in its
 config file. Each page also names the class to put in `component_type`. 
 Some components ship only with an [optional extra](installation.md#optional-library-components-extras).
 
-**Parsers**
-
 <!-- Start parsers -->
-| Parser |
-|---|
-| [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
-| [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
-| [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
-| [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
+??? "Parser methods"
+    | Parser |
+    |---|
+    | [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
+    | [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
+    | [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
+    | [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
 <!-- End parsers -->
 
-**Detectors**
-
 <!-- Start detectors -->
-| Detector |
-|---|
-| [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
-| [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
-| [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
-| [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
-| [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
-| [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
-| [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
-| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
-| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
-| [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
-| [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
-| [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
-| [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
+??? "Detectors methods"
+    | Detector |
+    |---|
+    | [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
+    | [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
+    | [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
+    | [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
+    | [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
+    | [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
+    | [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
+    | [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
+    | [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
+    | [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
+    | [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
+    | [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
+    | [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
 <!-- End detectors -->
 
 > These tables are auto-generated from the library documentation.
@@ -161,14 +160,14 @@ If no key is set, the API is open and the service logs a warning at startup.
 
 Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:
 
-```bash
+```bash title="Generate key"
 export DETECTMATE_HTTP_API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
 detectmate --settings settings.yaml
 ```
 
 Call the API with the header:
 
-```bash
+```bash title="Call API"
 curl -H "X-Auth-Token: $DETECTMATE_HTTP_API_KEY" http://127.0.0.1:8000/api/v1/status
 detectmate-client --api-key "$DETECTMATE_HTTP_API_KEY" status   # or set DETECTMATE_API_KEY
 ```
@@ -207,7 +206,7 @@ These endpoints are available when the loaded library component has persistency 
 
 #### `/api/v1/persistency/status` response
 
-```json
+```json title="Status reply"
 {
   "path": "/state/NewValueDetector",
   "save_interval_seconds": 300,
@@ -253,7 +252,7 @@ Both phases stop automatically after their configured event count. By default th
 
 #### `POST /api/v1/training/state` payload
 
-```json
+```json title="State payload"
 {"state": "<value>"}
 ```
 
@@ -268,7 +267,7 @@ Any other value is rejected with `422 Unprocessable Entity`.
 
 #### `GET /api/v1/training/state` response
 
-```json
+```json title="State reply"
 {"state": "Training"}
 ```
 
@@ -284,7 +283,7 @@ The `state` field reflects what the component did with the most recently process
 
 Persistency for detector components is enabled through the `persist` block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.
 
-```yaml
+```yaml title="Persistency configuration"
 --8<-- "docs/examples/configuration/detector_persist_config.yaml"
 ```
 

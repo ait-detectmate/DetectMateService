@@ -4,7 +4,7 @@ DetectMateService requires **Python 3.12 or newer**.
 
 First, clone DetectMateService and navigate into the repository:
 
-```bash
+```bash title="Clone repository"
 git clone https://github.com/ait-detectmate/DetectMateService.git
 cd DetectMateService
 ```
@@ -14,7 +14,7 @@ cd DetectMateService
 We recommend using [uv](https://github.com/astral-sh/uv) to manage the environment
 and dependencies. To create the environment and install the dependencies, run:
 
-```bash
+```bash title="Setup dependencies with uv"
 uv sync
 ```
 
@@ -22,7 +22,7 @@ uv sync
 
 If you prefer plain `pip`, you can set things up like this instead:
 
-```bash
+```bash title="Setup dependencies wiht pip"
 # Create a virtual environment
 python -m venv .venv
 # Activate it
@@ -48,7 +48,7 @@ configured components actually need:
 
 Install only what you need:
 
-```bash
+```bash title="Install only some dependencies"
 uv sync --extra llm
 # or with pip
 pip install ".[llm]"
@@ -56,7 +56,7 @@ pip install ".[llm]"
 
 Or install everything:
 
-```bash
+```bash title="Install all dependencies"
 uv sync --extra full
 ```
 
@@ -69,14 +69,14 @@ contributors get every optional component out of the box.
 `Dockerfile` and `Dockerfile-dev` take a `LIBRARY_EXTRAS` build arg (comma-separated
 extras, default `full`) that controls which extras get installed in the image:
 
-```bash
+```bash title="Build Docker image"
 docker build --build-arg LIBRARY_EXTRAS=llm,dataframes -t detectmate .
 ```
 
 With `docker compose`, set the `LIBRARY_EXTRAS` env var before building (it defaults
 to `full` if unset):
 
-```bash
+```bash title="Use Docker compose"
 LIBRARY_EXTRAS=llm docker compose build parser detector
 ```
 

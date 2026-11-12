@@ -11,7 +11,7 @@ dynamic = ["version"]
 # detectmatelibrary[extra] with no version — since it's the same package name,
 # uv/pip unify it to this pin. Bump here, then run `uv lock`.
 dependencies = [
-    "detectmatelibrary==0.6.1",
+    "detectmatelibrary==0.7.0",
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
@@ -49,6 +49,7 @@ dev = [
     "httpx2>=2.7.0",
     "pymdown-extensions>=10.0",
     "DetectMateService[full]",
+    "mkdocs-material>=9.8.1",
 ]
 
 [project.scripts]

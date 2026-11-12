@@ -16,7 +16,7 @@ This document provides an overview of where DetectMateService imports from Detec
 
 **Import location:** `src/service/core.py`, `src/service/features/component_loader.py`
 
-```python
+```python title="Import CoreComponent"
 from detectmatelibrary.common.core import CoreComponent
 ```
 
@@ -29,7 +29,7 @@ The `ComponentLoader` dynamically imports component classes and validates they i
 - **Instantiation**: Components are instantiated with an optional config parameter
 - **Type checking**: `isinstance(instance, CoreComponent)` validates the loaded class
 
-```python
+```python title="Load Component"
 instance = component_class(config=config)
 if not isinstance(instance, CoreComponent):
     raise TypeError(...)
@@ -42,7 +42,7 @@ if not isinstance(instance, CoreComponent):
 - **process() invocation**: `Service.process()` calls `self.library_component.process(raw_message)`
 - **Return handling**: `bytes` output is forwarded; `None` skips the message
 
-```python
+```python title="Run Component"
 return self.library_component.process(raw_message)
 ```
 
@@ -60,7 +60,7 @@ for writing one.
 
 **Import location:** `src/service/core.py`, `src/service/features/config_loader.py`, `src/service/features/config_manager.py`
 
-```python
+```python title="Load CoreConfig"
 from detectmatelibrary.common.core import CoreConfig
 ```
 
@@ -72,7 +72,7 @@ The `ConfigClassLoader` dynamically imports config classes and validates they in
 
 - **Subclass checking**: `issubclass(config_class, CoreConfig)` validates the class hierarchy
 
-```python
+```python title="Check if is subclass"
 if not issubclass(config_class, CoreConfig):
     raise TypeError(...)
 ```
@@ -85,7 +85,7 @@ The `ConfigManager` receives the component's `CoreConfig` subclass as its schema
 - **Validation**: config files and `reconfigure` payloads are validated against `ServiceConfig`
 - **Serialization**: `to_dict()` (if available) or `model_dump()` converts the config to a dict for YAML storage
 
-```python
+```python title="Validate and Serialize"
 # Validation (top-level structure only)
 self._configs = ServiceConfig.model_validate(new_configs)
 
@@ -112,7 +112,7 @@ for how the library interprets the config contents.
 
 **Import location:** Integration tests only (`tests/library_integration/`)
 
-```python
+```python title="Import Schemas"
 from detectmatelibrary.schemas import LogSchema, ParserSchema, DetectorSchema
 ```
 

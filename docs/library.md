@@ -16,7 +16,7 @@ The library is installed automatically as a dependency of the service, so no sep
 
 Modify `settings.yaml` to use a library component:
 
-```yaml
+```yaml title="Changing setting file"
 --8<-- "docs/examples/library/settings.yaml"
 ```
 
@@ -28,13 +28,13 @@ per component. Check the individual component's page in the
 [DetectMateLibrary documentation](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/)
 and [Component configuration](configuration.md#component-configuration):
 
-```yaml
+```yaml title="Changing detector config file"
 --8<-- "docs/examples/library/detector-config.yaml"
 ```
 
 ## 3. Start with configuration
 
-```bash
+```bash title="Start Service"
 detectmate --settings settings.yaml --config detector-config.yaml
 ```
 
@@ -42,7 +42,7 @@ detectmate --settings settings.yaml --config detector-config.yaml
 
 Create `new-config.yaml`:
 
-```yaml
+```yaml title="Reconfigure in runtime"
 --8<-- "docs/examples/library/new-config.yaml"
 ```
 
@@ -51,14 +51,14 @@ The service supports dynamic reconfiguration with two modes:
 ### 1. In-memory update (default)
 Changes are applied to the running service but not saved to disk. The changes will be lost when the service restarts.
 
-```bash
+```bash title="Changes apply without saving in disk"
 detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml
 ```
 
 ### 2. Persistent update (with --persist flag)
 Changes are applied to the running service AND saved to the original parameter file. The changes persist across service restarts.
 
-```bash
+```bash title="Persistency update with flag"
 detectmate-client --url 127.0.0.1:8000 reconfigure path/to/new-config.yaml --persist
 ```
 
@@ -70,7 +70,7 @@ Detectors accumulate learned state (observed values, variable distributions, etc
 
 Add a `persist` block to your component config:
 
-```yaml
+```yaml title="Enable persistency state"
 --8<-- "docs/examples/library/detector_persist_config.yaml"
 ```
 
@@ -80,7 +80,7 @@ The state is written under `{path}/{ComponentName}/` as a `metadata.json` index 
 
 Once persistency is configured, three API endpoints become available:
 
-```bash
+```bash title="Controlling persistency at runtime"
 # Check current state: events seen, events since last save, last save timestamp
 curl http://127.0.0.1:8000/api/v1/persistency/status
 
@@ -99,7 +99,7 @@ You can also use `detectmate-client` instead of curl, see [usage.md](usage.md#co
 
 You can download the current learned state as a portable zip archive and restore it later. Useful for backups, moving state between environments, or seeding a new instance.
 
-```bash
+```bash title="Exporting and importing with API"
 # Download the current state to a local file
 curl http://127.0.0.1:8000/api/v1/persistency/export -o detector_state.zip
 
@@ -112,7 +112,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/start
 
 You can also use `detectmate-client` instead of curl:
 
-```bash
+```bash title="Exporting and importing with CLI"
 # Download the current state to a local file
 detectmate-client --url 127.0.0.1:8000 persistency-export detector_state.zip
 
@@ -133,7 +133,7 @@ Detectors go through two phases as they process events: a **configure** phase (l
 
 You can override this behaviour at any time using the training state endpoints:
 
-```bash
+```bash title="Controling training at runtime"
 # Check what the component is currently doing
 curl http://127.0.0.1:8000/api/v1/training/state
 # → {"state": "Training"}  |  "Configuring"  |  "Default"
