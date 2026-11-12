@@ -1,169 +1,1405 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/development/configuration/" />
-      <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Configuration - DetectMate Service</title>
-    <link rel="stylesheet" href="../css/theme.css" />
-    <link rel="stylesheet" href="../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
-        <link href="../css/version-select.css" rel="stylesheet" />
-    
-      <script>
-        // Current page data
-        var mkdocs_page_name = "Configuration";
-        var mkdocs_page_input_path = "configuration.md";
-        var mkdocs_page_url = "/DetectMateService/development/configuration/";
-      </script>
-    
-    <!--[if lt IE 9]>
-      <script src="../js/html5shiv.min.js"></script>
-    <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-      <script>hljs.highlightAll();</script> 
-</head>
 
-<body class="wy-body-for-nav" role="document">
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ait-detectmate.github.io/DetectMateService/development/configuration/">
+      
+      
+        <link rel="prev" href="../installation/">
+      
+      
+        <link rel="next" href="../usage/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../img/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Configuration - DetectMate Service</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-    <div class="wy-side-scroll">
-      <div class="wy-side-nav-search">
-          <a href=".." class="icon icon-home"> DetectMate Service
-        </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
-  </form>
-</div>
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
       </div>
+    
+    
+      
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
-                </li>
-              </ul>
-              <p class="caption"><span class="caption-text">User Guide</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
-                  </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Configuration</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#service-settings">Service settings</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#naming-components">Naming components</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#yaml-files">YAML files</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment variables</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#component-configuration">Component configuration</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#what-goes-in-the-config-file">What goes in the config file</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#library-component-reference">Library component reference</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#http-api">HTTP API</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#authentication">Authentication</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#core-endpoints">Core Endpoints</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#persistency-endpoints">Persistency Endpoints</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#apiv1persistencystatus-response">/api/v1/persistency/status response</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#training-state-endpoints">Training State Endpoints</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#background-training-vs-configuration">Background: training vs. configuration</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#post-apiv1trainingstate-payload">POST /api/v1/training/state payload</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#get-apiv1trainingstate-response">GET /api/v1/training/state response</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#persistency-component-configuration">Persistency component configuration</a>
-    </li>
-        </ul>
-    </li>
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" >Usage</a>
-    <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../usage/">Running the Service</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="../library/">Using a Library Component</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="../prometheus/">Monitoring with Prometheus</a>
-                </li>
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../docker-compose/">Docker Compose Reference</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Contributing</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../contribution/">Git Workflow</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" >Development</a>
-    <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../development/">Overview</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="../library-imports/">Library Imports</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="../interfaces/">Interfaces</a>
-                </li>
-    </ul>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Maintainers</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../release/">Release Process</a>
-                  </li>
-              </ul>
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="DetectMate Service" class="md-header__button md-logo" aria-label="DetectMate Service" data-md-component="logo">
+      
+  <img src="../img/logo_service.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DetectMate Service
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
       </div>
     </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="..">DetectMate Service</a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
         
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
       </nav>
-      <div class="wy-nav-content">
-        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">User Guide</li>
-      <li class="breadcrumb-item active">Configuration</li>
-    <li class="wy-breadcrumbs-aside">
-    </li>
-  </ul>
-  <hr/>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-            <div class="section" itemprop="articleBody">
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
               
-                <h1 id="configuration">Configuration</h1>
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="DetectMate Service" class="md-nav__button md-logo" aria-label="DetectMate Service" data-md-component="logo">
+      
+  <img src="../img/logo_service.png" alt="logo">
+
+    </a>
+    DetectMate Service
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Service settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#naming-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yaml-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YAML files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-goes-in-the-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What goes in the config file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-component-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library component reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HTTP API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Endpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistency-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistency Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Persistency Endpoints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apiv1persistencystatus-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /api/v1/persistency/status response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-state-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training State Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Training State Endpoints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background-training-vs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background: training vs. configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiv1trainingstate-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/v1/training/state payload
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiv1trainingstate-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/v1/training/state response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistency-component-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistency component configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running the Service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using a Library Component
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prometheus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring with Prometheus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker-compose/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker Compose Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../library-imports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Imports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Maintainers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Service settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#naming-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yaml-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YAML files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-goes-in-the-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What goes in the config file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-component-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library component reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HTTP API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Endpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistency-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistency Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Persistency Endpoints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apiv1persistencystatus-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /api/v1/persistency/status response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-state-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training State Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Training State Endpoints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background-training-vs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background: training vs. configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiv1trainingstate-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/v1/training/state payload
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiv1trainingstate-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/v1/training/state response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistency-component-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistency component configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="configuration">Configuration</h1>
 <p>DetectMateService is configured with a YAML settings file (<code>--settings</code>) and environment variables. Environment variables override values from the YAML file, and unset settings fall back to their defaults.</p>
 <p>Two settings can also be set with CLI flags, which override both: <code>--config</code> sets <code>config_file</code>, and <code>--no-autostart</code> sets <code>engine_autostart</code> to <code>false</code>.</p>
 <p><strong>CLI flags (<code>--config</code>, <code>--no-autostart</code>) &gt; environment variables &gt; YAML file &gt; defaults</strong></p>
 <p>Unknown keys in the YAML file are rejected at startup.</p>
 <h2 id="service-settings">Service settings</h2>
 <p>These settings control the service infrastructure.</p>
+<details>
+<summary>Settings</summary>
 <table>
 <thead>
 <tr>
@@ -302,10 +1538,11 @@
 </tr>
 </tbody>
 </table>
+</details>
 <h3 id="naming-components">Naming components</h3>
 <p><code>component_name</code> can be chosen freely, but it is <strong>not</strong> used as a
 display label anywhere. Logs, metrics and log file names all use <code>component_id</code>, <code>component_name</code> is only used to seed it.</p>
-<div class="highlight"><pre><span></span><code><span class="n">component_id</span> <span class="o">=</span> <span class="n">uuid5</span><span class="p">(</span><span class="n">NAMESPACE_URL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;detectmate/</span><span class="si">{</span><span class="n">component_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span>
+<div class="language-python highlight"><span class="filename">Add component name</span><pre><span></span><code><span class="n">component_id</span> <span class="o">=</span> <span class="n">uuid5</span><span class="p">(</span><span class="n">NAMESPACE_URL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;detectmate/</span><span class="si">{</span><span class="n">component_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span>
 </code></pre></div>
 <p>This means:</p>
 <ul>
@@ -316,7 +1553,7 @@ display label anywhere. Logs, metrics and log file names all use <code>component
 </ul>
 <h3 id="yaml-files">YAML files</h3>
 <p>You can provide a YAML file containing the service settings. Below is an example <code>settings.yaml</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-detector&quot;</span>
+<div class="language-yaml highlight"><span class="filename">Setting yaml</span><pre><span></span><code><span class="nt">component_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-detector&quot;</span>
 <span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;DEBUG&quot;</span>
 <span class="nt">log_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./logs&quot;</span>
 
@@ -339,7 +1576,7 @@ display label anywhere. Logs, metrics and log file names all use <code>component
 <p>Environment variables override values in the YAML file. They are prefixed with <code>DETECTMATE_</code>.</p>
 <p>List and nested settings take JSON, or use <code>__</code> to set a single nested field (e.g. <code>DETECTMATE_TLS_OUTPUT__CA_FILE</code>).</p>
 <p>Example:
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_LOG_LEVEL</span><span class="o">=</span>DEBUG
+<div class="language-bash highlight"><span class="filename">Define environment variables</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_LOG_LEVEL</span><span class="o">=</span>DEBUG
 <span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_COMPONENT_NAME</span><span class="o">=</span>worker-1
 <span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_OUT_ADDR</span><span class="o">=</span><span class="s1">&#39;[&quot;tcp://127.0.0.1:5000&quot;]&#39;</span>
 detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml
@@ -349,7 +1586,7 @@ detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yam
 <p>Component configuration controls the specific logic of the detector or parser. To support dynamic library loading, this file uses a nested structure.
 The configuration must be namespaced by the component category (detectors or parsers) and the specific class name to allow the library to correctly route parameters.
 Example detector_config.yaml</p>
-<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Category Level</span>
+<div class="language-yaml highlight"><span class="filename">Detector configuration</span><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Category Level</span>
 <span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span><span class="w">        </span><span class="c1"># Class Name Level</span>
 <span class="w">    </span><span class="nt">auto_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
@@ -386,7 +1623,6 @@ To find the fields a component accepts:</p>
 <p>Every parser and detector the library documents and the fields in its
 config file. Each page also names the class to put in <code>component_type</code>. 
 Some components ship only with an <a href="../installation/#optional-library-components-extras">optional extra</a>.</p>
-<p><strong>Parsers</strong></p>
 <!-- Start parsers -->
 <table>
 <thead>
@@ -396,28 +1632,27 @@ Some components ship only with an <a href="../installation/#optional-library-com
 </thead>
 <tbody>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/auto_parser/">Auto Parser</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/auto_parser/">auto_parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/drain_parser/">Drain Parser</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/drain_parser/">drain_parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/">JSON Parser</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/">json_parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/">LogBatcher Parser</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/">logbatcher_parser</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/">Template Matcher</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/">template_matcher</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/">Template Tree Matcher</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/">template_tree_matcher</a></td>
 </tr>
 </tbody>
 </table>
 <!-- End parsers -->
 
-<p><strong>Detectors</strong></p>
 <!-- Start detectors -->
 <table>
 <thead>
@@ -427,43 +1662,43 @@ Some components ship only with an <a href="../installation/#optional-library-com
 </thead>
 <tbody>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/">Bigram Frequency Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/">bigram_frequency</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/">Charset Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/">charset</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/">DeepLog Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/">combo</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/">ECVC Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/">deeplog</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/">Event Sequence Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/">ecvc_detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/">LogBERT Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/">event_sequence</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/">New Event Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/">logbert</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/">New Value Combo Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/">new_event</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/">New Value Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/">new_value</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/">Random Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/">random_detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/">Rule Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/">rule_based</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/">SCVS Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/">scvs_detector</a></td>
 </tr>
 <tr>
-<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/">Value Range Detector</a></td>
+<td><a href="https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/">value_range</a></td>
 </tr>
 </tbody>
 </table>
@@ -478,11 +1713,11 @@ Some components ship only with an <a href="../installation/#optional-library-com
 <p>When <code>http_api_key</code> is set, every <code>/api/v1/*</code> route requires the key in the <code>X-Auth-Token</code> header. A missing or wrong key returns <code>401 {"detail": "Invalid authentication credentials"}</code>. <code>/metrics</code>, <code>/docs</code>, <code>/redoc</code> and <code>/openapi.json</code> never require a key.</p>
 <p>If no key is set, the API is open and the service logs a warning at startup.</p>
 <p>Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_HTTP_API_KEY</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import secrets; print(secrets.token_urlsafe(32))&quot;</span><span class="k">)</span>
+<div class="language-bash highlight"><span class="filename">Generate key</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DETECTMATE_HTTP_API_KEY</span><span class="o">=</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import secrets; print(secrets.token_urlsafe(32))&quot;</span><span class="k">)</span>
 detectmate<span class="w"> </span>--settings<span class="w"> </span>settings.yaml
 </code></pre></div>
 <p>Call the API with the header:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>http://127.0.0.1:8000/api/v1/status
+<div class="language-bash highlight"><span class="filename">Call API</span><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>http://127.0.0.1:8000/api/v1/status
 detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DETECTMATE_HTTP_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span>status<span class="w">   </span><span class="c1"># or set DETECTMATE_API_KEY</span>
 </code></pre></div>
 <p>In the Swagger UI (<code>/docs</code>), click <strong>Authorize</strong> and enter the key.</p>
@@ -566,7 +1801,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </table>
 <p><code>/api/v1/persistency/save</code>, <code>/api/v1/persistency/status</code>, and <code>/api/v1/persistency/export</code> return <code>404</code> if no library component is loaded or if <code>persist</code> is not configured. <code>/api/v1/persistency/load</code> and <code>/api/v1/persistency/import</code> additionally return <code>409</code> if the engine is running - stop it first with <code>/api/v1/stop</code>. <code>/api/v1/persistency/load</code> also returns <code>404</code> if no saved state exists yet (no <code>metadata.json</code> under the state path). <code>/api/v1/persistency/import</code> returns <code>422</code> if the uploaded file is not a valid zip or does not contain <code>metadata.json</code>. See <a href="../usage/#controlling-state-persistency">usage.md</a> for <code>detectmate-client</code> equivalents.</p>
 <h4 id="apiv1persistencystatus-response"><code>/api/v1/persistency/status</code> response</h4>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<div class="language-json highlight"><span class="filename">Status reply</span><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/state/NewValueDetector&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;save_interval_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;events_until_save&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
@@ -651,7 +1886,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </ul>
 <p>Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.</p>
 <h4 id="post-apiv1trainingstate-payload"><code>POST /api/v1/training/state</code> payload</h4>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;value&gt;&quot;</span><span class="p">}</span>
+<div class="language-json highlight"><span class="filename">State payload</span><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;value&gt;&quot;</span><span class="p">}</span>
 </code></pre></div>
 <table>
 <thead>
@@ -681,7 +1916,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </table>
 <p>Any other value is rejected with <code>422 Unprocessable Entity</code>.</p>
 <h4 id="get-apiv1trainingstate-response"><code>GET /api/v1/training/state</code> response</h4>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training&quot;</span><span class="p">}</span>
+<div class="language-json highlight"><span class="filename">State reply</span><pre><span></span><code><span class="p">{</span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Training&quot;</span><span class="p">}</span>
 </code></pre></div>
 <p>The <code>state</code> field reflects what the component did with the most recently processed event:</p>
 <table>
@@ -708,7 +1943,7 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </table>
 <h3 id="persistency-component-configuration">Persistency component configuration</h3>
 <p>Persistency for detector components is enabled through the <code>persist</code> block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
+<div class="language-yaml highlight"><span class="filename">Persistency configuration</span><pre><span></span><code><span class="nt">detectors</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">NewValueDetector</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">method_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_value_detector</span>
 <span class="w">    </span><span class="nt">persist</span><span class="p">:</span>
@@ -754,52 +1989,100 @@ detectmate-client<span class="w"> </span>--api-key<span class="w"> </span><span 
 </tr>
 </tbody>
 </table>
-              
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
             </div>
-          </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../usage/" class="btn btn-neutral float-right" title="Running the Service">Next <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-  </div>
-
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
           
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-      </div>
-
-    </section>
-
-  </div>
-
-  <div class="rst-versions" role="note" aria-label="Versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
+        
+      </main>
+      
+        <footer class="md-footer">
+  
     
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../installation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Installation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Installation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../usage/" class="md-footer__link md-footer__link--next" aria-label="Next: Running the Service">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Running the Service
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
-      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
-    
-    
-      <span><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
-    
-  </span>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
 </div>
-    <script src="../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "..";</script>
-    <script src="../js/theme_extra.js"></script>
-    <script src="../js/theme.js"></script>
-      <script src="../search/main.js"></script>
-      <script src="../js/version-select.js"></script>
-    <script>
-        jQuery(function () {
-            SphinxRtdTheme.Navigation.enable(true);
-        });
-    </script>
-
-</body>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.footer", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
 </html>
