@@ -139,8 +139,8 @@ class TestDetectorServiceViaEngine:
                 # Verify structure
                 assert detector_schema.description == "Dummy detection process"
                 assert detector_schema.score == 1.0
-                assert "type" in detector_schema.alertsObtain
-                assert "Anomaly detected by DummyDetector" in detector_schema.alertsObtain["type"]
+                assert "type" in detector_schema.alertDetails
+                assert "Anomaly detected by DummyDetector" in detector_schema.alertDetails["type"]
             except pynng.Timeout:
                 pytest.fail("Second message should have triggered detection")
 

@@ -213,7 +213,7 @@ class RandomDetector(CoreDetector):
         overall_score = 0.0
         alerts = {}
 
-        event_config = self.config.events[input_["EventID"]]
+        event_config = self.config.events[input_["eventID"]]
         if event_config is None:
             return False
 
@@ -230,7 +230,7 @@ class RandomDetector(CoreDetector):
 
         if overall_score > 0:
             output_["score"] = overall_score
-            output_["alertsObtain"].update(alerts)
+            output_["alertDetails"].update(alerts)
             return True
 
         return False
