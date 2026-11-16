@@ -1,8 +1,10 @@
 # Installation
 
+DetectMateService requires **Python 3.12 or newer**.
+
 First, clone DetectMateService and navigate into the repository:
 
-```bash
+```bash title="Clone repository"
 git clone https://github.com/ait-detectmate/DetectMateService.git
 cd DetectMateService
 ```
@@ -10,11 +12,9 @@ cd DetectMateService
 ## Setup with uv (recommended)
 
 We recommend using [uv](https://github.com/astral-sh/uv) to manage the environment
-and dependencies.
+and dependencies. To create the environment and install the dependencies, run:
 
-### 1. Download the dependencies
-
-```bash
+```bash title="Setup dependencies with uv"
 uv sync
 ```
 
@@ -22,12 +22,12 @@ uv sync
 
 If you prefer plain `pip`, you can set things up like this instead:
 
-```bash
+```bash title="Setup dependencies wiht pip"
 # Create a virtual environment
 python -m venv .venv
 # Activate it
 source .venv/bin/activate
-# Install the project in editable mode with dev dependencies
+# Install the project and its dependencies
 pip install .
 ```
 
@@ -41,14 +41,14 @@ configured components actually need:
 
 | Extra              | Adds                                    | Needed for |
 |---------------------|------------------------------------------|------------|
-| `llm`               | `openai`, `tiktoken`, `scikit-learn`, `scipy`, `tenacity` | LLM-backed detectors/parsers |
+| `llm`               | `openai`, `tiktoken`, `scikit-learn`, `scipy`, `tenacity`, `pandas` | LLM-backed detectors/parsers |
 | `dataframes`        | `pandas`, `polars`                        | Dataframe-based persistency backends and components |
 | `polars-rtcompat`   | `polars[rtcompat]`                        | Polars runtime compatibility on older CPUs |
 | `full`              | all of the above                          | Running any/all library components, e.g. local development |
 
 Install only what you need:
 
-```bash
+```bash title="Install only some dependencies"
 uv sync --extra llm
 # or with pip
 pip install ".[llm]"
@@ -56,7 +56,7 @@ pip install ".[llm]"
 
 Or install everything:
 
-```bash
+```bash title="Install all dependencies"
 uv sync --extra full
 ```
 
@@ -69,14 +69,14 @@ contributors get every optional component out of the box.
 `Dockerfile` and `Dockerfile-dev` take a `LIBRARY_EXTRAS` build arg (comma-separated
 extras, default `full`) that controls which extras get installed in the image:
 
-```bash
+```bash title="Build Docker image"
 docker build --build-arg LIBRARY_EXTRAS=llm,dataframes -t detectmate .
 ```
 
 With `docker compose`, set the `LIBRARY_EXTRAS` env var before building (it defaults
 to `full` if unset):
 
-```bash
+```bash title="Use Docker compose"
 LIBRARY_EXTRAS=llm docker compose build parser detector
 ```
 

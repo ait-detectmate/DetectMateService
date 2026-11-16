@@ -285,7 +285,7 @@ class TestFullPipeline:
 
         assert detector_schema.score == 1.0
         assert detector_schema.description == "Dummy detection process"
-        assert "Anomaly detected by DummyDetector" in detector_schema.alertsObtain["type"]
+        assert "Anomaly detected by DummyDetector" in detector_schema.alertDetails["type"]
         assert parser_schema_2.log == "DummyParser", "Log not as expected."
         assert log_schema_2.log != "DummyParser", "Log not as expected."
 
