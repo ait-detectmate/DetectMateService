@@ -1,0 +1,9 @@
+detectors:
+  NewValueDetector:
+    method_type: new_value_detector
+    persist:
+      path: ./state          # Directory to store state files (supports fsspec URLs)
+      interval_seconds: 300  # Save every 5 minutes (default)
+      events_until_save: 1000  # Also save after every 1000 ingested events (optional)
+      auto_load: true        # Restore previous state on startup (default: false)
+      storage_options: {}    # Extra options passed to fsspec (e.g. S3 credentials)
