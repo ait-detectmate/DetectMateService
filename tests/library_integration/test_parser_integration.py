@@ -116,13 +116,13 @@ class TestParserServiceViaEngine:
     def test_parse_has_event_id(
         self, running_parser_service: dict, test_log_messages: list
     ) -> None:
-        """Verify parser includes the expected EventID."""
+        """Verify parser includes the expected eventID."""
         engine_addr = running_parser_service["engine_addr"]
         with pynng.Pair0(dial=engine_addr, recv_timeout=10000) as socket:
             socket.send(test_log_messages[0])
             response = socket.recv()
             (parser_schema := ParserSchema()).deserialize(response)
-            assert parser_schema.EventID == 2
+            assert parser_schema.eventID == 2
 
     def test_parses_first_log_schema(
         self, running_parser_service: dict, test_log_messages: list
@@ -204,4 +204,4 @@ class TestParserServiceViaEngine:
                 # All messages should have the same dummy parser output structure
                 assert parser_schema.variables == ["dummy_variable"]
                 assert parser_schema.template == "This is a dummy template"
-                assert parser_schema.EventID == 2
+                assert parser_schema.eventID == 2

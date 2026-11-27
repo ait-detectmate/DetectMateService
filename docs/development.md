@@ -1,17 +1,17 @@
 # Development
 
-This section describes how to setup a development environment and how to contribute to `DetectMateService`.
+This section describes how to set up a development environment and how to contribute to `DetectMateService`.
 
 !!! note
 
     Read the [Contribution Guide](contribution.md) to follow and understand the development workflow.
 
 
-## Setup a development environment
+## Set up a development environment
 
 For development we recommend using [uv](https://docs.astral.sh/uv/). You can install all optional dependencies:
 
-```bash
+```bash title="Sync dependencies"
 uv sync --dev
 ```
 
@@ -20,25 +20,25 @@ uv sync --dev
 
 ## Use prek to run code checks
 
-Every code contributer must use [`prek`](https://github.com/j178/prek) to run basic checks at commit time.
+Every code contributor must use [`prek`](https://github.com/j178/prek) to run basic checks at commit time.
 `prek` is configured via the existing `.pre-commit-config.yaml`
-and can be installed as part of the `dev` extras. To ensure pre-commit hooks run before each commit, run:
+and is installed as part of the `dev` dependency group. To ensure pre-commit hooks run before each commit, run:
 
-```bash
+```bash title="Install PreCommit"
 uv run prek install
 ```
 
 To run the checks manually, you can execute:
 
-```bash
+```bash title="Run PreCommit"
 uv run prek run -a
 ```
 
 ## Add tests and run pytest
 
-In oder to run the tests run the following command:
+To run the tests, run the following command:
 
-```bash
+```bash title="Run Pytests"
 uv run --dev pytest
 ```
 
@@ -53,7 +53,7 @@ whenever a `.py` file under `src/` changes. `uv sync` already installs
 `detectmateservice` in editable mode, the restarted process picks up
 edits immediately without a rebuild.
 
-```bash
+```bash title="Run Docker"
 docker compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build
 ```
 
@@ -65,11 +65,11 @@ values) unless persistence with `auto_load` is configured — see
 
 `docker-compose.library-source.yml.example` is a template overlay that
 installs `detectmatelibrary` from a local source checkout instead of PyPI,
-for the `detector` service. Copy it to `docker-compose.library-source.yml`
+for the `parser`, `detector` and `detector-rule` services. Copy it to `docker-compose.library-source.yml`
 (gitignored, so your local path never ends up in version control) and point
 the volume at your checkout:
 
-```bash
+```bash title="Developing agians a local DetectMateLibrary"
 cp docker-compose.library-source.yml.example docker-compose.library-source.yml
 # edit the volume path in docker-compose.library-source.yml, then:
 docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --build
@@ -81,13 +81,13 @@ docker compose -f docker-compose.yml -f docker-compose.library-source.yml up --b
 link from IPC to `tls+tcp`, leaving the rest of the stack unchanged. Generate
 a throwaway CA + server certificate once before first use:
 
-```bash
+```bash title="CA + server certificate"
 bash scripts/gen_tls_certs.sh
 ```
 
 Then start the stack with the overlay applied:
 
-```bash
+```bash title="Start Docker with certificate"
 docker compose -f docker-compose.yml -f docker-compose.tls.yml up --build
 ```
 
@@ -112,7 +112,7 @@ version of their own.
 The parser and detector tables in [Component configuration](configuration.md#library-component-reference)
 are generated, not written by hand:
 
-```bash
+```bash title="Regenerating the component tables"
 uv run python scripts/gen_component_links.py           # rewrite the tables
 uv run python scripts/gen_component_links.py --check    # exit 1 if they are out of date
 ```
@@ -121,7 +121,7 @@ The entries are whatever the published DetectMateLibrary documentation lists und
 `parsers/` and `detectors/` sections, read from its `sitemap.xml`, and each one is named by
 the headline of its page. A component that gets a page in the library therefore appears here
 on the next run without anyone editing markdown. The script only rewrites the text between
-the `<!-- Start detectors -->` / `<!-- End detectors -->` markers. The docs workflow runs it
+the `<!-- Start parsers -->` / `<!-- End parsers -->` and `<!-- Start detectors -->` / `<!-- End detectors -->` markers. The docs workflow runs it
 before publishing, so the published tables stay current even between library bumps.
 
 

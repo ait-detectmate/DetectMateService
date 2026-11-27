@@ -8,8 +8,9 @@ from pydantic import BaseModel
 
 from detectmatelibrary.utils.persistency import PersistencyLoadError
 from service.features.engine import EngineState
+from service.features.web.auth import require_api_key, get_service
 
-router = APIRouter(prefix="/admin")
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
 
 
 class ReconfigPayload(BaseModel):
@@ -17,13 +18,8 @@ class ReconfigPayload(BaseModel):
     persist: bool = False
 
 
-def get_service() -> Any:
-    # This gets overridden by the server setup in server.py
-    raise NotImplementedError
-
-
 @router.post("/start")  # type: ignore[misc]
-async def admin_start(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_start(service: Any = Depends(get_service)) -> Dict[str, Any]:
     result = service.start()
     if result.startswith("error:"):
         raise HTTPException(status_code=500, detail=result)
@@ -31,7 +27,7 @@ async def admin_start(service: Any = Depends(get_service)) -> Dict[str, Any]:
 
 
 @router.post("/stop")  # type: ignore[misc]
-async def admin_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
     result = service.stop()
     if result.startswith("error:"):
         raise HTTPException(status_code=500, detail=result)
@@ -39,12 +35,12 @@ async def admin_stop(service: Any = Depends(get_service)) -> Dict[str, Any]:
 
 
 @router.get("/status")  # type: ignore[misc]
-async def admin_status(service: Any = Depends(get_service)) -> Any:
+async def api_status(service: Any = Depends(get_service)) -> Any:
     return service._create_status_report(getattr(service, "_state", None) == EngineState.RUNNING)
 
 
 @router.post("/reconfigure")  # type: ignore[misc]
-async def admin_reconfigure(payload: ReconfigPayload, service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_reconfigure(payload: ReconfigPayload, service: Any = Depends(get_service)) -> Dict[str, Any]:
     # format the string to match what internal reconfigure() expects
     result = service.reconfigure(
         config_data=payload.config,
@@ -58,7 +54,7 @@ async def admin_reconfigure(payload: ReconfigPayload, service: Any = Depends(get
 
 
 @router.post("/shutdown")  # type: ignore[misc]
-async def admin_shutdown(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_shutdown(service: Any = Depends(get_service)) -> Dict[str, Any]:
     # Kills the entire process
     return {"message": service.shutdown()}
 
@@ -90,8 +86,15 @@ def _get_saver(service: Any) -> Any:
     return saver
 
 
+def _require_persistency(component: Any) -> None:
+    """Raise HTTPException 404 if the component has no persistency
+    configured."""
+    if getattr(component, "persistency", None) is None:
+        raise HTTPException(status_code=404, detail="Persistency not configured for this component")
+
+
 @router.post("/persistency/save")  # type: ignore[misc]
-async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_persistency_save(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Force an immediate flush of in-memory state to storage."""
     saver = _get_saver(service)
     saver.save()
@@ -99,12 +102,12 @@ async def admin_persistency_save(service: Any = Depends(get_service)) -> Dict[st
 
 
 @router.post("/persistency/load")  # type: ignore[misc]
-async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_persistency_load(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Restore state from storage, replacing current in-memory state."""
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
-            detail="Stop the engine before loading state (/admin/stop)",
+            detail="Stop the engine before loading state (/api/v1/stop)",
         )
     saver = _get_saver(service)
     try:
@@ -115,14 +118,15 @@ async def admin_persistency_load(service: Any = Depends(get_service)) -> Dict[st
 
 
 @router.get("/persistency/status")  # type: ignore[misc]
-async def admin_persistency_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_persistency_status(service: Any = Depends(get_service)) -> Dict[str, Any]:
     return cast(Dict[str, Any], _get_saver(service).get_status())
 
 
 @router.get("/persistency/export")  # type: ignore[misc]
-async def admin_persistency_export(service: Any = Depends(get_service)) -> StreamingResponse:
+async def api_persistency_export(service: Any = Depends(get_service)) -> StreamingResponse:
     """Stream the current learned state as a zip archive."""
     component = _get_component(service)
+    _require_persistency(component)
     data = component.export_state()
     if data is None:
         raise HTTPException(status_code=404, detail="Persistency not configured for this component")
@@ -135,17 +139,18 @@ async def admin_persistency_export(service: Any = Depends(get_service)) -> Strea
 
 
 @router.post("/persistency/import")  # type: ignore[misc]
-async def admin_persistency_import(
+async def api_persistency_import(
     service: Any = Depends(get_service),
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     """Restore learned state from an uploaded zip archive."""
+    component = _get_component(service)
+    _require_persistency(component)
     if getattr(service, "_state", None) in (EngineState.RUNNING, EngineState.STOPPING):
         raise HTTPException(
             status_code=409,
-            detail="Stop the engine before importing state (/admin/stop)",
+            detail="Stop the engine before importing state (/api/v1/stop)",
         )
-    component = _get_component(service)
     data = await file.read()
     if not zipfile.is_zipfile(io.BytesIO(data)):
         raise HTTPException(status_code=422, detail="Uploaded file is not a valid zip archive")
@@ -160,7 +165,7 @@ async def admin_persistency_import(
 
 
 @router.post("/training/state")  # type: ignore[misc]
-async def admin_training_set_state(
+async def api_training_set_state(
     payload: TrainingStatePayload, service: Any = Depends(get_service)
 ) -> Dict[str, Any]:
     """Override the fit logic training/configuration state on the library
@@ -171,7 +176,7 @@ async def admin_training_set_state(
 
 
 @router.get("/training/state")  # type: ignore[misc]
-async def admin_training_get_state(service: Any = Depends(get_service)) -> Dict[str, Any]:
+async def api_training_get_state(service: Any = Depends(get_service)) -> Dict[str, Any]:
     """Return the fit logic state from the last processed message."""
     component = _get_component(service)
     return {"state": component.get_state()}
