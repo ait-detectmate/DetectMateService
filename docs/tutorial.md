@@ -17,19 +17,19 @@ Logfile analysis consists of two main steps: first, parsing log lines, and secon
 
 The following diagram illustrates a typical log analysis pipeline:
 
-![Illustration of a logpipeline](images/Detectmate.drawio.png "logpipeline")
+![Illustration of a logpipeline](img/ServicePipeline.svg "logpipeline")
 
-Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectmateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
+Logfile ingestion is handled by Fluentd. It supports reading from various systems and can convert the data to a specific format before sending it to any other target. In our example, it reads lines from a file and sends them to the DetectMate parser. The parser processes the data and forwards them to the detector. If the detector finds an anomaly, it will send it to another Fluentd process that can communicate with various targets, such as Elasticsearch, Kafka, or a log file. To make configuring such a pipeline straightforward, the DetectMateService repository ships a boilerplate Docker Compose file. This tutorial will use the Docker Compose file so that we can focus on the anomaly detection only.
 
 ## The Objective
 
-In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to different paths of the trained model.
+In this tutorial, we will set up a log data analysis pipeline that reads Nginx access logs. We will then train the detector on various paths in the HTTP requests. Finally, we will generate anomalies by sending HTTP requests to paths the model has not seen during training.
 
 ## Preparation
 
-We will setup the DetectMate on a fresh installation of Ubuntu Noble:
+We will set up DetectMate on a fresh installation of Ubuntu Noble:
 
-```
+```console title="Checking version"
 alice@ubuntu2404:~$ lsb_release -a
 No LSB modules are available.
 Distributor ID:	Ubuntu
@@ -38,9 +38,9 @@ Release:	24.04
 Codename:	noble
 ```
 
-In this tutorial we want to find anomalies in Nginx access.logs. So let's install nginx:
+In this tutorial we want to find anomalies in Nginx access logs. So let's install nginx:
 
-```
+```console title="Dependencies installation"
 alice@ubuntu2404:~$ sudo apt update && sudo apt install nginx -y
 Hit:1 http://at.archive.ubuntu.com/ubuntu noble InRelease
 Hit:2 http://at.archive.ubuntu.com/ubuntu noble-updates InRelease
@@ -97,7 +97,7 @@ alice@ubuntu2404:~$
 
 We can try to send HTTP-requests to our local Nginx:
 
-```
+```console title="Handshake with Nginx"
 alice@ubuntu2404:~$ curl http://localhost
 <!DOCTYPE html>
 <html>
@@ -125,9 +125,9 @@ Commercial support is available at
 alice@ubuntu2404:~$
 ```
 
-Now we should have at least one line in /var/log/nginx/access.log:
+Now we should have at least one line in `/var/log/nginx/access.log`:
 
-```
+```console title="Checking the logs"
 alice@ubuntu2404:~$ sudo cat /var/log/nginx/access.log
 ::1 - - [18/Mar/2026:11:43:30 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/8.5.0"
 ```
@@ -142,13 +142,13 @@ In this section, we will focus solely on the installation commands.
 
 First run the following command to uninstall all conflicting packages:
 
-```
+```bash title="Removing conflicting packages"
 sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 ```
 
 Now set up Docker's apt repository:
 
-```
+```bash title="Set up Docker"
 # Add Docker's official GPG key:
 sudo apt update
 sudo apt install ca-certificates curl
@@ -170,16 +170,16 @@ sudo apt update
 
 Install docker and docker compose:
 
-```
+```bash title="Install docker compose"
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
 !!! note
     Since we did not add our user to the docker group, we have to use sudo for docker compose!
 
-With Docker compose working, we will now download the DetectmateService repository using `git`:
+With Docker compose working, we will now download the DetectMateService repository using `git`:
 
-```
+```console title="Clone repository"
 alice@ubuntu2404:~$ git clone https://github.com/ait-detectmate/DetectMateService.git
 Cloning into 'DetectMateService'...
 remote: Enumerating objects: 2303, done.
@@ -194,7 +194,7 @@ alice@ubuntu2404:~$ cd DetectMateService/
 
 Let's start the default pipeline, just to test it:
 
-```
+```console title="Test Docker compose"
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
 [+] up 7/7
  ✔ Container detectmateservice-fluentout-1      Started                                                                                                                                                                                 
@@ -209,7 +209,7 @@ alice@ubuntu2404:~/DetectMateService$
 
 To check the status of the containers, we can use `docker compose ps`:
 
-```
+```console title="Check containers"
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose ps
 NAME                                 IMAGE                              COMMAND                  SERVICE          CREATED         STATUS         PORTS
 detectmateservice-detector-1         detectmateservice-detector         "uv run detectmate -…"   detector         4 minutes ago   Up 3 minutes   0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp
@@ -226,7 +226,7 @@ Notice that the pipeline has **two** detector services running side by side: `de
 
 For now, we will shutdown all containers:
 
-```
+```console title="Shutdown containers"
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose down -v
 [+] down 9/9
  ✔ Container grafana                             Removed                                                                                                                                                                              
@@ -251,13 +251,13 @@ and modify the fluentd config so that it reads access.log instead.
 
 Initially we edit the `docker-compose.yml` and change only the `fluentin` volume mount to use `/var/log/nginx`:
 
-```yaml
+```yaml title="Docker compose file"
 --8<-- "docker-compose.yml"
 ```
 
-Now that the `access.logs` are available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
+Now that the `access.log` file is available in the container, we have to point fluentd to read that file. We need to edit the file `container/fluentin/fluent.conf` and replace `path /fluentd/log/some.log` with `path /fluentd/log/access.log`:
 
-```
+```yaml title="Fluentd file"
 --8<-- "container/fluentin/fluent.conf:tutorial"
 ```
 
@@ -272,26 +272,26 @@ The log pipeline uses three DetectMate services: `parser`, `detector` and `detec
 
 The Nginx log line we previously created has a very specific format:
 
-```
+```console title="Nginx format"
 ::1 - - [18/Mar/2026:11:43:30 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/8.5.0"
 ```
 
 This format can be described like that:
 
-```
+```console title="Nginx template"
 <IP> - - [<Time>] "<Method> <URL> <Protocol>" <Status> <Bytes> "<Referer>" "<UserAgent>"
 ```
 
 DetectMate includes a matcher_parser that can split such a log line. The configuration for
 the parser is in `container/config/parser_config.yaml`:
 
-```yaml
+```yaml title="Parser config file"
 --8<-- "container/config/parser_config.yaml"
 ```
 
 `container/config/templates.txt` contains a single wildcard template that matches any well-formed access-log line:
 
-```
+```console title="Different template"
 --8<-- "container/config/templates.txt"
 ```
 
@@ -301,7 +301,7 @@ This means every normal Nginx request parses successfully. We will rely on this 
 
 The simplest way to generate anomalies is to watch a single field of the parsed data and learn all its values during training. As soon as the detector switches from training mode to detection mode, all values not found in the trained model are flagged as anomalies. DetectMate ships with a `new_value_detector` that can do exactly that. The config `container/config/detector_config.yaml` looks as follows:
 
-```yaml
+```yaml title="Detector New Value config file"
 --8<-- "container/config/detector_config.yaml"
 ```
 
@@ -311,15 +311,15 @@ Here, the `URL` token from the parsed data is monitored (`- pos: URL`), and the 
 
 Next to the `NewValueDetector`, the pipeline also runs a second detector, `detector-rule`, using the `rule_detector` method. Unlike `NewValueDetector`, it needs no training: it evaluates a fixed list of simple rules against every log line, such as "no template was found by the parser" or "the log text contains a keyword like 'error' or 'exception'". Its configuration lives in `container/config/detector_rule_config.yaml`:
 
-```yaml
+```yaml title="Detector Rule based config file"
 --8<-- "container/config/detector_rule_config.yaml"
 ```
 By default (when nothing is specified in the rule: block), R001, R003 and R004 are enabled.
 With the config above only `R003` and `R004` are enabled, so the rule-based detector stays quiet while we work through the rest of this tutorial (plain Nginx access logs don't contain exception/error keywords, nor a `Level` field). At the very end of this tutorial, we will enable the `R001 - TemplateNotFound` rule and deliberately send a log line that cannot be parsed, to see the rule-based detector raise its own alert.
 
-Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different status values:
+Now let's start the pipeline using `sudo docker compose up -d` and send two valid log lines with two different URLs:
 
-```
+```console title="Restart pipeline"
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose up -d
 [+] up 7/7
  ✔ Network detectmateservice_default            Created                                                                                                                                                                      
@@ -345,9 +345,9 @@ alice@ubuntu2404:~/DetectMateService$
 **Wait a couple of minutes until parser and detector containers are up and running.** You can check by executing `sudo docker compose logs parser`, `sudo docker compose logs detector` or `sudo docker compose logs detector-rule`.
 When the containers are ready, the output of the component will show `Uvicorn running on` or any HTTP-requests for the `/metrics` endpoint:
 
-```
+```console title="Parser logs"
 parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: setup_io: ready to process messages
-parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP Admin active at 0.0.0.0:8000
+parser-1  | [2026-03-18 15:21:45,017] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: HTTP API active at 0.0.0.0:8000
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: Auto-starting engine...
 parser-1  | [2026-03-18 15:21:45,018] INFO detectmatelibrary.parsers.json_parser.MatcherParser.b7ce95e085705d4d87b71db2d1392f08: engine started
 parser-1  | INFO:     Started server process [61]
@@ -360,7 +360,7 @@ parser-1  | INFO:     172.18.0.2:39840 - "GET /metrics HTTP/1.1" 200 OK
 
 Now generate two `access.log` lines:
 
-```
+```console title="Generate access logs"
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/hello
 <html>
 <head><title>404 Not Found</title></head>
@@ -380,9 +380,9 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/world
 alice@ubuntu2404:~/DetectMateService$
 ```
 
-We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged in `container/fluentlogs/output.%Y%m%d`. With `ls container/fluentlogs/output.%Y%m%d` find the filename `output.<date>.log` and have a look:
+We now trained with the two values `hello` and `world`. This means, as soon as we query any other url than `/hello` or `/world` we should receive an anomaly. Anomalies get logged to `container/fluentlogs/output.<date>.log`: fluentd fills in the `%Y%m%d` part of the path configured in `fluent.conf`. (The `output.%Y%m%d` directory next to it is only fluentd's buffer.) Find the filename with `ls container/fluentlogs/` and have a look:
 
-```
+```console title="Generate anomaly"
 alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <html>
 <head><title>404 Not Found</title></head>
@@ -391,14 +391,14 @@ alice@ubuntu2404:~/DetectMateService$ curl http://localhost/foobar
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
 </html>
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.%Y%m%d/output.20260318.log
-2026-03-18T15:39:43+00:00	nng.input	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"10","detectionTimestamp":1773848383,"logIDs":["e5d922c8-19e1-47d1-842b-7bbabecb384d"],"score":1.0,"extractedTimestamps":[1773848383],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1773848383,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output.20261014.log
+2026-10-14T09:53:28+00:00	nng.*	{"__version__":"1.0.0","detectorID":"NewValueDetector","detectorType":"new_value_detector","alertID":"NewValueDetector_10","detectionTimestamp":1791971608,"logIDs":["9922ab54-0fdb-41b5-815c-41af09df8020"],"score":1.0,"extractedTimestamps":[1791971608],"description":"NewValueDetector detects values not encountered in training as anomalies.","receivedTimestamp":1791971608,"alertsObtain":{"Global - URL":"Unknown value: '/foobar'"}}
 alice@ubuntu2404:~/DetectMateService$
 ```
 
 Great! We detected our first anomaly.
 
-If you check `container/fluentlogs/output-rule.%Y%m%d` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
+If you check `container/fluentlogs/output-rule.<date>.log` at this point, you'll find it empty (or missing entirely). The rule-based detector has stayed quiet the whole time, since none of the requests we sent contain an exception/error keyword. We'll change that in the next section.
 
 
 
@@ -408,13 +408,13 @@ So far, `detector-rule` has been running quietly next to `detector`, since none 
 
 Edit `container/config/detector_rule_config.yaml` and add the rule "R001 - TemplateNotFound":
 
-```yaml
+```yaml title="Changing rule based"
 --8<-- "docs/examples/tutorial/detector_rule_config_r001.yaml"
 ```
 
 Restart just the `detector-rule` service to pick up the change:
 
-```
+```console title="Restart Rule based detector"
 alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
 [+] Restarting 1/1
  ✔ Container detectmateservice-detector-rule-1  Started
@@ -422,15 +422,15 @@ alice@ubuntu2404:~/DetectMateService$ sudo docker compose restart detector-rule
 
 Now append a contrived log line to `/var/log/nginx/access.log` that doesn't match the Nginx access log template at all, for example a line without the expected quotes and brackets:
 
-```
+```console title="Add new line to Nginx"
 alice@ubuntu2404:~/DetectMateService$ echo 'this line does not match the configured nginx log format at all' | sudo tee -a /var/log/nginx/access.log
 ```
 
-Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.%Y%m%d`:
+Since this line can't be matched against `<*> - - [<*>] "<*> <*> <*>" <*> <*> "<*>" "<*>"`, the parser assigns it `EventID: -1`, which is exactly what the `TemplateNotFound` rule checks for. Have a look at `container/fluentlogs/output-rule.<date>.log`:
 
-```
-alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20260713.log
-2026-07-13T12:03:55+00:00	nng.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"10","detectionTimestamp":1783944235,"logIDs":["5269c4a0-304c-431d-809b-ae34a15aa68b"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1783944235,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
+```console title="Check Anomaly"
+alice@ubuntu2404:~/DetectMateService$ sudo cat container/fluentlogs/output-rule.20261014.log
+2026-10-14T09:53:46+00:00	nngrule.*	{"__version__":"1.0.0","detectorID":"RuleDetector","detectorType":"rule_detector","alertID":"RuleDetector_10","detectionTimestamp":1791971626,"logIDs":["35a7e9c0-c2f2-4f8c-ade1-73ce33340ec4"],"score":1.0,"extractedTimestamps":[0],"description":"","receivedTimestamp":1791971626,"alertsObtain":{"R001 - TemplateNotFound":"No template found by parser"}}
 ```
 
 The rule-based detector caught it: `"R001 - TemplateNotFound":"No template found by parser"`. Unlike `NewValueDetector`, it needed no training data at all — it was ready to alert from the very first log line.

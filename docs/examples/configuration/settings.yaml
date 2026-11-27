@@ -2,7 +2,7 @@ component_name: "my-detector"
 log_level: "DEBUG"
 log_dir: "./logs"
 
-# Manager Interface
+# HTTP API (management and metrics)
 http_host: 127.0.0.1
 http_port: 8000
 

@@ -4,33 +4,33 @@ DetectMateService provides a command-line interface (CLI) `detectmate` to manage
 
 ## Quick start your first Service
 
-To run a component with default settings only, you can use this command:
-```bash
-detectmate
+`detectmate` needs a settings file. To run a service with default settings only, create an empty one and start the service with it:
+```bash title="Start service"
+touch settings.yaml
+detectmate --settings settings.yaml
 ```
 
 You should see output like:
 
-```
-[2026-01-20 15:16:21,140] INFO service.cli: config file: None
-[2026-01-20 15:16:21,140] INFO service.cli: config file: None
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: engine started
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: HTTP Admin active at 127.0.0.1:8000
-[2026-01-20 15:16:21,143] INFO core.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
-INFO:     Started server process [3933168]
+```console title="Logs"
+[2026-10-14 13:25:18,606] INFO service.cli: config file: None
+[2026-10-14 13:25:18,607] INFO service.5958cc49c05e572baa4f0acbc4b33f87: No output addresses configured, processed messages will not be forwarded
+[2026-10-14 13:25:18,607] INFO service.5958cc49c05e572baa4f0acbc4b33f87: setup_io: ready to process messages
+[2026-10-14 13:25:18,607] INFO service.5958cc49c05e572baa4f0acbc4b33f87: HTTP API active at 127.0.0.1:8000
+[2026-10-14 13:25:18,607] WARNING service.5958cc49c05e572baa4f0acbc4b33f87: HTTP API is unauthenticated. Set DETECTMATE_HTTP_API_KEY to require a key.
+[2026-10-14 13:25:18,607] INFO service.5958cc49c05e572baa4f0acbc4b33f87: Auto-starting engine...
+[2026-10-14 13:25:18,607] INFO service.5958cc49c05e572baa4f0acbc4b33f87: engine started
+INFO:     Started server process [2830861]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-
 ```
 
 ## Create service settings
 
 To run the service with custom variables, we can define settings. For example, create a file named `settings.yaml`:
 
-```yaml
+```yaml title="Setting file"
 --8<-- "docs/examples/usage/settings.yaml"
 ```
 
@@ -38,7 +38,7 @@ To run the service with custom variables, we can define settings. For example, c
 
 To start the service, use the `detectmate` command. You can optionally specify a settings file and a component configuration file.
 
-```bash
+```bash title="Start server with setting file"
 detectmate --settings settings.yaml --config config.yaml
 ```
 
@@ -46,21 +46,23 @@ detectmate --settings settings.yaml --config config.yaml
 | :--- | :--- |
 | `--settings` | Path to the service settings YAML file. |
 | `--config` | Path to the component configuration YAML file. |
-| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /admin/start` to begin processing. |
+| `--no-autostart` | Start the service without auto-starting the engine. Use `POST /api/v1/start` to begin processing. |
 
 ## Starting in standby mode
 
 By default the engine starts automatically when the service launches. Pass `--no-autostart` to keep the engine idle on startup:
 
-```bash
+```bash title="Start service without the autostart"
 detectmate --settings settings.yaml --no-autostart
 ```
 
-The HTTP Admin API is fully available immediately. The engine stays idle until you trigger it explicitly:
+The HTTP API is fully available immediately. The engine stays idle until you trigger it explicitly:
 
-```bash
-curl -X POST http://127.0.0.1:8000/admin/start
+```bash title="Call API"
+curl -X POST http://127.0.0.1:8000/api/v1/start
 ```
+
+If the service has an API key configured, add `-H "X-Auth-Token: <key>"` to every `/api/v1` request. See [Authentication](configuration.md#authentication).
 
 This is useful for staged startup workflows where you want to validate configuration or wait for upstream/downstream peers to be ready before allowing data to flow.
 
@@ -70,13 +72,13 @@ The same behaviour can also be configured persistently via the settings file or 
 
 To check the status of a running service run:
 
-```bash
-detectmate-client status --url <http_host:http_port>
+```bash title="Check Service"
+detectmate-client --url <http_host:http_port> status
 ```
 
 Output:
 
-```json
+```json title="Output obtain"
 {
   "status": {
     "component_type": "core",
@@ -96,21 +98,21 @@ Output:
 
 You can update the component configuration of a running service without restarting it:
 
-```bash
+```bash title="Reconfigure Service"
 detectmate-client --url <http_host:http_port> reconfigure new_config.yaml
 ```
 
 Add `--persist` to save the new configuration to the original config file (if supported).
 
-```bash
-detectmate --url <http_host:http_port> reconfigure new_config.yaml --persist
+```bash title="Reconfigure with persistency option"
+detectmate-client --url <http_host:http_port> reconfigure new_config.yaml --persist
 ```
 
 ## Stopping the engine
 
-To stop just the processing engine. the service process, its HTTP admin API, and any loaded component stay up, and you can restart the engine afterward with `start`:
+To stop just the processing engine, run the command below. The service process, its HTTP API, and any loaded component stay up, and you can restart the engine afterward with `start`:
 
-```bash
+```bash title="Stop engine"
 detectmate-client --url <http_host:http_port> stop
 ```
 
@@ -118,24 +120,26 @@ detectmate-client --url <http_host:http_port> stop
 
 To shut down the entire service process (not just the engine) send `SIGINT` (Ctrl+C if it's running in your foreground terminal, as in the [Quick start](#quick-start-your-first-service) output above) or `SIGTERM` (what `docker stop` and systemd send), or call the shutdown endpoint directly:
 
-```bash
-curl -X POST http://<http_host:http_port>/admin/shutdown
+```bash title="Stop the process"
+curl -X POST http://<http_host:http_port>/api/v1/shutdown
 ```
 
-Unlike `stop`, this is not restartable, the process exits. Expect these two log lines:
+Unlike `stop`, this is not restartable, the process exits. After a signal, the last two log lines are:
 
-```
-Shutdown signal received (SIGINT)...
-Clean exit.
+```console title="Logs of stoping Service"
+[2026-10-14 13:25:22,345] INFO service.cli: Shutdown signal received (SIGINT)...
+[2026-10-14 13:25:22,345] INFO service.cli: Clean exit.
 ```
 
-(`SIGTERM` logs the same two lines with `SIGTERM` in place of `SIGINT`.) If the engine is still running when the process shuts down, it's stopped automatically as part of teardown. you don't need to call `stop` first.
+(`SIGTERM` logs `SIGTERM` in place of `SIGINT`.) The shutdown endpoint logs `Process shutdown initiated.` instead of the signal line, and also ends with `Clean exit.`.
+
+If the engine is still running when the process shuts down, it's stopped automatically as part of teardown, so you don't need to call `stop` first.
 
 ## Controlling state persistency
 
 When a component has persistency configured, you can manage its saved state at runtime.
 
-```bash
+```bash title="Controling persistency"
 # Show persistency config, event counters, and last save timestamp
 detectmate-client --url <http_host:http_port> persistency-status
 
@@ -148,7 +152,7 @@ detectmate-client --url <http_host:http_port> persistency-load
 
 These commands return `404` if persistency is not configured for the loaded component. `persistency-load` and `persistency-import` return `409` if the engine is running — stop it first, then load/import, then restart. See [configuration.md](configuration.md) for how to enable persistency via the `persist` block.
 
-```bash
+```bash title="Restore persistency"
 # Download the current learned state to a file
 detectmate-client --url <http_host:http_port> persistency-export detector_state.zip
 
@@ -162,14 +166,14 @@ detectmate-client --url <http_host:http_port> start
 
 By default a detector trains for a fixed number of events, then switches to inference-only mode. You can override this at runtime:
 
-```bash
+```bash title="Controlling training state"
 # Check what the component is currently doing
 detectmate-client --url <http_host:http_port> training-get-state
 
 # Freeze the model, stop training immediately
 detectmate-client --url <http_host:http_port> training-set-state stop_training
 
-# Resume training, eep updating past the configured event limit
+# Resume training: keep updating past the configured event limit
 detectmate-client --url <http_host:http_port> training-set-state keep_training
 
 # Force the configure phase on or off

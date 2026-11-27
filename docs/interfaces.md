@@ -4,20 +4,25 @@ This document describes the interface contract between DetectMateService and Det
 
 ## CoreComponent Interface
 
-All processing components (readers, parsers, detectors) must inherit from `CoreComponent`:
+All processing components (parsers and detectors) must inherit from `CoreComponent`:
 
-```python
-from detectmatelibrary.common.core import CoreComponent
+```python title="Create a Component"
+from detectmatelibrary.common.core import CoreComponent, CoreConfig
 
 class MyComponent(CoreComponent):
-    def __init__(self, config=None):
+    def __init__(self, name: str = "MyComponent", config: CoreConfig | dict | None = None):
         """Initialize the component.
 
         Args:
+            name: Name of the component instance.
             config: Optional configuration dictionary or CoreConfig instance.
                     May be None if no configuration is provided.
         """
-        super().__init__(config)
+        if config is None:
+            config = CoreConfig()
+        elif isinstance(config, dict):
+            config = CoreConfig.from_dict(config, name)
+        super().__init__(name=name, config=config)
         # Your initialization here
 
     def process(self, data: bytes) -> bytes | None:
@@ -36,7 +41,7 @@ class MyComponent(CoreComponent):
 
 ### Key Requirements
 
-- **Constructor**: Must accept an optional `config` parameter (can be `dict` or `CoreConfig` instance)
+- **Constructor**: Must accept a `name` and an optional `config` parameter (can be `dict` or `CoreConfig` instance). The service passes the config as a `dict`
 - **process() method**: Must accept `bytes` and return `bytes | None`
 - **Return behavior**:
   - Return `bytes` to forward output to downstream components
@@ -46,7 +51,7 @@ class MyComponent(CoreComponent):
 
 Configuration classes must inherit from `CoreConfig`, which extends Pydantic's `BaseModel`:
 
-```python
+```python title="Create a Config Component"
 from detectmatelibrary.common.core import CoreConfig
 
 class MyComponentConfig(CoreConfig):
@@ -66,22 +71,18 @@ class MyComponentConfig(CoreConfig):
 
 1. Resolution: `ComponentResolver` expands the `component_type` from settings to a fully qualified path and derives the matching config class from it (see [Component Loading](#component-loading)). An explicit `component_config_class` is optional and takes precedence.
 2. Service loads config from YAML file.
-3. Schema identification: The service calls dynamically imports and verify the configuration class.
+3. Schema identification: `ConfigClassLoader` dynamically imports the resolved configuration class.
  - Validation: It ensures the config class is a subclass of `CoreConfig`.
-4. Component Instantiation: The service uses to dynamically loads the resolved component class.
- - Validation: It ensures the component class is an instance of `CoreComponent`
+4. Component Instantiation: `ComponentLoader` dynamically imports the resolved component class and instantiates it.
+ - Validation: It ensures the new instance is an instance of `CoreComponent`.
 5. Config from `ConfigManager` is passed to component constructor
 6. The Library processes and validates the configuration internally
- - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it raises an AutoConfigError.
+ - Validation: The library checks if `auto_config` is enabled. If disabled and no `params` exist, it emits a `MissingParamsWarning`.
 
  - Type Checking: It ensures the method_type matches the expected component type.
 
- - Formatting: It iterates through the params dictionary. For every parameter, it applies a specific format.
-
- - Keyword Cleaning: If a parameter key starts with `all_`, the library processes it and strips the prefix (e.g., all_threshold becomes threshold).
-
   - Flattening: The library flattens the structure by updating the top-level config dictionary with the contents of params and then deleting the now-redundant `params` key.
-7. Processor Adaptation: The service wraps the `CoreComponent` in a `LibraryComponentProcessor` (an adapter) to make it compatible with the `Engine` loop.
+7. Processing: The `Engine` loop calls `Service.process()`, which passes each message to the `CoreComponent`'s `process()` method.
 8. At runtime, `reconfigure` command can update configs dynamically
 
 ## Component Loading
@@ -90,7 +91,7 @@ The `component_type` setting tells the service which class to load. You can use 
 
 ### Short class name
 
-```yaml
+```yaml title="Select component"
 component_type: RandomDetector
 ```
 
@@ -104,7 +105,7 @@ Convenient for library components, but note:
 
 ### Dotted path
 
-```yaml
+```yaml title="Select component from detectors"
 component_type: detectors.random_detector.RandomDetector
 ```
 
@@ -140,7 +141,7 @@ Once the component is resolved, `ComponentResolver` looks for `<ClassName>Config
 
 In your service settings YAML, specify:
 
-```yaml
+```yaml title="Specify Detector"
 component_type: detectors.MyDetector   # Component class path or class name
 config_file: detector-config.yaml      # Path to component config
 # Optional:
@@ -155,7 +156,7 @@ Components in the processing pipeline use protobuf schemas for structured data e
 
 | Stage | Input | Output Schema |
 |-------|-------|---------------|
-| Reader | Raw source (file, network, etc.) | `LogSchema` |
+| Log source (e.g. Fluentd with the `detectmate` formatter) | Raw log lines (file, network, etc.) | `LogSchema` |
 | Parser | `LogSchema` bytes | `ParserSchema` |
 | Detector | `ParserSchema` bytes | `DetectorSchema` |
 
@@ -167,8 +168,8 @@ Here's a minimal detector component implementation:
 
 ### 1. Config Class (`detectors/random_detector.py`)
 
-```python
-from detectmatelibrary.common._config._formats import LogVariables, AllLogVariables
+```python title="Random Detector Code"
+from detectmatelibrary.common._config._formats import EventsConfig, Variable
 
 from detectmatelibrary.common.detector import CoreDetector, CoreDetectorConfig
 
@@ -212,7 +213,7 @@ class RandomDetector(CoreDetector):
         overall_score = 0.0
         alerts = {}
 
-        event_config = self.config.events[input_["EventID"]]
+        event_config = self.config.events[input_["eventID"]]
         if event_config is None:
             return False
 
@@ -229,7 +230,7 @@ class RandomDetector(CoreDetector):
 
         if overall_score > 0:
             output_["score"] = overall_score
-            output_["alertsObtain"].update(alerts)
+            output_["alertDetails"].update(alerts)
             return True
 
         return False
@@ -237,7 +238,7 @@ class RandomDetector(CoreDetector):
 
 ### 2. Service Settings (`settings.yaml`)
 
-```yaml
+```yaml title="Setting Random detector"
 component_name: random-detector
 component_type: detectors.random_detector.RandomDetector
 config_file: random-config.yaml
@@ -251,7 +252,7 @@ engine_addr: ipc:///tmp/threshold.engine.ipc
 
 Component configuration uses a nested structure:
 
-```yaml
+```yaml title="Config Random Detector"
 detectors:
     RandomDetector:
         method_type: random_detector
@@ -268,15 +269,16 @@ detectors:
                               threshold: 0.
                     header_variables:
                         - pos: level
-                          params: {}
+                          params:
+                              threshold: 0.5
 ```
 
 This hierarchical format allows the library to correctly route parameters based on category and class name.
 
 ### 4. Run the Service
 
-```bash
-detectmate --settings settings.yaml --configs random-config.yaml
+```bash title="Run detector with CLI"
+detectmate --settings settings.yaml --config random-config.yaml
 ```
 
 ## Validation

@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import sys
 import json
 import yaml
 import requests
 
+API_KEY_HEADER_NAME = "X-Auth-Token"
+
 
 class DetectMateClient:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, api_key: str | None = None):
         if not base_url.startswith(("http://", "https://")):
             base_url = f"http://{base_url}"
         self.base_url = base_url.rstrip('/')
         self.timeout: int = 10
+        self.session = requests.Session()
+        if api_key:
+            self.session.headers[API_KEY_HEADER_NAME] = api_key
 
     def _handle_response(self, response: requests.Response) -> None:
         try:
@@ -19,7 +25,9 @@ class DetectMateClient:
             print(json.dumps(response.json(), indent=2))
         except requests.exceptions.HTTPError as e:
             print(f"Error: {e}")
-            if response.text:
+            if response.status_code == 401:
+                print("Authentication failed: pass the service's key with --api-key or DETECTMATE_API_KEY.")
+            elif response.text:
                 print(f"Details: {response.text}")
             sys.exit(1)
         except Exception as e:
@@ -28,20 +36,20 @@ class DetectMateClient:
 
     def start(self) -> None:
         print(f"Sending START to {self.base_url}...")
-        response = requests.post(f"{self.base_url}/admin/start", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/start", timeout=self.timeout)
         self._handle_response(response)
 
     def stop(self) -> None:
         print(f"Sending STOP to {self.base_url}...")
-        response = requests.post(f"{self.base_url}/admin/stop", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/stop", timeout=self.timeout)
         self._handle_response(response)
 
     def status(self) -> None:
-        response = requests.get(f"{self.base_url}/admin/status", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/status", timeout=self.timeout)
         self._handle_response(response)
 
     def metrics(self) -> None:
-        response = requests.get(f"{self.base_url}/metrics", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/metrics", timeout=self.timeout)
         try:
             response.raise_for_status()
             # Prometheus returns plain text
@@ -61,8 +69,8 @@ class DetectMateClient:
             }
 
             print(f"Sending RECONFIGURE (persist={persist}) to {self.base_url}...")
-            response = requests.post(
-                f"{self.base_url}/admin/reconfigure", timeout=self.timeout,
+            response = self.session.post(
+                f"{self.base_url}/api/v1/reconfigure", timeout=self.timeout,
                 json=payload
             )
             self._handle_response(response)
@@ -72,23 +80,23 @@ class DetectMateClient:
             print(f"Error parsing YAML: {e}")
 
     def persistency_status(self) -> None:
-        response = requests.get(f"{self.base_url}/admin/persistency/status", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/persistency/status", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_save(self) -> None:
         print(f"Sending PERSISTENCY SAVE to {self.base_url}...")
-        response = requests.post(f"{self.base_url}/admin/persistency/save", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/persistency/save", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_load(self) -> None:
         print(f"Sending PERSISTENCY LOAD to {self.base_url}...")
-        response = requests.post(f"{self.base_url}/admin/persistency/load", timeout=self.timeout)
+        response = self.session.post(f"{self.base_url}/api/v1/persistency/load", timeout=self.timeout)
         self._handle_response(response)
 
     def persistency_export(self, outfile: str) -> None:
         print(f"Exporting state from {self.base_url} to {outfile}...")
         try:
-            response = requests.get(f"{self.base_url}/admin/persistency/export", timeout=self.timeout)
+            response = self.session.get(f"{self.base_url}/api/v1/persistency/export", timeout=self.timeout)
             response.raise_for_status()
             with open(outfile, "wb") as f:
                 f.write(response.content)
@@ -103,8 +111,8 @@ class DetectMateClient:
         print(f"Sending PERSISTENCY IMPORT from {filepath} to {self.base_url}...")
         try:
             with open(filepath, "rb") as f:
-                response = requests.post(
-                    f"{self.base_url}/admin/persistency/import",
+                response = self.session.post(
+                    f"{self.base_url}/api/v1/persistency/import",
                     files={"file": (filepath, f, "application/zip")},
                     timeout=self.timeout,
                 )
@@ -114,13 +122,13 @@ class DetectMateClient:
             sys.exit(1)
 
     def training_get_state(self) -> None:
-        response = requests.get(f"{self.base_url}/admin/training/state", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/api/v1/training/state", timeout=self.timeout)
         self._handle_response(response)
 
     def training_set_state(self, state: str) -> None:
         print(f"Sending TRAINING STATE '{state}' to {self.base_url}...")
-        response = requests.post(
-            f"{self.base_url}/admin/training/state", timeout=self.timeout,
+        response = self.session.post(
+            f"{self.base_url}/api/v1/training/state", timeout=self.timeout,
             json={"state": state}
         )
         self._handle_response(response)
@@ -129,12 +137,17 @@ class DetectMateClient:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="detectmate-client",
-        description="CLI Client for DetectMateService HTTP Admin API"
+        description="CLI Client for DetectMateService HTTP API"
     )
     parser.add_argument(
         "--url",
         default="http://localhost:8000",
         help="Base URL of the service (default: http://localhost:8000)"
+    )
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("DETECTMATE_API_KEY"),
+        help="Key sent in the X-Auth-Token header (default: $DETECTMATE_API_KEY)"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -178,7 +191,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    client = DetectMateClient(args.url)
+    client = DetectMateClient(args.url, api_key=args.api_key)
 
     if args.command == "start":
         client.start()

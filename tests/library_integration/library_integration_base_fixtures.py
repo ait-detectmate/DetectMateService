@@ -27,13 +27,13 @@ def test_parser_messages() -> list:
         {
             "parserType": "LogParser",
             "parserID": "parser_001",
-            "EventID": 1,
+            "eventID": 1,
             "template": "User <*> logged in from <*>",
             "variables": ["john", "192.168.1.100"],
             "parsedLogID": "101",
             "logID": "1",
             "log": "User john logged in from 192.168.1.100",
-            "logFormatVariables": {
+            "headerVariables": {
                 "username": "john",
                 "ip": "192.168.1.100",
                 "Time": "1634567890"
@@ -44,13 +44,13 @@ def test_parser_messages() -> list:
         {
             "parserType": "LogParser",
             "parserID": "parser_002",
-            "EventID": 2,
+            "eventID": 2,
             "template": "Database query failed: <*>",
             "variables": ["connection timeout"],
             "parsedLogID": "102",
             "logID": "2",
             "log": "Database query failed: connection timeout",
-            "logFormatVariables": {
+            "headerVariables": {
                 "error": "connection timeout",
                 "severity": "HIGH",
                 "Time": "1634567900"
@@ -61,13 +61,13 @@ def test_parser_messages() -> list:
         {
             "parserType": "LogParser",
             "parserID": "parser_003",
-            "EventID": 3,
+            "eventID": 3,
             "template": "File <*> accessed by <*> at <*>",
             "variables": ["config.txt", "admin", "10:45:30"],
             "parsedLogID": "103",
             "logID": "3",
             "log": "File config.txt accessed by admin at 10:45:30",
-            "logFormatVariables": {
+            "headerVariables": {
                 "filename": "config.txt",
                 "user": "admin",
                 "Time": "1634567910"

@@ -51,7 +51,7 @@ def main() -> None:
         "--no-autostart",
         action="store_true",
         help="Start the service without auto-starting the engine. "
-             "Use POST /admin/start to begin processing.",
+             "Use POST /api/v1/start to begin processing.",
     )
 
     args = parser.parse_args()

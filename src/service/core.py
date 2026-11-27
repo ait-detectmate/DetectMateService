@@ -204,6 +204,12 @@ class Service(Engine, ABC):
                 # Default passthrough behavior for core services without components
                 return raw_message
 
+    def _warn_if_api_unauthenticated(self) -> None:
+        if self.settings.http_api_key is None:
+            self.log.warning(
+                "HTTP API is unauthenticated. Set DETECTMATE_HTTP_API_KEY to require a key."
+            )
+
     # public API
     def setup_io(self) -> None:
         """Hook for loading models, etc."""
@@ -214,7 +220,8 @@ class Service(Engine, ABC):
         try:
             # 1. Start Web Server (Admin API)
             if self.web_server:
-                self.log.info(f"HTTP Admin active at {self.settings.http_host}:{self.settings.http_port}")
+                self.log.info(f"HTTP API active at {self.settings.http_host}:{self.settings.http_port}")
+                self._warn_if_api_unauthenticated()
                 self.web_server.start()
 
             # 2. Engine Start logic
@@ -223,7 +230,7 @@ class Service(Engine, ABC):
                 self.log.info("Auto-starting engine...")
                 self.start()
             else:
-                self.log.info("Engine idle. Awaiting /admin/start")
+                self.log.info("Engine idle. Awaiting /api/v1/start")
 
             # 3. Wait for the global shutdown event
             self.service_exit_event.wait()
@@ -236,6 +243,16 @@ class Service(Engine, ABC):
             # pre-check state here (that check belongs solely to Engine's
             # locked transition, not to callers racing against it).
             self.stop()
+
+    def _on_state_change(self, new_state: EngineState) -> None:
+        """Keep the prometheus engine_running metric in sync with every engine
+        state transition, including an unexpected loop-thread exit."""
+        if new_state == EngineState.STOPPING:
+            return
+        engine_running.labels(
+            component_type=self.component_type,
+            component_id=self.component_id
+        ).state("running" if new_state == EngineState.RUNNING else "stopped")
 
     def start(self) -> str:
         """Expose engine start as a command."""
@@ -250,10 +267,6 @@ class Service(Engine, ABC):
                 component_type=self.component_type,
                 component_id=self.component_id
             ).inc()
-            engine_running.labels(
-                component_type=self.component_type,
-                component_id=self.component_id
-            ).state('running')
 
         self.log.info(msg)
         return msg
@@ -264,10 +277,6 @@ class Service(Engine, ABC):
         try:
             msg = Engine.stop(self)
             if msg == "engine stopped":
-                engine_running.labels(
-                    component_type=self.component_type,
-                    component_id=self.component_id
-                ).state('stopped')
                 self.log.info("Engine stopped successfully")
             else:
                 self.log.info(msg)
@@ -387,11 +396,8 @@ class Service(Engine, ABC):
 
     def _create_status_report(self, running: bool) -> Dict[str, Any]:
         """Create a status report dictionary with settings and configs."""
-        # Convert Path objects in settings to strings for JSON serialization
-        settings_dict = self.settings.model_dump()
-        for key, value in settings_dict.items():
-            if isinstance(value, Path):
-                settings_dict[key] = str(value)
+        # JSON mode turns Paths into strings and masks SecretStr values (http_api_key)
+        settings_dict = self.settings.model_dump(mode="json")
 
         # Handle configs
         if self.config_manager:

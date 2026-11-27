@@ -3,8 +3,9 @@ component_type: detectors.RandomDetector
 log_level: "DEBUG"
 log_dir: "./logs"
 
-# Manager Interface (Command Channel)
-manager_addr: "ipc:///tmp/detectmate.cmd.ipc"
+# HTTP API (management and metrics)
+http_host: 127.0.0.1
+http_port: 8000
 
 # Engine Interface (Data Channel)
 engine_addr: "ipc:///tmp/detectmate.engine.ipc"

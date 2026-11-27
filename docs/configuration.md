@@ -1,34 +1,41 @@
 # Configuration
 
-DetectMateService can be configured using a YAML settings file, environment variables, or CLI flags. The precedence order is:
+DetectMateService is configured with a YAML settings file (`--settings`) and environment variables. Environment variables override values from the YAML file, and unset settings fall back to their defaults.
 
-**CLI flags > environment variables > YAML file**
+Two settings can also be set with CLI flags, which override both: `--config` sets `config_file`, and `--no-autostart` sets `engine_autostart` to `false`.
+
+**CLI flags (`--config`, `--no-autostart`) > environment variables > YAML file > defaults**
+
+Unknown keys in the YAML file are rejected at startup.
 
 ## Service settings
 
 These settings control the service infrastructure.
 
-| Setting                       | Env Variable                             | Default                            | Description                                                                                               |
-| :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
-| `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
-| `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly.     |
-| `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
-| `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
-| `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
-| `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
-| `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
-| `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
-| `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         
-| `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
-| `manager_recv_timeout`        | `DETECTMATE_MANAGER_RECV_TIMEOUT`        | `100`                              | Receive timeout (ms) for the manager command channel.                                                     |
-| `manager_thread_join_timeout` | `DETECTMATE_MANAGER_THREAD_JOIN_TIMEOUT` | `1.0`                              | Timeout (s) when waiting for the manager thread to stop.                                                  |
-| `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0/1).                                                                    |
-| `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
-| `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
-| `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
-| `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
-| `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs).                                                       |
-| `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+??? "Settings"
+    | Setting                       | Env Variable                             | Default                            | Description                                                                                               |
+    | :---------------------------- |:-----------------------------------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|
+    | `component_name`              | `DETECTMATE_COMPONENT_NAME`              | `None`                             | Name of this service instance. Free to choose, but must be unique per instance. Only used as seed for `component_id`, see [Naming components](#naming-components). |
+    | `component_id`                | `DETECTMATE_COMPONENT_ID`                | `None` (computed)                  | Unique identifier for the component, used as a metric label and in log file names. Derived from `component_type` and `component_name` if not set explicitly, or from `component_type` and `engine_addr` if no `component_name` is set. |
+    | `component_type`              | `DETECTMATE_COMPONENT_TYPE`              | `core`                             | Component class to load: a class name (`RandomDetector`) or a dotted import path (`detectors.MyDetector`). `core` runs the service without a library component. See [Component Loading](interfaces.md#component-loading). |
+    | `component_config_class`      | `DETECTMATE_COMPONENT_CONFIG_CLASS`      | `None`                             | Optional. Import path of the component's configuration class. Derived automatically as `<ComponentClass>Config` from the component's own module; set it only when that convention does not hold. See [Config class resolution](interfaces.md#config-class-resolution). |
+    | `log_level`                   | `DETECTMATE_LOG_LEVEL`                   | `INFO`                             | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`).                                                      |
+    | `log_dir`                     | `DETECTMATE_LOG_DIR`                     | `./logs`                           | Directory for log files.                                                                                  |
+    | `log_to_console`              | `DETECTMATE_LOG_TO_CONSOLE`              | `true`                             | Whether logs are written to stdout/stderr.                                                                |
+    | `log_to_file`                 | `DETECTMATE_LOG_TO_FILE`                 | `true`                             | Whether logs are written to files in `log_dir`.                                                           |
+    | `http_host`                | `DETECTMATE_HTTP_HOST`                   | `127.0.0.1`                        | Host address for the HTTP server.                                                                         |
+    | `http_port`                | `DETECTMATE_HTTP_PORT`                   | `8000`                             | Port for the HTTP server.                                                                                 |
+    | `http_api_key`             | `DETECTMATE_HTTP_API_KEY`                | unset                              | Key required in the `X-Auth-Token` header for all `/api/v1/*` routes. Unset or empty disables authentication. See [Authentication](#authentication). |
+    | `engine_addr`                 | `DETECTMATE_ENGINE_ADDR`                 | `ipc:///tmp/detectmate.engine.ipc` | Address for data processing (PAIR0).                                                                    |
+    | `engine_autostart`            | `DETECTMATE_ENGINE_AUTOSTART`            | `true`                             | Whether the engine starts automatically on launch. Can also be overridden at runtime with `--no-autostart`. |
+    | `engine_recv_timeout`         | `DETECTMATE_ENGINE_RECV_TIMEOUT`         | `100`                              | Receive timeout (ms) for the engine channel.                                                              |
+    | `engine_retry_count`         | `DETECTMATE_ENGINE_RETRY_COUNT`          | `10`                               | Retry count for resending messages when TryAgain exception occurs.                                        |
+    | `engine_buffer_size`         | `DETECTMATE_ENGINE_BUFFER_SIZE`          | `100`                              | Buffer size for the number of sent and received messages in NNG.                                          |
+    | `out_addr`                    | `DETECTMATE_OUT_ADDR`                    | `[]`                               | List of output addresses (strongly typed NNG URLs). As an environment variable, pass a JSON list, e.g. `DETECTMATE_OUT_ADDR='["tcp://host:5000", "ipc:///tmp/out.ipc"]'`. |
+    | `out_dial_timeout`            | `DETECTMATE_OUT_DIAL_TIMEOUT`            | `1000`                             | Timeout (ms) for connecting to output addresses.                                                          |
+    | `tls_input`                   | `DETECTMATE_TLS_INPUT__CERT_KEY_FILE`    | unset                              | TLS config for the input socket, required when `engine_addr` uses `tls+tcp://`. Takes `cert_key_file` (PEM file with the server certificate and private key). |
+    | `tls_output`                  | `DETECTMATE_TLS_OUTPUT__CA_FILE`, `DETECTMATE_TLS_OUTPUT__SERVER_NAME` | unset | TLS config for the output sockets, required when any `out_addr` uses `tls+tcp://`. Takes `ca_file` (CA certificate used to verify the server) and an optional `server_name` (SNI override when the hostname differs from the certificate). |
+    | `config_file`                 | `DETECTMATE_CONFIG_FILE`                 | unset                              | Path to the component configuration file, see [Component configuration](#component-configuration). Overridden by `--config`. |
 
 
 ### Naming components
@@ -36,15 +43,15 @@ These settings control the service infrastructure.
 `component_name` can be chosen freely, but it is **not** used as a
 display label anywhere. Logs, metrics and log file names all use `component_id`, `component_name` is only used to seed it.
 
-```python
+```python title="Add component name"
 component_id = uuid5(NAMESPACE_URL, f"detectmate/{component_type}/{component_name}").hex
 ```
 
 This means:
 
 - **Names must be unique per instance.** 
-- **Without a name, uniqueness comes from the address.** Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
-- **Changing `component_type` or `component_name`changes the id**
+- **Without a name, the id is derived from the address** (`detectmate/{component_type}|{engine_addr}`). Two components of the same type sharing one `engine_addr` collide. Set `component_name` when you run more than one instance.
+- **Changing `component_type` or `component_name` changes the id**
 - **`component_id` can be set explicitly** if you need to control it directly
 
 
@@ -52,7 +59,7 @@ This means:
 
 You can provide a YAML file containing the service settings. Below is an example `settings.yaml`:
 
-```yaml
+```yaml title="Setting yaml"
 --8<-- "docs/examples/configuration/settings.yaml"
 ```
 
@@ -61,11 +68,14 @@ You can provide a YAML file containing the service settings. Below is an example
 
 Environment variables override values in the YAML file. They are prefixed with `DETECTMATE_`.
 
+List and nested settings take JSON, or use `__` to set a single nested field (e.g. `DETECTMATE_TLS_OUTPUT__CA_FILE`).
+
 Example:
-```bash
+```bash title="Define environment variables"
 export DETECTMATE_LOG_LEVEL=DEBUG
 export DETECTMATE_COMPONENT_NAME=worker-1
-detectmate start
+export DETECTMATE_OUT_ADDR='["tcp://127.0.0.1:5000"]'
+detectmate --settings settings.yaml
 ```
 
 ## Component configuration
@@ -77,11 +87,11 @@ The configuration must be namespaced by the component category (detectors or par
 Example detector_config.yaml
 
 
-```yaml
+```yaml title="Detector configuration"
 --8<-- "docs/examples/configuration/detector_config.yaml"
 ```
 
-### What goes in a the config file
+### What goes in the config file
 
 Only the outer layout (i.e. category level, class name level, then the component's own keys) is the
 same for every component. What is valid *inside* is defined by the component's configuration
@@ -96,10 +106,6 @@ To find the fields a component accepts:
   explains how the library interprets the values.
 - **The config class itself**: the fields, types and defaults of `<ComponentClass>Config` in the
   library source are the authoritative list.
-- **Let the service generate one**: point `config_file` at a path that does not exist yet and the
-  service writes a default file derived from the component's config class on startup. It is a
-  scaffold, not a working config! Values it cannot infer are written as `<PLACEHOLDER>` and have
-  to be filled in.
 
 You can read more about Components in the [Using a Library Component](library.md) section.
 
@@ -109,54 +115,80 @@ Every parser and detector the library documents and the fields in its
 config file. Each page also names the class to put in `component_type`. 
 Some components ship only with an [optional extra](installation.md#optional-library-components-extras).
 
-**Parsers**
-
 <!-- Start parsers -->
-| Parser |
-|---|
-| [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
-| [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
-| [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
-| [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
+??? "Parser methods"
+    | Parser |
+    |---|
+    | [JSON Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/json_parser/) |
+    | [LogBatcher Parser](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/logbatcher_parser/) |
+    | [Template matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_matcher/) |
+    | [Template Tree Matcher](https://ait-detectmate.github.io/DetectMateLibrary/latest/parsers/template_tree_matcher/) |
 <!-- End parsers -->
 
-**Detectors**
-
 <!-- Start detectors -->
-| Detector |
-|---|
-| [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
-| [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
-| [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
-| [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
-| [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
-| [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
-| [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
-| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
-| [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
-| [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
-| [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
-| [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
-| [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
+??? "Detectors methods"
+    | Detector |
+    |---|
+    | [Bigram Frequency Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/bigram_frequency/) |
+    | [Combo Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/combo/) |
+    | [Deeplog Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/deeplog/) |
+    | [ECVC Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/ecvc_detector/) |
+    | [Event Sequence Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/event_sequence/) |
+    | [LogBert Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/logbert/) |
+    | [New Event Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_event/) |
+    | [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/charset/) |
+    | [New Value Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/new_value/) |
+    | [Random Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/random_detector/) |
+    | [Rule-based Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/rule_based/) |
+    | [SCVS Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/scvs_detector/) |
+    | [Value Range Detector](https://ait-detectmate.github.io/DetectMateLibrary/latest/detectors/value_range/) |
 <!-- End detectors -->
 
 > These tables are auto-generated from the library documentation.
 
 
 
-## HTTP Admin Interface
+## HTTP API
 
 The service provides a REST API for runtime management and monitoring.
+
+### Authentication
+
+When `http_api_key` is set, every `/api/v1/*` route requires the key in the `X-Auth-Token` header. A missing or wrong key returns `401 {"detail": "Invalid authentication credentials"}`. `/metrics`, `/docs`, `/redoc` and `/openapi.json` never require a key.
+
+If no key is set, the API is open and the service logs a warning at startup.
+
+Generate a key and pass it through the environment rather than the settings YAML, so it isn't committed with the config:
+
+```bash title="Generate key"
+export DETECTMATE_HTTP_API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+detectmate --settings settings.yaml
+```
+
+Call the API with the header:
+
+```bash title="Call API"
+curl -H "X-Auth-Token: $DETECTMATE_HTTP_API_KEY" http://127.0.0.1:8000/api/v1/status
+detectmate-client --api-key "$DETECTMATE_HTTP_API_KEY" status   # or set DETECTMATE_API_KEY
+```
+
+In the Swagger UI (`/docs`), click **Authorize** and enter the key.
+
+With Docker Compose, put `DETECTMATE_HTTP_API_KEY=<key>` in a `.env` file next to `docker-compose.yml`. `.env` is gitignored. The same key is then used by the parser and both detectors.
+
+To rotate the key, change it and restart the service.
+
+The key is sent in cleartext over plain HTTP. Either keep `http_host` on loopback or a private network, or put a TLS-terminating reverse proxy in front of the service.
 
 ### Core Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/status` | Returns the health, running state, and current effective configurations. |
-| `POST` | `/admin/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
-| `POST` | `/admin/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
-| `POST` | `/admin/reconfigure` | Updates component parameters dynamically. Only `detectors`, `parsers`, and `readers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
-| `POST` | `/admin/shutdown` | Gracefully terminates the entire service process. |
+| `GET` | `/api/v1/status` | Returns the health, running state, and current effective configurations. |
+| `POST` | `/api/v1/start` | Starts the data processing engine thread. Idempotent - returns `200`/`"engine already running"` if already started. Returns `500` if the engine thread fails to start. |
+| `POST` | `/api/v1/stop` | Stops the data processing engine thread. Idempotent - returns `200`/`"engine already stopped"` if already stopped. Returns `500` if the engine fails to stop cleanly. |
+| `POST` | `/api/v1/reconfigure` | Updates component parameters dynamically. Only `detectors` and `parsers` are valid top-level config keys - returns `400` for unknown keys or other invalid config data, and `409` if no config manager is configured (e.g. no `config_file` was set for this component). |
+| `POST` | `/api/v1/shutdown` | Gracefully terminates the entire service process. |
 
 ### Persistency Endpoints
 
@@ -164,17 +196,17 @@ These endpoints are available when the loaded library component has persistency 
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
-| `POST` | `/admin/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
-| `POST` | `/admin/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running. |
-| `GET` | `/admin/persistency/export` | Downloads the current learned state as a zip archive. |
-| `POST` | `/admin/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
+| `GET` | `/api/v1/persistency/status` | Returns persistency configuration, in-memory event counters, and timestamp of the last save. |
+| `POST` | `/api/v1/persistency/save` | Forces an immediate flush of in-memory learned state to storage. |
+| `POST` | `/api/v1/persistency/load` | Restores learned state from storage, replacing what is currently in memory. The engine must be stopped first - returns `409` if it is running, and `404` if no saved state exists at the configured `path`. |
+| `GET` | `/api/v1/persistency/export` | Downloads the current learned state as a zip archive. |
+| `POST` | `/api/v1/persistency/import` | Uploads a zip archive and restores state from it. The engine must be stopped first - returns `409` if it is running. |
 
-`/admin/persistency/save`, `/admin/persistency/status`, and `/admin/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/admin/persistency/load` and `/admin/persistency/import` additionally return `409` if the engine is running - stop it first with `/admin/stop`. `/admin/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
+`/api/v1/persistency/save`, `/api/v1/persistency/status`, and `/api/v1/persistency/export` return `404` if no library component is loaded or if `persist` is not configured. `/api/v1/persistency/load` and `/api/v1/persistency/import` additionally return `409` if the engine is running - stop it first with `/api/v1/stop`. `/api/v1/persistency/load` also returns `404` if no saved state exists yet (no `metadata.json` under the state path). `/api/v1/persistency/import` returns `422` if the uploaded file is not a valid zip or does not contain `metadata.json`. See [usage.md](usage.md#controlling-state-persistency) for `detectmate-client` equivalents.
 
-#### `/admin/persistency/status` response
+#### `/api/v1/persistency/status` response
 
-```json
+```json title="Status reply"
 {
   "path": "/state/NewValueDetector",
   "save_interval_seconds": 300,
@@ -204,8 +236,8 @@ These endpoints control whether the library component is actively training or co
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/admin/training/state` | Returns the fit logic state from the last processed event. |
-| `POST` | `/admin/training/state` | Overrides the training or configuration phase. |
+| `GET` | `/api/v1/training/state` | Returns the fit logic state from the last processed event. |
+| `POST` | `/api/v1/training/state` | Overrides the training or configuration phase. |
 
 Both endpoints return `404` if no library component is loaded. See [usage.md](usage.md#controlling-training-state) for `detectmate-client` equivalents.
 
@@ -218,9 +250,9 @@ Each incoming event is evaluated by the component's fit logic, which decides wha
 
 Both phases stop automatically after their configured event count. By default the component transitions to inference-only mode after that.
 
-#### `POST /admin/training/state` payload
+#### `POST /api/v1/training/state` payload
 
-```json
+```json title="State payload"
 {"state": "<value>"}
 ```
 
@@ -233,31 +265,31 @@ Both phases stop automatically after their configured event count. By default th
 
 Any other value is rejected with `422 Unprocessable Entity`.
 
-#### `GET /admin/training/state` response
+#### `GET /api/v1/training/state` response
 
-```json
-{"state": "Training."}
+```json title="State reply"
+{"state": "Training"}
 ```
 
 The `state` field reflects what the component did with the most recently processed event:
 
 | Value | Meaning |
 | :--- | :--- |
-| `"Training."` | Last event was used for model training. |
+| `"Training"` | Last event was used for model training. |
 | `"Configuring"` | Last event was used for the configure phase. |
-| `"Default"` | Neither,  the component is in inference-only mode. |
+| `"Default"` | Neither, the component is in inference-only mode. |
 
 ### Persistency component configuration
 
 Persistency for detector components is enabled through the `persist` block in the component configuration file. When present, the component automatically saves its learned state to disk on a configurable schedule.
 
-```yaml
+```yaml title="Persistency configuration"
 --8<-- "docs/examples/configuration/detector_persist_config.yaml"
 ```
 
 | Field | Default | Description |
 | :--- | :--- | :--- |
-| `path` | `./state` | Where to write state files. Accepts any fsspec-compatible URL (`s3://`, `gs://`, local path, etc.). The component name is appended automatically. |
+| `path` | `$STATE_DIRECTORY`, else `./state` | Where to write state files. If unset, the first directory in the `STATE_DIRECTORY` environment variable is used (set by systemd's `StateDirectory=`), otherwise `./state` relative to the working directory. Accepts any fsspec-compatible URL (`s3://`, `gs://`, local path, etc.). The component name is appended automatically. |
 | `interval_seconds` | `300` | Seconds between background saves. |
 | `events_until_save` | `null` | If set, trigger an additional save after this many events. Combines with the timer. |
 | `auto_load` | `false` | If `true`, the component restores its previous state from `path` when it starts. |

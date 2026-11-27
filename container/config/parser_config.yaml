@@ -8,4 +8,4 @@ parsers:
       remove_spaces: false
       remove_punctuation: false
       lowercase: false
-      path_templates: /config/templates.txt  # empty file because there are no templates necessary for apache access logs
+      path_templates: /config/templates.txt  # one wildcard template that matches any Nginx access-log line

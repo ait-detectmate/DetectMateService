@@ -3,9 +3,12 @@ from pathlib import Path
 from uuid import uuid5, NAMESPACE_URL
 from typing import Any, Dict, Optional, List, Annotated, Union
 import yaml
-from pydantic import BaseModel, ValidationError, model_validator, UrlConstraints, field_serializer, Field
+from pydantic import (
+    BaseModel, ValidationError, model_validator, UrlConstraints, field_serializer, Field, SecretStr,
+    field_validator,
+)
 from pydantic_core import Url
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
 
 class TlsInputConfig(BaseModel):
@@ -76,6 +79,9 @@ class ServiceSettings(BaseSettings):
     # HTTP server (FastAPI) settings
     http_host: str = "127.0.0.1"
     http_port: int = 8000
+    # Key required in the X-Auth-Token header for API routes.
+    # None disables authentication. Set it via DETECTMATE_HTTP_API_KEY.
+    http_api_key: Optional[SecretStr] = None
 
     model_config = SettingsConfigDict(
         env_prefix="DETECTMATE_",  # DETECTMATE_LOG_LEVEL etc.
@@ -84,6 +90,14 @@ class ServiceSettings(BaseSettings):
     )
 
     config_file: Optional[Path] = None
+
+    @field_validator("http_api_key", mode="before")
+    @classmethod
+    def _empty_api_key_is_none(cls, v: Any) -> Any:
+        """Treat an empty key (unset compose variable) as 'no auth'."""
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     # serializer so dumps/json/status become strings again
     @field_serializer("out_addr")
@@ -144,6 +158,11 @@ class ServiceSettings(BaseSettings):
                 except (IOError, yaml.YAMLError) as e:
                     raise SystemExit(f"[config] Error reading YAML file {path}: {e}") from e
 
+        # reject unknown keys (e.g. removed settings like manager_addr) instead of silently dropping them
+        unknown_keys = sorted(set(data) - set(cls.model_fields))
+        if unknown_keys:
+            raise SystemExit(f"[config] Unknown setting(s) in {path}: {', '.join(unknown_keys)}")
+
         # convert string paths to Path objects
         if "log_dir" in data and isinstance(data["log_dir"], str):
             data["log_dir"] = Path(data["log_dir"])
@@ -155,19 +174,12 @@ class ServiceSettings(BaseSettings):
             if env_name in os.environ:
                 env_fields.add(field)
 
-        # create a dictionary with final values (env vars override yaml)
-        final_data = {}
-        for field in cls.model_fields:
-            if field in env_fields:
-                # get the value from environment (let Pydantic handle parsing)
-                env_name = f"{cls.model_config['env_prefix']}{field.upper()}"
-                final_data[field] = os.environ[env_name]
-            elif field in data:
-                final_data[field] = data[field]  # use yaml value if no env var
-            else:
-                continue  # pydantic will handle default values
+        # Pass only YAML values without an env var as init kwargs. BaseSettings reads
+        # the env vars itself (decoding JSON for lists/models, e.g. out_addr), and init
+        # kwargs would take priority over its env parsing, so env vars override yaml.
+        yaml_data = {field: value for field, value in data.items() if field not in env_fields}
 
         try:
-            return cls.model_validate(final_data)
-        except ValidationError as e:
+            return cls(**yaml_data)
+        except (ValidationError, SettingsError) as e:
             raise SystemExit(f"[config] x {e}") from e

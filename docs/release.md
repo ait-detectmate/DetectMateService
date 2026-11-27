@@ -44,7 +44,7 @@ Open a pull request to merge the `development` branch into `main`. Once CI passe
 
 Create a new branch from `main` and update the version string in `src/service/metadata.py`:
 
-```python
+```python title="Select version"
 __version__ = '0.X.Y'  # set to the new release version
 ```
 
@@ -52,7 +52,7 @@ The version here must match the tag you will create in step 5 (e.g. version `0.4
 
 Also make sure `uv.lock` is up to date:
 
-```bash
+```bash title="Generate lock file"
 uv lock
 ```
 
@@ -88,7 +88,7 @@ it ran successfully.
 
 If the workflow fails or you need to do it manually:
 
-```bash
+```bash title="Manually generate development branch"
 git checkout main
 git pull
 git checkout -b development

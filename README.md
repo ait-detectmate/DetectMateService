@@ -1,139 +1,71 @@
 # DetectMate Service
 
-DetectMate Service is a framework for building modular services that communicate via NNG messaging.
+![UML](docs/img/logo_2.svg)
 
-## Setup
+DetectMate Service is a framework for building modular log processing and anomaly detection services that
+communicate via [NNG](https://nng.nanomsg.org/) messaging. Each service runs one component (for example a
+parser or detector from [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary)), receives
+data on an input socket, forwards the results to one or more output sockets, and exposes an HTTP API for
+management and Prometheus metrics.
 
-With uv (recommended):
+Full documentation: <https://ait-detectmate.github.io/DetectMateService/latest>
 
-```bash
-uv sync --dev
-```
+## Requirements
 
-With pip and virtualenv:
+- Python 3.12 or newer
+- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- Docker and Docker Compose (optional, for containerized pipelines)
 
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -e .
-```
-
-## Developer setup
-
-If you plan to contribute to the development of this package, follow these steps to set up the dev environment and install pre-commit hooks (using [prek](https://github.com/j178/prek))
+## Installation
 
 ```bash
-uv sync --dev
-uv run --dev prek install
+git clone https://github.com/ait-detectmate/DetectMateService.git
+cd DetectMateService
+uv sync                 # or: pip install .
+uv sync --extra full    # optional: all library component extras
 ```
 
-Run the tests:
-
-```bash
-uv run --dev pytest -q
-```
-
-Run the tests with coverage (add `--cov-report=html` to generate an HTML report):
-
-```bash
-uv run --dev pytest --cov=. --cov-report=term-missing
-```
-
+See [Installation](https://ait-detectmate.github.io/DetectMateService/latest/installation/) for pip setup,
+optional extras and Docker builds.
 
 ## Usage
 
-To use the `Service` class, you can create a subclass that implements the `process` method. Here's an example:
-
-```python
-import pynng
-from service.core import Service
-
-class DemoService(Service):
-    def process(self, raw_message: bytes) -> bytes | None:
-        return None  # No actual processing in this demo
-
-service = DemoService()
-
-with service:
-    with pynng.Req0(dial=service.settings.manager_addr) as req:
-        for cmd in ("ping", "status", "stop"):
-            print(f">>> {cmd}")
-            req.send(cmd.encode("utf-8"))
-            reply = req.recv().decode("utf-8", "ignore")
-            print(f"<<< {reply}")
+```bash
+touch settings.yaml
+uv run detectmate --settings settings.yaml
 ```
 
-### CLI
+- [Running the Service](https://ait-detectmate.github.io/DetectMateService/latest/usage/)
+- [Configuration](https://ait-detectmate.github.io/DetectMateService/latest/configuration/)
+- [Using a Library Component](https://ait-detectmate.github.io/DetectMateService/latest/library/)
+- [Monitoring with Prometheus](https://ait-detectmate.github.io/DetectMateService/latest/prometheus/)
 
-You can also run the service using the command line interface (CLI).
-It takes configuration files as arguments:
-
-Example configuration files can be found in the `tests/config` directory.
-
-Start the service:
+## Docker Compose
 
 ```bash
-uv run detectmate --settings examples/service_settings.yaml
-```
-To survey the state of your component and interact with the running service, use the detectmate-client tool.
-
-Get the service status:
-
-```bash
-uv run detectmate-client status --url <http_host:http_port>
+docker compose up
 ```
 
-Stop the engine:
+See the [Docker Compose Reference](https://ait-detectmate.github.io/DetectMateService/latest/docker-compose/).
 
-```bash
-uv run detectmate-client stop --url <http_host:http_port>
-```
+## Tutorial
 
-Start the engine:
-```bash
-uv run detectmate-client start --url <http_host:http_port>
-```
+[Detecting Anomalies in Nginx Logs](https://ait-detectmate.github.io/DetectMateService/latest/tutorial/) —
+an end-to-end walkthrough from a fresh machine to a running pipeline.
 
-Request prometheus metrics:
-```bash
-uv run detectmate-client metrics --url <http_host:http_port>
-```
+## Related Projects
 
-Shutdown entire service:
-
-```bash
-uv run detectmate-client shutdown --url <http_host:http_port>
-```
-
-
-### Demo pipeline run with Docker
-
-A containerized demonstration of the DetectMate log analysis pipeline. The demo runs three services (reader, parser,
-detector) that process audit logs to detect anomalies, with a test script that feeds log lines through the complete
-pipeline and reports detected anomalies.
-
-**Terminal 1** (keep running to see service logs):
-```bash
-docker compose up reader parser detector
-```
-
-**Terminal 2** (run after services are up):
-```bash
-# Wait a few seconds for services to be ready, then:
-docker compose up demo
-```
-
-## Documentation
-
-- [Project Documentation](https://ait-detectmate.github.io/DetectMateService/latest)
+- [DetectMateLibrary](https://github.com/ait-detectmate/DetectMateLibrary)
+  ([docs](https://ait-detectmate.github.io/DetectMateLibrary/latest/))
 
 ## Contribution
 
 We're happily taking patches and other contributions. Please see the following links for how to get started:
 
-- [GitHub Workflow](https://ait-detectmate.github.io/DetectMateService/latest/Contribution)
+- [Git Workflow](https://ait-detectmate.github.io/DetectMateService/latest/contribution/)
+- [Development](https://ait-detectmate.github.io/DetectMateService/latest/development/)
 
-If you encounter any bugs, please create an issue on [Github](https://github.com/ait-detectmate/DetectMateService/issues).
+If you encounter any bugs, please create an issue on [GitHub](https://github.com/ait-detectmate/DetectMateService/issues).
 
 ## License
 
